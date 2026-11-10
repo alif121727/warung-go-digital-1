@@ -84,6 +84,9 @@ internal mengarah ke sana.
   data contoh untuk kembali ke kondisi awal kapan saja.
 - **QR benar-benar bisa dipindai.** Buka modul Warung atau Rating, klik ikon QR, lalu
   pindai dengan kamera ponsel.
+- **Sudah rapi di HP.** Tampilan menyesuaikan layar ponsel: menu geser, tabel berubah
+  jadi kartu (tanpa geser ke samping), tombol cukup besar untuk disentuh, dan tidak ada
+  zoom otomatis saat mengetik. Sudah diuji dari layar 320 px sampai tablet.
 
 ---
 

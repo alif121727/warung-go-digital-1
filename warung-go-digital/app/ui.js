@@ -288,10 +288,27 @@ const UI = (() => {
       </div>
     </div>`;
 
+  /* Salin judul kolom ke tiap sel sebagai data-label. Dipakai CSS untuk
+     menumpuk tabel jadi kartu di layar ponsel, tanpa mengubah tiap modul. */
+  const tabelResponsif = (root = document) => {
+    qa('table.tbl', root).forEach((tb) => {
+      const judul = [...tb.querySelectorAll('thead th')].map((th) => th.textContent.trim());
+      tb.querySelectorAll('tbody tr').forEach((tr) => {
+        [...tr.children].forEach((td, i) => {
+          if (td.tagName !== 'TD') return;
+          const label = judul[i] || '';
+          if (label && !td.hasAttribute('data-label')) td.setAttribute('data-label', label);
+        });
+      });
+      tb.setAttribute('data-responsif', '1');
+    });
+  };
+
   return {
     icon, esc, q, qa, el, warnaDari, inisial, bintang,
     toast, modal, tutupModal, konfirmasi, drawer, tutupDrawer,
     grafikTren, grafikGaris, unduh, salin, stat, kosong, lencanaStatus, who,
+    tabelResponsif,
   };
 })();
 

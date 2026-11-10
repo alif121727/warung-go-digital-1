@@ -136,6 +136,16 @@ with sync_playwright() as p:
     cek("Menu publik: warung tak dikenal ditangani",
         "tidak ditemukan" in pg3.text_content("#nama"))
 
+    # ═══ NAVIGASI VIA MENU (bukan langsung set hash) ═══
+    pg.evaluate("location.hash='#/dasbor'"); pg.wait_for_timeout(600)
+    id_menu = pg.eval_on_selector_all("#nav .navitem", "e=>e.map(x=>x.dataset.go)")
+    cek("Navigasi: id menu terisi", all(x and x != "undefined" for x in id_menu) and len(id_menu) >= 8,
+        str(id_menu[:4]))
+    pg.click('#nav .navitem[data-go="transaksi"]'); pg.wait_for_timeout(700)
+    cek("Navigasi: klik menu berpindah modul", pg.evaluate("()=>location.hash") == "#/transaksi")
+    cek("Navigasi: judul ikut berubah",
+        "Transaksi" in pg.eval_on_selector("#judul", "e=>e.textContent"))
+
     # ═══ ERROR ═══
     cek("Tanpa error console (panel)", len(errs) == 0, str(errs[:3]))
     cek("Tanpa error (menu publik)", len(errs2) == 0, str(errs2[:3]))

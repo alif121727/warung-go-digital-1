@@ -24,7 +24,7 @@ const App = (() => {
     const nav = UI.q('#nav');
     let html = '';
     for (const [namaGrup, ids] of GRUP) {
-      const items = ids.map((id) => daftar[id]).filter(Boolean);
+      const items = ids.filter((id) => daftar[id]).map((id) => ({ id, ...daftar[id] }));
       if (!items.length) continue;
       html += `<div class="side__label">${namaGrup}</div>`;
       for (const m of items) {
@@ -56,6 +56,7 @@ const App = (() => {
     view.innerHTML = '';
     try {
       m.render(view, state);
+      UI.tabelResponsif(view);
     } catch (e) {
       console.error(e);
       view.innerHTML = `<div class="card"><div class="card__body">${UI.kosong({

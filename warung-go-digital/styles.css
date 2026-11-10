@@ -41,6 +41,12 @@
   --wrap: 1200px;
   --gutter: clamp(1.15rem, 4vw, 2.5rem);
 
+  /* area aman layar berponi */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+
   --f-display: "Bricolage Grotesque", system-ui, sans-serif;
   --f-serif:   "Instrument Serif", Georgia, serif;
   --f-body:    "Bricolage Grotesque", system-ui, sans-serif;
@@ -62,6 +68,9 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -144,6 +153,7 @@ h1 em, h2 em, .contact__head h2 em {
   backdrop-filter: blur(14px) saturate(1.4);
   border-bottom: 1px solid transparent;
   transition: border-color .3s, background .3s, box-shadow .3s;
+  padding-top: var(--safe-t);
 }
 .topbar.is-stuck {
   border-color: var(--line);
@@ -644,6 +654,7 @@ h1 em, h2 em, .contact__head h2 em {
 /* ── Floating WhatsApp ────────────────────────────────── */
 .fab {
   position: fixed; right: clamp(1rem, 3vw, 1.8rem); bottom: clamp(1rem, 3vw, 1.8rem);
+  bottom: calc(clamp(1rem, 3vw, 1.8rem) + var(--safe-b));
   z-index: 850;
   display: inline-flex; align-items: center; gap: .6rem;
   background: var(--wa); color: #082614;
@@ -697,6 +708,19 @@ h1 em, h2 em, .contact__head h2 em {
   .subs { flex-direction: column; align-items: flex-start; gap: .8rem; }
   .ftable th, .ftable td { padding: .7rem .6rem; font-size: .82rem; }
   .ftable thead th { font-size: .82rem; }
+}
+
+/* ── Perangkat sentuh: area tekan lebih besar, cegah zoom iOS ── */
+@media (pointer: coarse) {
+  .field input, .field select { font-size: 16px; }
+  .btn { min-height: 44px; }
+  .btn--xs { min-height: 40px; }
+  .burger { min-width: 44px; min-height: 44px; display: grid; place-items: center; padding: 0; }
+  .burger span { margin-inline: auto; }
+  .logo { min-height: 44px; }
+  .menu-panel a, .foot a { min-height: 44px; display: flex; align-items: center; }
+  .menu a { padding: .5rem .2rem; }
+  .chip { min-height: 40px; display: inline-flex; align-items: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {

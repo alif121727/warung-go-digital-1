@@ -53,6 +53,12 @@
   --sidebar: 254px;
   --topbar: 64px;
 
+  /* Area aman layar berponi (notch) */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+
   /* Gerak */
   --e: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -73,6 +79,11 @@ html, body {
   font-size: 14px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  /* Cegah Safari iOS memperbesar teks sendiri saat layar diputar */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Matikan kilatan abu saat elemen disentuh di Android */
+  -webkit-tap-highlight-color: transparent;
 }
 
 h1, h2, h3, h4 {
@@ -105,7 +116,9 @@ a { color: inherit; text-decoration: none; }
 .app {
   display: grid;
   grid-template-columns: var(--sidebar) 1fr;
+  /* dvh = tinggi nyata yang terlihat; vh biasa terpotong bilah alamat ponsel */
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* ── Bilah sisi ── */
@@ -117,6 +130,7 @@ a { color: inherit; text-decoration: none; }
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   z-index: 40;
   overflow: hidden;
 }
@@ -295,7 +309,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 0 22px;
+  padding: 0 calc(22px + var(--safe-r)) 0 calc(22px + var(--safe-l));
   position: sticky;
   top: 0;
   z-index: 30;
@@ -779,6 +793,7 @@ table.tbl {
   width: 100%;
   max-width: 560px;
   max-height: 90vh;
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
   animation: pop 0.24s var(--e);
@@ -832,6 +847,7 @@ table.tbl {
 .toasts {
   position: fixed;
   bottom: 20px;
+  bottom: calc(20px + var(--safe-b));
   right: 20px;
   z-index: 200;
   display: flex;
@@ -874,6 +890,8 @@ table.tbl {
   z-index: 110;
   display: flex;
   flex-direction: column;
+  padding-top: var(--safe-t);
+  padding-bottom: var(--safe-b);
   transform: translateX(100%);
   transition: transform 0.3s var(--e);
 }
@@ -1089,6 +1107,10 @@ table.tbl {
   .side {
     position: fixed;
     left: 0; top: 0; bottom: 0;
+    width: min(86vw, 300px);
+    height: 100dvh;
+    padding-top: var(--safe-t);
+    padding-bottom: var(--safe-b);
     transform: translateX(-100%);
     transition: transform 0.28s var(--e);
     box-shadow: var(--sh-lg);
@@ -1107,7 +1129,7 @@ table.tbl {
 }
 
 @media (max-width: 620px) {
-  .view { padding: 16px 14px 60px; }
+  .view { padding: 16px 14px 60px; padding-bottom: calc(60px + var(--safe-b)); }
   .topbar { padding: 0 12px; gap: 8px; }
   .topbar__title { flex: 1; min-width: 0; }
   .topbar__title h1 {
@@ -1126,8 +1148,9 @@ table.tbl {
   .chart { height: 150px; gap: 5px; }
   .chart__tip { display: none; }
   .modal { padding: 0; align-items: flex-end; }
-  .modal__box { max-width: none; border-radius: var(--r-xl) var(--r-xl) 0 0; max-height: 94vh; }
-  .toasts { left: 14px; right: 14px; bottom: 14px; }
+  .modal__box { max-width: none; border-radius: var(--r-xl) var(--r-xl) 0 0; max-height: 94vh; max-height: 94dvh; padding-bottom: var(--safe-b); }
+  .modal__box .modal__foot { padding-bottom: calc(16px + var(--safe-b)); }
+  .toasts { left: 14px; right: 14px; bottom: 14px; bottom: calc(14px + var(--safe-b)); }
   .toast { max-width: none; }
   /* Tombol aksi pada kepala halaman memenuhi lebar agar tidak meluber */
   .sect { align-items: stretch; }
@@ -1142,6 +1165,77 @@ table.tbl {
   .card__head h3 { min-width: 0; }
   .card__head .sel { width: 100% !important; }
   .card__head .legend { width: 100%; }
+
+  /* Tabel ditumpuk jadi kartu agar tidak perlu digeser ke samping */
+  .tablewrap { overflow: visible; border: none; background: transparent; }
+  table.tbl[data-responsif] {
+    display: block;
+    width: 100%;
+    min-width: 0 !important;
+    font-size: 13px;
+  }
+  table.tbl[data-responsif] thead { display: none; }
+  table.tbl[data-responsif] tbody { display: block; }
+  table.tbl[data-responsif] tbody tr {
+    display: block;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 3px 13px;
+    margin-bottom: 10px;
+    box-shadow: var(--sh-xs);
+  }
+  table.tbl[data-responsif] tbody tr:hover { background: var(--card); }
+  table.tbl[data-responsif] tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line-2);
+    text-align: right;
+    min-height: 40px;
+  }
+  table.tbl[data-responsif] tbody tr td:last-child { border-bottom: none; }
+  table.tbl[data-responsif] tbody td::before {
+    content: attr(data-label);
+    flex: none;
+    max-width: 42%;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--t3);
+    text-align: left;
+  }
+  table.tbl[data-responsif] tbody td:not([data-label]) {
+    display: block;
+    text-align: center;
+    min-height: 0;
+    padding: 14px 0;
+  }
+  table.tbl[data-responsif] tbody td:not([data-label])::before { content: none; }
+  table.tbl[data-responsif] tbody td.aksi { flex-wrap: wrap; justify-content: flex-end; }
+  table.tbl[data-responsif] tbody td.aksi::before { margin-right: auto; }
+  table.tbl[data-responsif] tbody td > * { min-width: 0; }
+  table.tbl[data-responsif] .who { text-align: left; }
+  table.tbl[data-responsif] .bar { width: 100%; }
+}
+
+/* ── Perangkat sentuh: perbesar area yang bisa ditekan ── */
+@media (pointer: coarse) {
+  /* iOS Safari otomatis memperbesar layar bila font input < 16px */
+  .inp, .sel, .ta, .search input { font-size: 16px; }
+  .btn { min-height: 44px; }
+  .btn--sm { min-height: 40px; padding: 8px 13px; }
+  .btn--icon { min-width: 40px; }
+  .chip { min-height: 40px; padding: 9px 15px; display: inline-flex; align-items: center; }
+  .navitem { min-height: 46px; }
+  .topbar__burger { width: 44px; height: 44px; }
+  #btnImpor, #btnEkspor, #btnReset { min-width: 44px; min-height: 44px; }
+  .seg__btn, .seg button { min-height: 40px; }
+  .toast__close { min-width: 40px; min-height: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

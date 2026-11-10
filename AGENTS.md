@@ -164,9 +164,42 @@ pip install playwright pillow numpy
   dan tombol aksi). Kejadian nyata: `data-balas` dipakai chip saringan sekaligus tombol
   balas ulasan → klik chip ikut membuka modal. Pakai nama berbeda: `data-saringbalas`
   untuk saringan, `data-balas` untuk aksi.
+- **Jangan buang `id` saat menyusun daftar modul.** Kejadian nyata: `bangunNav` memakai
+  `ids.map(id => daftar[id]).filter(Boolean)`, sehingga objeknya kehilangan `id` dan
+  semua tombol menu jadi `data-go="undefined"` — navigasi Panel Mitra mati total, dan
+  di HP (yang hanya punya menu geser) pengguna terkunci di satu halaman. Selalu bawa
+  `id` bersama definisi: `ids.filter(id => daftar[id]).map(id => ({ id, ...daftar[id] }))`.
+  Uji ini tidak terdeteksi kalau uji hanya menyetel `location.hash` langsung; klik
+  tombol menu secara nyata.
 - Encoder QR: `isFunction()` tidak boleh menandai blok 9×9 kanan-bawah sebagai modul
   fungsi. QR hanya punya tiga pola pencari (kiri-atas, kanan-atas, kiri-bawah). Salah
   menandai → modul tidak ikut di-mask → QR versi 1–2 gagal dipindai.
+- **Berkas uji harus menulis dan membaca berkas yang sama.** Kejadian nyata:
+  `uji-qr.py` menulis PNG ke `./` tetapi `decode-qr.js` membaca `/tmp/<nama>.png`,
+  sehingga dekode memakai berkas basi dan melaporkan "LULUS" palsu (hasil dekode
+  memuat port 12040 dari uji lama, padahal server aktif 12000). Sekarang skrip menulis
+  ke `tempfile.mkdtemp()` dan mengoper jalur berkasnya ke `decode-qr.js`.
+
+### Dukungan HP (ponsel)
+
+Tampilan harus layak di HP karena QR dibuka dari kamera ponsel. Yang sudah diterapkan:
+
+- `viewport-fit=cover` pada ketiga HTML + `env(safe-area-inset-*)` sebagai variabel
+  (`--safe-t/b/l/r` di `app/styles.css`, `--safe-*` di `styles.css` landing).
+- Tinggi layout memakai `100dvh` (bukan `100vh`) agar tidak terpotong bilah alamat
+  peramban ponsel. Berlaku pada `.app`, `.side`, dan `.modal__box`.
+- Input wajib `font-size: 16px` pada perangkat sentuh; di bawah itu iOS Safari
+  melakukan zoom otomatis saat mengetik.
+- Target sentuh minimal 40px (`@media (pointer: coarse)`): burger, logo, `.navitem`,
+  tombol ikon bilah atas, tombol "Pesan" di menu publik.
+- Tabel berubah jadi kartu di layar sempit lewat `UI.tabelResponsif()` (`app/ui.js`),
+  dipanggil di akhir render (`app/app.js`). Sel label diisi dari `<th>` menjadi
+  `data-label`, `thead` disembunyikan, sehingga tidak perlu geser ke samping.
+- Bilah atas, sidebar, drawer, toast, dan tombol mengambang WhatsApp diberi padding
+  area aman agar tidak tertutup poni/bilah bawah iPhone.
+
+Uji HP: `python3 uji/uji-hp.py` (jika ada) atau skrip Playwright dengan
+`is_mobile=True, has_touch=True` pada lebar 320/360/390/430 dan tablet 768.
 
 ## Membuat paket ZIP siap-pakai
 

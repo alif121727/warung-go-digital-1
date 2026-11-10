@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Menu Digital — Warung Go Digital</title>
 <meta name="theme-color" content="#0d1a12">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,6 +21,8 @@
     margin: 0; background: #f7f5f0; color: var(--t1);
     font-family: Inter, system-ui, sans-serif; font-size: 14.5px; line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
   h1, h2, h3 { font-family: 'Bricolage Grotesque', sans-serif; margin: 0; letter-spacing: -.02em; line-height: 1.15; }
   .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 90px; }
@@ -28,6 +30,7 @@
   /* ── Kepala warung ── */
   .hero {
     background: var(--ink); color: #fff; padding: 30px 24px 66px;
+    padding-top: calc(30px + env(safe-area-inset-top, 0px));
     position: relative; overflow: hidden;
   }
   .hero::before {
@@ -100,6 +103,7 @@
     font-size: 11.5px; font-weight: 700; color: var(--wa); text-decoration: none;
     border: 1px solid rgba(37,211,102,.4); background: rgba(37,211,102,.1);
     padding: 4px 10px; border-radius: 999px; white-space: nowrap; margin-top: 7px;
+    display: inline-flex; align-items: center; min-height: 34px;
   }
 
   .kosong { text-align: center; padding: 50px 20px; color: var(--t2); }
@@ -113,6 +117,7 @@
 
   .wafloat {
     position: fixed; bottom: 18px; right: 18px; z-index: 50;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
     background: var(--wa); color: #06301a; border-radius: 999px;
     padding: 13px 20px; font-weight: 700; font-size: 13.5px; text-decoration: none;
     display: flex; align-items: center; gap: 9px;
@@ -120,9 +125,15 @@
   }
   .wafloat svg { width: 19px; height: 19px; }
 
+  /* Area tekan lebih besar di perangkat sentuh */
+  @media (pointer: coarse) {
+    .btn { min-height: 46px; }
+    .item__pesan { padding: 9px 14px; font-size: 12.5px; min-height: 40px; }
+  }
+
   @media (max-width: 560px) {
     .hero h1 { font-size: 24px; }
-    .hero { padding: 24px 18px 58px; }
+    .hero { padding: 24px 18px 58px; padding-top: calc(24px + env(safe-area-inset-top, 0px)); }
     .kartu { padding: 16px; }
     .item { padding: 12px; gap: 11px; }
     .item__gambar { width: 52px; height: 52px; }

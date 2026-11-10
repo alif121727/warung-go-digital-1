@@ -1,8 +1,9 @@
 """Ambil QR dari aplikasi lalu dekode ulang untuk membuktikan bisa dipindai."""
-import base64, json, subprocess, sys
+import base64, json, os, subprocess, sys, tempfile
 from playwright.sync_api import sync_playwright
 
 BASE = "http://localhost:12000/warung-go-digital/app/"
+DIR_UJI = os.path.dirname(os.path.abspath(__file__))
 
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path="/usr/bin/chromium", args=["--no-sandbox"])
@@ -29,14 +30,19 @@ with sync_playwright() as p:
 
     b.close()
 
+tmp = tempfile.mkdtemp(prefix="qr-uji-")
+berkas = []
 for nama, data in [("qr_menu", qr_menu), ("qr_ulasan", qr_ulasan)]:
-    with open(f"./{nama}.png", "wb") as f:
+    jalur = os.path.join(tmp, nama + ".png")
+    with open(jalur, "wb") as f:
         f.write(base64.b64decode(data.split(",")[1]))
+    berkas.append(jalur)
 
 print("URL menu yang dikodekan:", url_menu)
-print("Berkas QR disimpan.")
+print("Berkas QR disimpan di:", tmp)
 
-hasil = subprocess.run(["node", "./qrtest/decode.js"], capture_output=True, text=True)
+hasil = subprocess.run(["node", os.path.join(DIR_UJI, "decode-qr.js"), *berkas],
+                       capture_output=True, text=True)
 print(hasil.stdout)
 if hasil.stderr:
     print("stderr:", hasil.stderr[:400])
