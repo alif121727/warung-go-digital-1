@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menu Digital — Warung Go Digital</title>
+<meta name="theme-color" content="#0d1a12">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --ink: #0d1a12; --amber: #f5a524; --krem: #f6f0e2;
+    --wa: #25d366; --leaf: #3ba55d;
+    --t1: #0d1a12; --t2: #4a574f; --t3: #8a948d;
+    --card: #fff; --line: #e6e2d8;
+    --r: 14px; --e: cubic-bezier(.22,1,.36,1);
+  }
+  body {
+    margin: 0; background: #f7f5f0; color: var(--t1);
+    font-family: Inter, system-ui, sans-serif; font-size: 14.5px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: 'Bricolage Grotesque', sans-serif; margin: 0; letter-spacing: -.02em; line-height: 1.15; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 90px; }
+
+  /* ── Kepala warung ── */
+  .hero {
+    background: var(--ink); color: #fff; padding: 30px 24px 66px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(500px 300px at 15% 0%, rgba(245,165,36,.2), transparent 70%);
+  }
+  .hero__in { max-width: 720px; margin: 0 auto; position: relative; }
+  .hero__brand {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--amber); margin-bottom: 12px;
+  }
+  .hero h1 { font-size: 30px; font-weight: 800; }
+  .hero__meta { color: #b6c6bc; font-size: 13px; margin-top: 7px; }
+  .hero__badges { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 15px; }
+  .pill {
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.16);
+    padding: 5px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .pill--amber { background: rgba(245,165,36,.2); border-color: rgba(245,165,36,.35); color: #ffd88a; }
+
+  /* ── Kartu info ── */
+  .kartu {
+    background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+    padding: 20px; margin-top: -46px; position: relative; z-index: 2;
+    box-shadow: 0 12px 34px rgba(13,26,18,.1);
+  }
+  .kartu__row { display: flex; gap: 11px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 18px; border-radius: 11px; border: 1px solid var(--line);
+    background: var(--card); font-size: 13.5px; font-weight: 700; cursor: pointer;
+    text-decoration: none; color: inherit; transition: all .15s var(--e); flex: 1; min-width: 140px;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(13,26,18,.1); }
+  .btn--wa { background: var(--wa); border-color: var(--wa); color: #06301a; }
+  .btn--ink { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .btn svg { width: 17px; height: 17px; }
+
+  /* ── Menu ── */
+  .judul {
+    display: flex; align-items: center; gap: 11px; margin: 30px 0 14px;
+  }
+  .judul h2 { font-size: 18px; }
+  .judul span {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--t3);
+    background: #ece8de; padding: 3px 9px; border-radius: 999px;
+  }
+  .judul::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  .item {
+    display: flex; gap: 14px; padding: 14px; background: var(--card);
+    border: 1px solid var(--line); border-radius: var(--r); margin-bottom: 10px;
+    transition: all .16s var(--e);
+  }
+  .item:hover { box-shadow: 0 6px 18px rgba(13,26,18,.07); transform: translateY(-1px); }
+  .item__gambar {
+    width: 62px; height: 62px; border-radius: 11px; flex: none;
+    background: linear-gradient(140deg, #e9e4d8, #d8d1c1);
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .item__gambar img { width: 100%; height: 100%; object-fit: cover; }
+  .item__gambar svg { width: 24px; height: 24px; color: #a9a294; }
+  .item__isi { flex: 1; min-width: 0; }
+  .item__nama { font-weight: 700; font-size: 14.5px; font-family: 'Bricolage Grotesque', sans-serif; }
+  .item__ket { font-size: 12.5px; color: var(--t2); margin-top: 2px; }
+  .item__kanan { text-align: right; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; }
+  .item__harga { font-weight: 800; font-family: 'Bricolage Grotesque', sans-serif; font-size: 15.5px; white-space: nowrap; }
+  .item__pesan {
+    font-size: 11.5px; font-weight: 700; color: var(--wa); text-decoration: none;
+    border: 1px solid rgba(37,211,102,.4); background: rgba(37,211,102,.1);
+    padding: 4px 10px; border-radius: 999px; white-space: nowrap; margin-top: 7px;
+  }
+
+  .kosong { text-align: center; padding: 50px 20px; color: var(--t2); }
+  .kosong svg { width: 40px; height: 40px; color: #c9c2b3; margin-bottom: 12px; }
+
+  .foot {
+    text-align: center; padding: 30px 20px; color: var(--t3); font-size: 11.5px;
+    border-top: 1px solid var(--line); margin-top: 30px;
+  }
+  .foot b { color: var(--t2); font-family: 'JetBrains Mono', monospace; letter-spacing: .06em; }
+
+  .wafloat {
+    position: fixed; bottom: 18px; right: 18px; z-index: 50;
+    background: var(--wa); color: #06301a; border-radius: 999px;
+    padding: 13px 20px; font-weight: 700; font-size: 13.5px; text-decoration: none;
+    display: flex; align-items: center; gap: 9px;
+    box-shadow: 0 8px 26px rgba(37,211,102,.42);
+  }
+  .wafloat svg { width: 19px; height: 19px; }
+
+  @media (max-width: 560px) {
+    .hero h1 { font-size: 24px; }
+    .hero { padding: 24px 18px 58px; }
+    .kartu { padding: 16px; }
+    .item { padding: 12px; gap: 11px; }
+    .item__gambar { width: 52px; height: 52px; }
+    .wafloat { left: 14px; right: 14px; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero__in">
+    <div class="hero__brand">Warung Go Digital</div>
+    <h1 id="nama">Memuat menu…</h1>
+    <div class="hero__meta" id="meta"></div>
+    <div class="hero__badges" id="badges"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="kartu">
+    <div class="kartu__row">
+      <a class="btn btn--wa" id="waPesan" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3.5 20.5l1.7-4.8A8.5 8.5 0 1121 11.5z"/></svg>
+        Pesan via WhatsApp
+      </a>
+      <a class="btn btn--ink" id="waMaps" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+        Lihat Lokasi
+      </a>
+    </div>
+  </div>
+
+  <div id="isiMenu"></div>
+
+  <div class="foot">
+    Menu digital oleh <b>WARUNG GO DIGITAL</b><br>
+    Etalase digital untuk warung &amp; UMKM
+  </div>
+</div>
+
+<a class="wafloat" id="waFloat" href="#">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3.5 20.5l1.7-4.8A8.5 8.5 0 1121 11.5z"/></svg>
+  Pesan Sekarang
+</a>
+
+<script src="store.js"></script>
+<script>
+(() => {
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const q = new URLSearchParams(location.search);
+  const id = q.get('w');
+
+  Store.load();
+  const w = id ? Store.find('warung', id) : null;
+
+  if (!w) {
+    document.getElementById('nama').textContent = 'Warung tidak ditemukan';
+    document.getElementById('meta').textContent = 'Kode warung pada tautan tidak dikenali.';
+    document.getElementById('isiMenu').innerHTML = `
+      <div class="kosong">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11a1 1 0 001 1h14a1 1 0 001-1V9"/></svg>
+        <h3>Menu tidak tersedia</h3>
+        <p>Minta petugas warung untuk memindai ulang kode QR.</p>
+      </div>`;
+    document.getElementById('waPesan').style.display = 'none';
+    document.getElementById('waMaps').style.display = 'none';
+    document.getElementById('waFloat').style.display = 'none';
+    return;
+  }
+
+  document.title = 'Menu ' + w.nama + ' — Warung Go Digital';
+  document.getElementById('nama').textContent = w.nama;
+  document.getElementById('meta').textContent = w.kategori + ' · ' + w.alamat;
+
+  const bintang = '★'.repeat(Math.round(w.ratingMaps)) + '☆'.repeat(5 - Math.round(w.ratingMaps));
+  document.getElementById('badges').innerHTML = `
+    <span class="pill pill--amber">${bintang} ${w.ratingMaps.toFixed(1)}</span>
+    <span class="pill">${w.jumlahUlasan} ulasan Google</span>
+    <span class="pill">${w.menu.length} menu tersedia</span>`;
+
+  const waBase = 'https://wa.me/' + w.wa;
+  const pesanUmum = encodeURIComponent('Halo ' + w.pemilik + ', saya mau pesan dari menu ' + w.nama + '.');
+  document.getElementById('waPesan').href = waBase + '?text=' + pesanUmum;
+  document.getElementById('waFloat').href = waBase + '?text=' + pesanUmum;
+  document.getElementById('waMaps').href = w.placeId
+    ? 'https://www.google.com/maps/place/?q=place_id:' + encodeURIComponent(w.placeId)
+    : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(w.nama + ' ' + w.alamat);
+
+  /* Foto produk dari modul Foto */
+  const fotoProduk = {};
+  for (const f of Store.where('foto', (x) => x.warungId === w.id && x.dataUrl)) {
+    const kunci = f.nama.toLowerCase().replace(/\s*—\s*foto\s*\d+$/, '').trim();
+    if (!fotoProduk[kunci]) fotoProduk[kunci] = f.dataUrl;
+  }
+
+  const kelompok = {};
+  for (const m of w.menu) (kelompok[m.kategori] = kelompok[m.kategori] || []).push(m);
+
+  const ikonGambar = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>`;
+
+  document.getElementById('isiMenu').innerHTML = w.menu.length
+    ? Object.entries(kelompok).map(([kategori, items]) => `
+        <div class="judul"><h2>${esc(kategori)}</h2><span>${items.length} item</span></div>
+        ${items.map((m) => {
+          const foto = fotoProduk[m.nama.toLowerCase().trim()];
+          const pesan = encodeURIComponent(`Halo ${w.pemilik}, saya mau pesan *${m.nama}* (${Store.rupiah(m.harga)}) dari ${w.nama}.`);
+          return `
+            <div class="item">
+              <div class="item__gambar">${foto ? `<img src="${foto}" alt="${esc(m.nama)}" loading="lazy">` : ikonGambar}</div>
+              <div class="item__isi">
+                <div class="item__nama">${esc(m.nama)}</div>
+                <div class="item__ket">Dibuat segar saat dipesan</div>
+              </div>
+              <div class="item__kanan">
+                <div class="item__harga">${Store.rupiah(m.harga)}</div>
+                <a class="item__pesan" href="${waBase}?text=${pesan}" target="_blank" rel="noopener">Pesan</a>
+              </div>
+            </div>`;
+        }).join('')}
+      `).join('')
+    : `<div class="kosong">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4a2 2 0 012-2h13v18H6a2 2 0 01-2-2z"/><path d="M8 7h7M8 11h7"/></svg>
+        <h3>Menu belum diisi</h3>
+        <p>Pemilik warung belum menambahkan daftar menu.</p>
+      </div>`;
+})();
+</script>
+</body>
+</html>

@@ -1,109 +1,130 @@
-# Cara Membuat Link Permanen
+# Panduan Deploy — Warung Go Digital
 
-Pratinjau `http://localhost:12000/` hanya hidup selama sesi berjalan. Ikuti salah satu
-cara di bawah agar linknya permanen.
+Paket ini berisi **tiga bagian** yang saling terhubung:
 
-Berkas yang perlu diunggah ada tiga:
+| Bagian | Alamat setelah deploy | Isi |
+|---|---|---|
+| Landing page | `/` | Promosi program PKM-K, daftar paket, formulir pendaftaran |
+| Panel Mitra | `/app/` | Aplikasi pengelolaan: transaksi, rating, katalog, promosi, foto, laporan |
+| Menu publik | `/app/menu.html?w=<id>` | Halaman menu yang dibuka pelanggan setelah memindai QR |
 
-```
-index.html
-styles.css
-app.js
-```
-
-Ketiganya harus berada dalam **satu folder yang sama**. Tidak perlu server, tidak perlu
-database.
+Tombol **Panel Mitra** di bilah atas landing page mengarah ke `/app/`.
 
 ---
 
-## Cara 1 — GitHub Pages (rekomendasi)
+## Berkas yang perlu diunggah
 
-Hasil: `https://alif121727.github.io/warung-go-digital/`
+Unggah **seluruh isi folder** `warung-go-digital/`, dengan susunan persis seperti ini:
 
-### Langkah
-
-1. Buka https://github.com/new dan login sebagai `alif121727`.
-2. Isi:
-   - **Repository name**: `warung-go-digital`
-   - **Visibility**: **Public** (wajib untuk akun gratis)
-   - Jangan centang "Add a README file"
-3. Klik **Create repository**.
-4. Di halaman repo baru, klik **uploading an existing file**.
-5. Seret ketiga berkas (`index.html`, `styles.css`, `app.js`) ke halaman itu.
-6. Klik **Commit changes**.
-7. Buka **Settings → Pages**.
-8. Di bagian **Branch**, pilih `main`, folder `/ (root)`, lalu klik **Save**.
-9. Tunggu 1–2 menit. Muat ulang halaman itu — akan muncul kotak hijau berisi link.
-
-Link itu **permanen**. Tidak akan hilang kecuali repo dihapus.
-
-### Mengubah isi nanti
-
-Unggah ulang berkas yang berubah lewat tombol **Add file → Upload files**. Link tetap
-sama. Tidak perlu mengatur Pages lagi.
-
----
-
-## Cara 2 — GitHub Pages lewat terminal
-
-Cara ini hanya bisa kalau Anda punya token GitHub dengan izin membuat repo. Token di
-lingkungan ini belum punya izin tersebut.
-
-```bash
-# di dalam folder yang berisi index.html, styles.css, app.js
-git init -b main
-git add -A
-git commit -m "Warung Go Digital — landing page"
-git remote add origin https://github.com/alif121727/warung-go-digital.git
-git push -u origin main
-
-# aktifkan Pages
-gh api -X POST repos/alif121727/warung-go-digital/pages \
-  -f source[branch]=main -f source[path]=/
+```
+warung-go-digital/
+├── index.html          ← landing page (halaman pembuka)
+├── styles.css
+├── app.js
+└── app/                ← Panel Mitra, harus tetap di dalam subfolder "app"
+    ├── index.html
+    ├── menu.html
+    ├── styles.css
+    ├── qr.js
+    ├── store.js
+    ├── ui.js
+    ├── app.js
+    └── modul-*.js
 ```
 
+Jangan mengubah nama folder `app` — tautan dari landing page dan seluruh tautan internal
+aplikasi mengacu ke sana.
+
+**Tidak perlu server, tidak perlu database.** Seluruh data aplikasi disimpan di
+`localStorage` browser pengunjung.
+
 ---
 
-## Cara 3 — Netlify Drop (paling cepat, tanpa Git)
-
-Hasil: `https://<nama-acak>.netlify.app`
+## Cara 1 — Netlify Drop (paling cepat, tanpa akun)
 
 1. Buka https://app.netlify.com/drop
-2. Seret **folder** yang berisi ketiga berkas ke area drop.
-3. Selesai. Netlify langsung memberi link.
-4. Untuk nama yang rapi: **Site settings → Change site name** → isi `warung-go-digital`.
-   Hasilnya `https://warung-go-digital.netlify.app`.
-5. Agar permanen jangka panjang, buat akun gratis dulu sebelum drop (kalau tidak,
-   situsnya bisa kedaluwarsa).
+2. Seret **folder** `warung-go-digital` (folder, bukan berkas ZIP) ke halaman itu.
+3. Tunggu proses selesai — Anda langsung mendapat alamat `https://<nama>.netlify.app`.
+4. Situs langsung permanen. Untuk memperbarui isi, seret ulang foldernya.
 
-Tidak perlu akun GitHub. Cocok kalau tidak mau repo publik.
+Cara ini sudah pernah dipakai dan berhasil:
+https://glistening-cannoli-c65d29.netlify.app/
+
+---
+
+## Cara 2 — Netlify dengan akun (agar bisa perbarui berkali-kali)
+
+1. Masuk ke https://app.netlify.com
+2. **Add new site** → **Deploy manually**
+3. Seret folder `warung-go-digital` ke kotak unggahan.
+4. Buka **Site configuration → Change site name** untuk memilih nama yang rapi,
+   misal `warung-go-digital` → `https://warung-go-digital.netlify.app`.
+
+---
+
+## Cara 3 — GitHub Pages
+
+Hasil: `https://<username>.github.io/warung-go-digital/`
+
+1. Buat repositori publik baru, misal `warung-go-digital`.
+2. Unggah **isi** folder `warung-go-digital/` ke akar repositori
+   (`index.html` harus di akar, dan folder `app/` di sampingnya).
+3. Buka **Settings → Pages**.
+4. Pada **Source**, pilih branch `main` dan folder `/ (root)`, lalu **Save**.
+5. Tunggu 1–2 menit, lalu buka alamatnya.
+
+### Lewat terminal
+
+```bash
+cd warung-go-digital
+git init -b main
+git add .
+git commit -m "Warung Go Digital: landing page + panel mitra"
+git remote add origin https://github.com/<username>/warung-go-digital.git
+git push -u origin main
+```
+
+Mengubah isi nanti cukup dengan mengunggah ulang berkas yang berubah — alamatnya tetap.
 
 ---
 
 ## Cara 4 — Vercel
 
-Hasil: `https://warung-go-digital.vercel.app`
-
-1. Buka https://vercel.com dan daftar (bisa pakai akun GitHub).
-2. Klik **Add New → Project**.
-3. Kalau berkas ada di GitHub, pilih repo-nya → **Deploy**.
-4. Kalau tidak pakai Git: pasang CLI lalu jalankan:
-
 ```bash
 npm i -g vercel
-cd /path/ke/folder-situs
+cd warung-go-digital
 vercel --prod
 ```
 
+Saat ditanya, pilih **Other** sebagai framework dan biarkan setelan build kosong.
+
 ---
 
-## Perbandingan
+## Setelah deploy — periksa ini
 
-| Cara | Perlu akun | Repo publik | Nama link | Kesulitan |
-|---|---|---|---|---|
-| GitHub Pages | GitHub (sudah ada) | Ya | `alif121727.github.io/warung-go-digital` | Mudah |
-| Netlify Drop | Opsional | Tidak | `warung-go-digital.netlify.app` | Paling mudah |
-| Vercel | Ya | Tidak | `warung-go-digital.vercel.app` | Sedang |
+1. Buka `/` → landing page tampil, harga benar (Hemat Rp 35.000, Plus Rp 100.000,
+   langganan Rp 15.000/bulan).
+2. Klik **Panel Mitra** → halaman `/app/` terbuka.
+3. Di Panel Mitra, buka modul **Warung** → klik ikon QR pada salah satu baris →
+   QR muncul.
+4. Pindai QR itu dengan kamera ponsel → halaman menu warung terbuka.
+5. Buka modul **Laporan Bulanan** → klik **Cetak Laporan** → pratinjau cetak muncul.
+
+---
+
+## Catatan penting
+
+- **Data tersimpan per-browser.** Data yang Anda tambahkan di satu komputer tidak otomatis
+  muncul di komputer lain, karena disimpan di `localStorage`. Untuk memindahkannya,
+  pakai tombol **Cadangan** (unduh JSON) lalu **Pulihkan** di perangkat tujuan.
+- **HTTPS diperlukan** agar tombol *Salin* dan akses kamera berfungsi. Netlify, Vercel,
+  dan GitHub Pages sudah HTTPS otomatis.
+- **Akses kamera** hanya muncul di perangkat yang mendukung. Kalau tidak ada, tombol
+  unggah berkas tetap berfungsi.
+- **QR dibuat di sisi klien** memakai `qr.js` tanpa layanan pihak ketiga, jadi tetap
+  berfungsi meski internet lambat.
+- **Jangan mengunggah PDF proposal** ke repo publik kalau isinya belum ingin dipublikasi.
+  Situs tidak membutuhkannya.
 
 ---
 
@@ -112,21 +133,8 @@ vercel --prod
 Contoh: `warunggodigital.id`
 
 1. Beli domain di registrar (Namecheap, Cloudflare, Niagahoster, dsb).
-   Perkiraan biaya: Rp 150.000–200.000 per tahun untuk `.id`.
-2. Di GitHub Pages: **Settings → Pages → Custom domain** → isi domain → Save.
-3. Di pengaturan DNS registrar, tambahkan:
-   - `A` ke `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - `CNAME` untuk `www` ke `alif121727.github.io`
-4. Centang **Enforce HTTPS**.
-
-Tunggu sampai 24 jam untuk propagasi DNS.
-
----
-
-## Yang perlu diperhatikan
-
-- **Repo publik berarti kode bisa dilihat siapa saja.** Untuk landing page seperti ini
-  tidak masalah — tidak ada data rahasia. Nomor WhatsApp memang sudah tampil di halaman.
-- **Jangan mengunggah PDF proposal** ke repo publik kalau isinya belum ingin dipublikasi.
-  Situs tidak membutuhkannya.
-- **Link tidak akan hilang** selama repo tidak dihapus dan Pages tetap aktif.
+   Perkiraan biaya Rp 150.000–200.000 per tahun untuk `.id`.
+2. Di Netlify: **Domain management → Add custom domain**.
+3. Ikuti petunjuk DNS yang ditampilkan Netlify (biasanya `CNAME` untuk `www` dan
+   `ALIAS`/`A` untuk akar domain).
+4. Tunggu propagasi DNS (biasanya di bawah 24 jam).
