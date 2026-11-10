@@ -220,11 +220,15 @@ berkas situs berubah.
 
 ## Deploy / hosting
 
-- **LIVE (permanen)**: https://glistening-cannoli-c65d29.netlify.app/ — Netlify Drop,
-  dibuat pengguna. Isi yang diunggah: `index.html`, `styles.css`, `app.js` (landing page
-  versi awal, belum termasuk Panel Mitra).
-- **Pratinjau sesi**: `http://localhost:12000/warung-go-digital/` (landing) dan
-  `/warung-go-digital/app/` (Panel Mitra) — sementara, mati saat sesi berakhir.
+- **Pratinjau sesi (aktif)**: `https://work-1-mfkngpvvghxksiwd.prod-runtime.all-hands.dev/warung-go-digital/`
+  (landing) dan `.../warung-go-digital/app/` (Panel Mitra). Publik, bisa dibuka dari HP,
+  menyajikan versi terbaru. **Sementara** — mati saat sesi berakhir.
+- **Situs Netlify lama SUDAH MATI**: `https://glistening-cannoli-c65d29.netlify.app/`
+  kini balas HTTP 404 ("site not found"). Drop anonim Netlify kedaluwarsa; agar permanen,
+  pengguna harus login ke Netlify lalu deploy ulang.
+- **Tidak ada kredensial deploy otomatis di lingkungan ini**: tidak ada `NETLIFY_TOKEN`,
+  tidak ada `.netlify/`, CLI `netlify` tidak terpasang, dan `$GITHUB_TOKEN` tidak bisa
+  membuat repo (403). Jadi deploy final tetap perlu tindakan pengguna.
 - Panduan hosting lengkap (GitHub Pages, Netlify, Vercel, domain sendiri): `DEPLOY.md`.
 
 Catatan izin: `$GITHUB_TOKEN` di lingkungan ini **tidak bisa membuat repo baru**

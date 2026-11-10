@@ -16,6 +16,11 @@ sekitar 2 menit.
 
 Untuk memperbarui isi nanti: seret ulang foldernya ke halaman yang sama.
 
+> **Penting:** kalau Anda menyeret tanpa login ke Netlify, alamatnya bersifat sementara
+> dan bisa hilang sendiri setelah beberapa lama (pernah terjadi: alamat lama kini balas
+> "Not Found"). Agar permanen, buat akun Netlify gratis dulu (login), baru seret
+> foldernya. Dengan akun, alamat Anda tidak akan kedaluwarsa.
+
 ---
 
 ## Cara mencoba di komputer sendiri lebih dulu
