@@ -23,6 +23,7 @@ Sumber konten: `Proposal_PKM-K_Warung_Go_Digital.pdf`.
 ├── dorong.sh                     # skrip bantu push ke GitHub
 ├── .github/workflows/deploy-pages.yml   # deploy otomatis ke GitHub Pages
 ├── warung-go-digital-siap-pakai.zip     # paket siap deploy (diabaikan git)
+├── warung-go-digital-repo.bundle        # seluruh repo + riwayat (diabaikan git)
 ├── uji/                          # skrip uji Playwright + QR
 └── warung-go-digital/
     ├── index.html                # landing page  → tombol "Panel Mitra" ke app/
