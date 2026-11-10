@@ -100,8 +100,18 @@ repo** (bukan hanya folder situs) ke GitHub, lalu:
 
 1. Buka **Settings → Pages**.
 2. Pada **Source**, pilih **GitHub Actions** (bukan "Deploy from a branch").
-3. Selesai. Setiap push ke cabang `master`/`main` otomatis membangun dan menerbitkan
+3. Selesai. Setiap push ke cabang `main` otomatis membangun dan menerbitkan
    situs. Workflow menyalin isi `warung-go-digital/` ke akar situs.
+
+> **Wajib langkah 2.** Langkah itu hanya sekali. Selama Pages belum dinyalakan,
+> workflow gagal di langkah `configure-pages` dengan pesan "Get Pages site failed".
+> Tidak bisa dinyalakan otomatis: opsi `enablement` pada aksi itu menuntut token
+> selain `GITHUB_TOKEN`, jadi lebih mudah menyalakannya dari halaman Settings.
+
+Workflow memakai versi aksi terbaru (semuanya Node 24):
+`checkout@v7`, `configure-pages@v6`, `upload-pages-artifact@v5`, `deploy-pages@v5`.
+Pada `upload-pages-artifact` disertakan `include-hidden-files: true` supaya
+`.nojekyll` ikut terunggah — tanpa itu berkas berawalan titik dilewati.
 
 ### Lewat terminal (untuk Pilihan B)
 
@@ -159,7 +169,7 @@ di-push ke GitHub:
 
 1. Buka **Settings → Pages**.
 2. Pada **Source**, pilih **GitHub Actions** (bukan "Deploy from a branch").
-3. Selesai. Setiap push ke cabang `master`/`main` akan otomatis membangun dan
+3. Selesai. Setiap push ke cabang `main` akan otomatis membangun dan
    menerbitkan situs ke `https://<username>.github.io/<repo>/`.
 
 Workflow ini menyalin isi folder `warung-go-digital/` ke akar situs dan menambahkan
