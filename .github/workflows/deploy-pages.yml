@@ -22,7 +22,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # enablement: true -> aktifkan GitHub Pages otomatis (Source: GitHub Actions)
+      # pada push pertama, memakai izin pages: write milik workflow ini.
+      # Tanpa ini, langkah ini gagal selama Pages belum dinyalakan manual.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       # Situs ada di dalam folder warung-go-digital/, sedangkan GitHub Pages
       # menyajikan dari akar. Jadi isinya disalin ke _site/ lebih dulu.
