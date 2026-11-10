@@ -16,6 +16,7 @@ Sumber konten: `Proposal_PKM-K_Warung_Go_Digital.pdf`.
 ├── Proposal_PKM-K_Warung_Go_Digital.pdf
 ├── index.html                    # redirect ke /warung-go-digital/
 ├── buat-paket.py                 # pembuat ZIP siap-pakai
+├── jalankan.sh                   # jalankan situs langsung di sesi ini
 ├── vercel.json                   # setelan deploy Vercel (dist/ = isi situs)
 ├── .vercelignore
 ├── netlify.toml                  # setelan Netlify (publish = warung-go-digital)
@@ -50,6 +51,22 @@ Uji penyajian dari akar: `python3 uji/uji-akar.py` (menyalin isi situs ke folder
 sementara, menyajikannya sebagai akar, lalu memeriksa rute dan tautan).
 
 ## Menjalankan lokal
+
+Cara termudah — pakai skrip yang sudah disiapkan:
+
+```bash
+bash jalankan.sh            # port bawaan 12001
+bash jalankan.sh 12002      # port lain bila perlu
+bash jalankan.sh --stop     # hentikan
+```
+
+Skrip menulis log ke `.jalankan.log` dan pid ke `.jalankan.pid` (keduanya diabaikan git).
+Saat berjalan, situs langsung bisa dibuka lewat URL publik:
+
+- landing → `https://work-2-mfkngpvvghxksiwd.prod-runtime.all-hands.dev/warung-go-digital/`
+- panel   → `.../warung-go-digital/app/`
+
+Atau manual:
 
 ```bash
 cd /workspace/project && python3 -m http.server 12000

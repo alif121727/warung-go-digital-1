@@ -3,3 +3,7 @@ warung-go-digital-siap-pakai.zip
 
 # Dependensi Node untuk uji (jsQR, pngjs) — pasang dengan `npm install`
 node_modules/
+
+# Berkas sementara saat menjalankan situs (jalankan.sh)
+.jalankan.log
+.jalankan.pid
