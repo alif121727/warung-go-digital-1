@@ -7,3 +7,6 @@ node_modules/
 # Berkas sementara saat menjalankan situs (jalankan.sh)
 .jalankan.log
 .jalankan.pid
+
+# Setelan editor
+.vscode/
