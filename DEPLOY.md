@@ -109,7 +109,7 @@ Dari **akar repo ini** (folder yang memuat `warung-go-digital/`):
 
 ```bash
 git remote add origin https://github.com/<username>/warung-go-digital.git
-git push -u origin master
+git push -u origin main
 ```
 
 Atau pakai skrip yang sudah disiapkan:
@@ -244,7 +244,7 @@ git clone warung-go-digital-repo.bundle warung-go-digital-repo
 cd warung-go-digital-repo
 
 git remote set-url origin https://github.com/<username>/warung-go-digital.git
-git push -u origin master
+git push -u origin main
 ```
 
 Ganti `<username>` dengan nama akun GitHub Anda. Setelah itu, isi repo sama persis
