@@ -168,11 +168,30 @@ pip install playwright pillow numpy
   fungsi. QR hanya punya tiga pola pencari (kiri-atas, kanan-atas, kiri-bawah). Salah
   menandai → modul tidak ikut di-mask → QR versi 1–2 gagal dipindai.
 
+## Membuat paket ZIP siap-pakai
+
+```bash
+python3 buat-paket.py
+```
+
+Menghasilkan `warung-go-digital-siap-pakai.zip` (diabaikan git) berisi:
+
+- `BACA-DULU.md` — petunjuk singkat, ditulis untuk pengguna non-teknis
+- `PANDUAN-DEPLOY.md` — disalin dari `DEPLOY.md`
+- `Proposal_PKM-K_Warung_Go_Digital.pdf`
+- `warung-go-digital/` — situs yang diunggah ke hosting
+
+Dokumen diletakkan **di samping** folder situs, bukan di dalamnya, supaya tidak ikut
+terunggah saat pengguna menyeret folder ke Netlify. Jalankan `buat-paket.py` setiap kali
+berkas situs berubah.
+
 ## Deploy / hosting
 
 - **LIVE (permanen)**: https://glistening-cannoli-c65d29.netlify.app/ — Netlify Drop,
-  dibuat pengguna. Isi yang diunggah: `index.html`, `styles.css`, `app.js`.
-- **Pratinjau sesi**: `http://localhost:12000/` — sementara, mati saat sesi berakhir.
+  dibuat pengguna. Isi yang diunggah: `index.html`, `styles.css`, `app.js` (landing page
+  versi awal, belum termasuk Panel Mitra).
+- **Pratinjau sesi**: `http://localhost:12000/warung-go-digital/` (landing) dan
+  `/warung-go-digital/app/` (Panel Mitra) — sementara, mati saat sesi berakhir.
 - Panduan hosting lengkap (GitHub Pages, Netlify, Vercel, domain sendiri): `DEPLOY.md`.
 
 Catatan izin: `$GITHUB_TOKEN` di lingkungan ini **tidak bisa membuat repo baru**
