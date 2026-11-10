@@ -74,10 +74,15 @@ Yang dicek:
 
 ## Deploy / hosting
 
+- **LIVE (permanen)**: https://glistening-cannoli-c65d29.netlify.app/ — Netlify Drop,
+  dibuat pengguna. Isi yang diunggah: `index.html`, `styles.css`, `app.js`.
 - **Pratinjau sesi**: `http://localhost:12000/` — sementara, mati saat sesi berakhir.
-- **Permanen (GitHub Pages)**: lihat `DEPLOY.md`.
+- Panduan hosting lengkap (GitHub Pages, Netlify, Vercel, domain sendiri): `DEPLOY.md`.
 
 Catatan izin: `$GITHUB_TOKEN` di lingkungan ini **tidak bisa membuat repo baru**
 (error 403 "Resource not accessible by integration"), dan akun `alif121727` belum
 punya repo apa pun. Jadi pembuatan repo harus dilakukan pengguna, atau perlu token
 dengan scope `repo` + `workflow`.
+
+Catatan lain: `playwright`, `pillow`, `numpy` sering hilang antar sesi — pasang ulang
+dengan `pip install playwright pillow numpy` sebelum menjalankan uji.
