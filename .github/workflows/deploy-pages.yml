@@ -20,14 +20,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      # enablement: true -> aktifkan GitHub Pages otomatis (Source: GitHub Actions)
-      # pada push pertama, memakai izin pages: write milik workflow ini.
-      # Tanpa ini, langkah ini gagal selama Pages belum dinyalakan manual.
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      # Pages harus sudah dinyalakan sekali lewat Settings → Pages → Source:
+      # "GitHub Actions". Opsi enablement sengaja TIDAK dipakai: ia menuntut
+      # token selain GITHUB_TOKEN (PAT atau GitHub App dengan pages:write),
+      # dan tanpa itu langkah ini gagal "Resource not accessible".
+      - uses: actions/configure-pages@v6
 
       # Situs ada di dalam folder warung-go-digital/, sedangkan GitHub Pages
       # menyajikan dari akar. Jadi isinya disalin ke _site/ lebih dulu.
@@ -37,9 +36,11 @@ jobs:
           cp -R warung-go-digital/. _site/
           touch _site/.nojekyll
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+          # Berkas titik (termasuk .nojekyll) tidak disertakan secara bawaan.
+          include-hidden-files: true
 
   deploy:
     needs: build
@@ -49,4 +50,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
