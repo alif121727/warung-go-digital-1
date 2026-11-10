@@ -278,6 +278,33 @@ Versi aksi yang dipakai (semua Node 24; v-Node20 sudah usang dan memunculkan
 peringatan deprecation): `checkout@v7`, `configure-pages@v6`,
 `upload-pages-artifact@v5`, `deploy-pages@v5`.
 
+### PWA (agar bisa dipasang di HP)
+
+Situs memenuhi syarat PWA, jadi bisa dipasang ke layar utama HP dan dibuka offline:
+
+- `manifest.webmanifest` — `start_url: "./app/"`, `display: "standalone"`,
+  ikon 192/512 + maskable.
+- `sw.js` — strategi: **network-first untuk navigasi** (halaman selalu terbaru,
+  cache hanya saat offline), **stale-while-revalidate untuk aset**. Naikkan
+  `VERSI` bila berkas situs berubah besar-besaran.
+- `pasang.js` — daftarkan service worker + tampilkan bilah "Pasang di layar utama"
+  (prompt bawaan di Android; petunjuk manual untuk iOS/Safari).
+- `ikon/` — dibuat oleh `buat-ikon.py` (butuh `pillow`).
+
+Tiga jebakan yang pernah membuat PWA gagal — jangan terulang:
+
+1. **`document.currentScript` bernilai `null` di dalam callback `window.load`.**
+   Hitung akar situs di luar callback, saat skrip masih dieksekusi.
+2. **Akar situs = direktori `pasang.js`, bukan `../`.** `pasang.js` sebaris dengan
+   `sw.js`, jadi pakai `new URL('.', document.currentScript.src)`. Memakai `../`
+   akan naik satu tingkat terlalu jauh (ke akar domain) dan SW balas 404.
+3. **`caches.match` harus `{ ignoreSearch: true }` untuk navigasi.** Halaman menu
+   dipanggil dengan `?w=wr-001`; tanpa opsi itu, saat offline URL tidak cocok dan
+   permintaan jatuh ke halaman cadangan yang salah.
+
+Pemasangan hanya bekerja lewat HTTPS (atau localhost). Panduan pengguna untuk
+Android & iPhone ada di `DEPLOY.md` → "Cara memasang situs sebagai aplikasi di HP".
+
 Catatan izin: aplikasi OpenHands harus dipasang di akun (izinya: contents, actions,
 issues, pull_requests, workflows, statuses, repository_hooks — **tidak ada `pages`**).
 Setelah terpasang, push jalan; sebelum itu `git push` balas 403. Token kredensial git

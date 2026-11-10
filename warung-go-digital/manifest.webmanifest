@@ -1,0 +1,50 @@
+{
+  "id": "./",
+  "name": "Warung Go Digital — Panel Mitra",
+  "short_name": "Warung Go",
+  "description": "Etalase digital untuk warung & UMKM: QR menu, katalog WhatsApp, rating Google Maps, promosi, dan laporan bulanan.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "./app/",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "theme_color": "#0d1a12",
+  "background_color": "#f7f5f0",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    {
+      "src": "ikon/ikon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "ikon/ikon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "ikon/ikon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Panel Mitra",
+      "short_name": "Panel",
+      "url": "./app/",
+      "icons": [{ "src": "ikon/ikon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Beranda",
+      "short_name": "Beranda",
+      "url": "./",
+      "icons": [{ "src": "ikon/ikon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

@@ -178,6 +178,57 @@ dijalankan manual lewat tab **Actions → Deploy ke GitHub Pages → Run workflo
 
 ---
 
+## Cara memasang situs sebagai aplikasi di HP
+
+Situs ini sudah memenuhi syarat PWA (Progressive Web App): ada `manifest.webmanifest`,
+service worker (`sw.js`), dan ikon. Artinya bisa **dipasang ke layar utama HP** dan
+dibuka seperti aplikasi biasa — tanpa Play Store/App Store, tanpa biaya.
+
+Setelah dipasang:
+- Ada ikon sendiri di layar utama (bukan sekadar pintasan bookmark).
+- Terbuka **layar penuh**, tanpa bilah alamat browser.
+- **Tetap bisa dibuka saat sinyal jelek/offline** setelah kunjungan pertama.
+
+> Pemasangan hanya bekerja lewat **HTTPS** (GitHub Pages, Vercel, Netlify sudah HTTPS
+> otomatis). Saat diuji di `localhost` juga boleh. Lewat `http://` biasa, browser
+> tidak mengizinkan pemasangan.
+
+### Android (Chrome / Edge / Samsung Internet)
+
+1. Buka alamat situs di browser.
+2. Akan muncul bilah **"Pasang di layar utama"** di bawah layar → ketuk **Pasang**.
+3. Kalau bilah itu tidak muncul, ketuk menu **⋮** (tiga titik) → **Tambahkan ke layar
+   utama** / **Instal aplikasi**.
+4. Ketuk **Pasang**/**Instal**. Ikon "Warung Go" muncul di layar utama.
+
+### iPhone / iPad (Safari)
+
+Safari tidak punya tombol "Pasang" otomatis, jadi harus manual:
+
+1. Buka alamat situs di **Safari** (bukan Chrome di iPhone).
+2. Ketuk tombol **Bagikan** (ikon kotak dengan panah ke atas).
+3. Gulir ke bawah → pilih **Tambahkan ke Layar Utama**.
+4. Ketuk **Tambah**. Ikon "Warung Go" muncul di layar utama.
+
+> Di iPhone, pemasangan **hanya** bekerja lewat Safari. Chrome/Firefox di iOS tidak
+> bisa memasang PWA.
+
+### Tips untuk pengguna warung
+
+- **QR menu untuk pelanggan**: cukup di-scan lewat kamera HP — tidak perlu memasang
+  apa pun. Pelanggan langsung melihat menu.
+- **Panel Mitra untuk pemilik**: pasang di layar utama agar sekali ketuk langsung
+  terbuka, cocok saat melayani pembeli.
+- **Data aman**: data Panel Mitra tersimpan di HP (localStorage). Gunakan tombol
+  **Cadangan** secara berkala untuk mengunduh salinan data.
+
+### Kalau ingin menghapus
+
+Tekan lama ikon di layar utama → **Hapus**/**Uninstall**. Situs dan data di server
+tidak terpengaruh.
+
+---
+
 ## Berkas konfigurasi yang ikut dalam paket ini
 
 Selain folder situs, paket ini memuat beberapa berkas kecil untuk deploy otomatis:
@@ -188,6 +239,11 @@ Selain folder situs, paket ini memuat beberapa berkas kecil untuk deploy otomati
 | `.vercelignore` | Daftar berkas yang tidak perlu diunggah ke Vercel (ZIP, PDF, folder uji) |
 | `netlify.toml` | Setelan Netlify: folder publik `warung-go-digital`, tanpa perintah build |
 | `.github/workflows/deploy-pages.yml` | Deploy otomatis ke GitHub Pages setiap kali Anda push |
+| `warung-go-digital/manifest.webmanifest` | Data aplikasi (nama, ikon, warna) agar bisa dipasang di layar utama HP |
+| `warung-go-digital/sw.js` | Service worker: simpan kerangka situs agar tetap terbuka saat offline |
+| `warung-go-digital/pasang.js` | Menampilkan bilah "Pasang di layar utama" dan mendaftarkan service worker |
+| `warung-go-digital/ikon/` | Ikon aplikasi (192, 512, maskable, apple-touch) |
+| `buat-ikon.py` | Membuat ulang ikon di `ikon/` (jalankan: `python3 buat-ikon.py`) |
 | `dorong.sh` | Skrip bantu untuk mendorong repo ini ke GitHub |
 
 Berkas-berkas ini **opsional**. Kalau Anda memakai Netlify Drop, cukup seret folder

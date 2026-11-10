@@ -13,6 +13,18 @@ Proyek PKM-K. Situs statis — tanpa server, tanpa basis data, tanpa biaya hosti
 | Panel Mitra | `/app/` | Dasbor, warung, transaksi, rating, katalog, promosi, foto, laporan |
 | Menu publik | `/app/menu.html?w=<id>` | Halaman menu untuk pelanggan, dibuka lewat QR |
 
+## Bisa dipasang di HP (PWA)
+
+Situs ini bisa dipasang ke layar utama HP dan dibuka seperti aplikasi biasa —
+tanpa Play Store/App Store, tanpa biaya. Setelah dipasang, ada ikonnya sendiri di
+layar utama, terbuka layar penuh, dan tetap bisa dibuka saat sinyal jelek.
+
+- **Android**: buka situs di Chrome → muncul bilah **"Pasang di layar utama"** →
+  ketuk **Pasang**. Atau menu **⋮ → Instal aplikasi**.
+- **iPhone**: buka di **Safari** → tombol **Bagikan** → **Tambahkan ke Layar Utama**.
+
+Panduan lengkap ada di [DEPLOY.md](DEPLOY.md) → "Cara memasang situs sebagai aplikasi di HP".
+
 ## Coba sekarang
 
 Situs sudah berjalan di sesi ini:
@@ -58,6 +70,7 @@ dan `warung-go-digital-repo.bundle` (seluruh repositori beserta riwayat commit).
 ```bash
 python3 uji/uji-fungsional.py   # alur utama Panel Mitra
 python3 uji/uji-hp.py           # tampilan di berbagai ukuran layar HP
+python3 uji/uji-pwa.py          # pemasangan di HP (manifest, service worker, offline)
 python3 uji/uji-tata-letak.py   # tidak ada elemen meluber
 python3 uji/uji-akar.py         # situs disajikan dari akar domain
 python3 uji/uji-qr.py           # QR terbaca kembali
