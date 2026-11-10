@@ -15,7 +15,12 @@ Sumber konten: `Proposal_PKM-K_Warung_Go_Digital.pdf`.
 /workspace/project/
 ├── Proposal_PKM-K_Warung_Go_Digital.pdf
 ├── index.html                    # redirect ke /warung-go-digital/
-├── warung-go-digital.zip         # paket siap deploy (landing + app)
+├── buat-paket.py                 # pembuat ZIP siap-pakai
+├── vercel.json                   # setelan deploy Vercel (dist/ = isi situs)
+├── .vercelignore
+├── .github/workflows/deploy-pages.yml   # deploy otomatis ke GitHub Pages
+├── warung-go-digital-siap-pakai.zip     # paket siap deploy (diabaikan git)
+├── uji/                          # skrip uji Playwright + QR
 └── warung-go-digital/
     ├── index.html                # landing page  → tombol "Panel Mitra" ke app/
     ├── styles.css
@@ -26,7 +31,7 @@ Sumber konten: `Proposal_PKM-K_Warung_Go_Digital.pdf`.
         ├── styles.css            # sistem desain aplikasi
         ├── qr.js                 # encoder QR asli (ISO/IEC 18004)
         ├── store.js              # lapisan data + localStorage + seed
-        ├── ui.js                 # ikon, modal, drawer, grafik, toast
+        ├── ui.js                 # ikon, modal, drawer, grafik, toast, tabelResponsif
         ├── app.js                # router + Dasbor + modul Warung
         ├── modul-transaksi.js    # pembayaran, kuitansi, CSV
         ├── modul-rating.js       # pantauan Maps, QR ulasan, balas ulasan
@@ -35,6 +40,12 @@ Sumber konten: `Proposal_PKM-K_Warung_Go_Digital.pdf`.
         ├── modul-foto.js         # foto produk + pengecilan gambar
         └── modul-laporan.js      # laporan bulanan + cetak
 ```
+
+**Penting:** situs ini dipakai di bawah path apa pun (akar domain atau subfolder seperti
+`/<repo>/`), karena seluruh tautan bersifat relatif. QR dibangun dari
+`location.origin + location.pathname` di `app/app.js`, jadi tetap benar di kedua kasus.
+Uji penyajian dari akar: `python3 uji/uji-akar.py` (menyalin isi situs ke folder
+sementara, menyajikannya sebagai akar, lalu memeriksa rute dan tautan).
 
 ## Menjalankan lokal
 

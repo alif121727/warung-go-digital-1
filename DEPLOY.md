@@ -45,10 +45,11 @@ aplikasi mengacu ke sana.
 1. Buka https://app.netlify.com/drop
 2. Seret **folder** `warung-go-digital` (folder, bukan berkas ZIP) ke halaman itu.
 3. Tunggu proses selesai — Anda langsung mendapat alamat `https://<nama>.netlify.app`.
-4. Situs langsung permanen. Untuk memperbarui isi, seret ulang foldernya.
+4. Untuk memperbarui isi, seret ulang foldernya.
 
-Cara ini sudah pernah dipakai dan berhasil:
-https://glistening-cannoli-c65d29.netlify.app/
+> **Penting:** kalau Anda **tidak login**, alamatnya bersifat sementara dan bisa hilang
+> sendiri. Alamat yang dulu dipakai untuk proyek ini kini sudah mati ("Not Found").
+> Agar permanen, login dulu ke Netlify (akun gratis), baru seret foldernya.
 
 ---
 
@@ -90,13 +91,56 @@ Mengubah isi nanti cukup dengan mengunggah ulang berkas yang berubah — alamatn
 
 ## Cara 4 — Vercel
 
+**Lewat situs (tanpa terminal):**
+
+1. Masuk ke https://vercel.com dan hubungkan akun GitHub Anda.
+2. **Add New → Project**, pilih repositori ini.
+3. Vercel membaca `vercel.json` yang sudah disiapkan: perintah build menyalin isi
+   folder `warung-go-digital/` ke `dist/`, lalu `dist/` disajikan sebagai akar situs.
+4. Klik **Deploy**. Setiap push berikutnya akan otomatis ter-deploy ulang.
+
+**Lewat terminal:**
+
 ```bash
 npm i -g vercel
-cd warung-go-digital
+cd ..            # kembali ke folder induk yang memuat warung-go-digital/
 vercel --prod
 ```
 
-Saat ditanya, pilih **Other** sebagai framework dan biarkan setelan build kosong.
+Saat ditanya framework, pilih **Other**. Kalau folder induk belum punya `vercel.json`,
+pilih setelan berikut saat ditanya: **Output Directory** = `warung-go-digital`
+(tidak perlu perintah build).
+
+---
+
+## Cara 5 — Deploy otomatis lewat GitHub Actions (GitHub Pages)
+
+Berkas `.github/workflows/deploy-pages.yml` sudah disiapkan. Setelah repositori ini
+di-push ke GitHub:
+
+1. Buka **Settings → Pages**.
+2. Pada **Source**, pilih **GitHub Actions** (bukan "Deploy from a branch").
+3. Selesai. Setiap push ke cabang `master`/`main` akan otomatis membangun dan
+   menerbitkan situs ke `https://<username>.github.io/<repo>/`.
+
+Workflow ini menyalin isi folder `warung-go-digital/` ke akar situs dan menambahkan
+berkas `.nojekyll` (supaya GitHub tidak memproses situs dengan Jekyll). Bisa juga
+dijalankan manual lewat tab **Actions → Deploy ke GitHub Pages → Run workflow**.
+
+---
+
+## Berkas konfigurasi yang ikut dalam paket ini
+
+Selain folder situs, paket ini memuat tiga berkas kecil untuk deploy otomatis:
+
+| Berkas | Gunanya |
+|---|---|
+| `vercel.json` | Setelan untuk Vercel: menyalin isi `warung-go-digital/` lalu menyajikannya sebagai akar situs |
+| `.vercelignore` | Daftar berkas yang tidak perlu diunggah ke Vercel (ZIP, PDF, folder uji) |
+| `.github/workflows/deploy-pages.yml` | Deploy otomatis ke GitHub Pages setiap kali Anda push |
+
+Berkas-berkas ini **opsional**. Kalau Anda memakai Netlify Drop, cukup seret folder
+`warung-go-digital` dan abaikan ketiganya.
 
 ---
 

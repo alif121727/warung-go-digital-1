@@ -1,0 +1,9 @@
+# Jangan unggah berkas yang tidak perlu ke Vercel
+node_modules/
+uji/
+*.zip
+*.pdf
+AGENTS.md
+BACA-DULU.md
+DEPLOY.md
+buat-paket.py

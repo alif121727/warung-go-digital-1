@@ -16,16 +16,23 @@ DOKUMEN = [
     ("DEPLOY.md", "PANDUAN-DEPLOY.md"),
     ("Proposal_PKM-K_Warung_Go_Digital.pdf", "Proposal_PKM-K_Warung_Go_Digital.pdf"),
 ]
+# Konfigurasi deploy otomatis, diletakkan di akar ZIP
+KONFIG = [
+    ("vercel.json", "vercel.json"),
+    (".vercelignore", ".vercelignore"),
+    (".github/workflows/deploy-pages.yml", ".github/workflows/deploy-pages.yml"),
+]
 
 
 def kumpulkan():
     entri = []
-    for src, arc in DOKUMEN:
-        p = os.path.join(AKAR, src)
-        if os.path.exists(p):
-            entri.append((p, arc))
-        else:
-            print(f"peringatan: {src} tidak ditemukan, dilewati")
+    for daftar in (DOKUMEN, KONFIG):
+        for src, arc in daftar:
+            p = os.path.join(AKAR, src)
+            if os.path.exists(p):
+                entri.append((p, arc))
+            else:
+                print(f"peringatan: {src} tidak ditemukan, dilewati")
     for akar, _, berkas in os.walk(os.path.join(AKAR, SITUS)):
         for f in sorted(berkas):
             p = os.path.join(akar, f)
