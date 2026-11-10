@@ -251,21 +251,38 @@ berkas situs berubah.
 
 ## Deploy / hosting
 
-- **Pratinjau sesi (aktif)**: `https://work-1-mfkngpvvghxksiwd.prod-runtime.all-hands.dev/warung-go-digital/`
-  (landing) dan `.../warung-go-digital/app/` (Panel Mitra). Publik, bisa dibuka dari HP,
-  menyajikan versi terbaru. **Sementara** — mati saat sesi berakhir.
+- **GitHub Pages (LIVE, permanen)**: `https://alif121727.github.io/warung-go-digital-1/`
+  (landing) dan `.../app/` (Panel Mitra). Repo: `alif121727/warung-go-digital-1`,
+  cabang `main`. Terbit lewat `.github/workflows/deploy-pages.yml`.
+- **Pratinjau sesi (sementara)**: `bash jalankan.sh` → server statis di port 12001,
+  publik lewat `https://work-2-mfkngpvvghxksiwd.prod-runtime.all-hands.dev/warung-go-digital/`.
+  Mati saat sesi berakhir.
 - **Situs Netlify lama SUDAH MATI**: `https://glistening-cannoli-c65d29.netlify.app/`
-  kini balas HTTP 404 ("site not found"). Drop anonim Netlify kedaluwarsa; agar permanen,
-  pengguna harus login ke Netlify lalu deploy ulang.
-- **Tidak ada kredensial deploy otomatis di lingkungan ini**: tidak ada `NETLIFY_TOKEN`,
-  tidak ada `.netlify/`, CLI `netlify` tidak terpasang, dan `$GITHUB_TOKEN` tidak bisa
-  membuat repo (403). Jadi deploy final tetap perlu tindakan pengguna.
+  balas HTTP 404. Drop anonim Netlify kedaluwarsa.
 - Panduan hosting lengkap (GitHub Pages, Netlify, Vercel, domain sendiri): `DEPLOY.md`.
 
-Catatan izin: `$GITHUB_TOKEN` di lingkungan ini **tidak bisa membuat repo baru**
-(error 403 "Resource not accessible by integration"), dan akun `alif121727` belum
-punya repo apa pun. Jadi pembuatan repo harus dilakukan pengguna, atau perlu token
-dengan scope `repo` + `workflow`.
+### Pelajaran penting soal GitHub Pages
+
+Tiga jebakan ini pernah membuat deploy gagal berulang kali — jangan terulang:
+
+1. **Pages harus dinyalakan sekali** lewat Settings → Pages → Source: **GitHub Actions**.
+   Tanpa itu, workflow gagal di `configure-pages` ("Get Pages site failed").
+2. **Opsi `enablement: true` BUKAN solusinya.** Opsi itu menuntut token selain
+   `GITHUB_TOKEN` (PAT atau GitHub App dengan `pages:write`). Dengan `GITHUB_TOKEN`
+   biasa ia justru gagal: "Resource not accessible by integration". Jadi jangan dipakai;
+   minta pengguna menyalakan Pages dari halaman Settings.
+3. **`upload-pages-artifact@v3+` melewati berkas berawalan titik secara bawaan**,
+   sehingga `touch _site/.nojekyll` sia-sia. Wajib `include-hidden-files: true`.
+
+Versi aksi yang dipakai (semua Node 24; v-Node20 sudah usang dan memunculkan
+peringatan deprecation): `checkout@v7`, `configure-pages@v6`,
+`upload-pages-artifact@v5`, `deploy-pages@v5`.
+
+Catatan izin: aplikasi OpenHands harus dipasang di akun (izinya: contents, actions,
+issues, pull_requests, workflows, statuses, repository_hooks — **tidak ada `pages`**).
+Setelah terpasang, push jalan; sebelum itu `git push` balas 403. Token kredensial git
+(`$OH_GIT_CREDENTIAL_ACCESS_TOKEN_GITHUB`) berumur pendek (~12 jam) dan bisa kedaluwarsa
+di tengah sesi panjang.
 
 Catatan lain: `playwright`, `pillow`, `numpy` sering hilang antar sesi — pasang ulang
 dengan `pip install playwright pillow numpy` sebelum menjalankan uji.
