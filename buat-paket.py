@@ -44,6 +44,8 @@ def kumpulkan():
 
 
 def main():
+    # Bundle dibuat lebih dulu: isinya dimasukkan ke ZIP, jadi harus sudah segar.
+    buat_bundle()
     entri = kumpulkan()
     with zipfile.ZipFile(KELUARAN, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for src, arc in entri:
@@ -53,7 +55,6 @@ def main():
             raise SystemExit("Paket rusak — ada berkas yang tidak utuh.")
         print(f"{KELUARAN}\n{len(z.infolist())} berkas, "
               f"{os.path.getsize(KELUARAN) / 1024:.0f} KB")
-    buat_bundle()
 
 
 def buat_bundle():
