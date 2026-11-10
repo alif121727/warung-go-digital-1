@@ -55,17 +55,32 @@ aplikasi mengacu ke sana.
 
 ## Cara 2 — Netlify dengan akun (agar bisa perbarui berkali-kali)
 
+**Cara cepat (seret folder):**
+
 1. Masuk ke https://app.netlify.com
 2. **Add new site** → **Deploy manually**
 3. Seret folder `warung-go-digital` ke kotak unggahan.
 4. Buka **Site configuration → Change site name** untuk memilih nama yang rapi,
    misal `warung-go-digital` → `https://warung-go-digital.netlify.app`.
 
+**Cara otomatis (hubungkan ke GitHub):**
+
+1. Dorong repo ini ke GitHub (lihat **Cara 3**).
+2. Di Netlify: **Add new site → Import an existing project → GitHub**.
+3. Pilih repositori ini. Netlify membaca berkas `netlify.toml` yang sudah disiapkan:
+   folder publiknya `warung-go-digital`, tanpa perintah build.
+4. Klik **Deploy**. Setiap push berikutnya otomatis ter-deploy ulang.
+
 ---
 
 ## Cara 3 — GitHub Pages
 
-Hasil: `https://<username>.github.io/warung-go-digital/`
+Hasil: `https://<username>.github.io/<repo>/`
+
+Ada dua pilihan. **Pilihan B (disarankan)** memakai workflow yang sudah disiapkan,
+sehingga setiap push ter-deploy otomatis.
+
+### Pilihan A — tanpa workflow (paling sederhana)
 
 1. Buat repositori publik baru, misal `warung-go-digital`.
 2. Unggah **isi** folder `warung-go-digital/` ke akar repositori
@@ -74,18 +89,38 @@ Hasil: `https://<username>.github.io/warung-go-digital/`
 4. Pada **Source**, pilih branch `main` dan folder `/ (root)`, lalu **Save**.
 5. Tunggu 1–2 menit, lalu buka alamatnya.
 
-### Lewat terminal
+### Pilihan B — dengan workflow (otomatis, disarankan)
+
+Repo ini sudah memuat `.github/workflows/deploy-pages.yml`. Cukup dorong **seluruh isi
+repo** (bukan hanya folder situs) ke GitHub, lalu:
+
+1. Buka **Settings → Pages**.
+2. Pada **Source**, pilih **GitHub Actions** (bukan "Deploy from a branch").
+3. Selesai. Setiap push ke cabang `master`/`main` otomatis membangun dan menerbitkan
+   situs. Workflow menyalin isi `warung-go-digital/` ke akar situs.
+
+### Lewat terminal (untuk Pilihan B)
+
+Dari **akar repo ini** (folder yang memuat `warung-go-digital/`):
 
 ```bash
-cd warung-go-digital
-git init -b main
-git add .
-git commit -m "Warung Go Digital: landing page + panel mitra"
 git remote add origin https://github.com/<username>/warung-go-digital.git
-git push -u origin main
+git push -u origin master
 ```
 
-Mengubah isi nanti cukup dengan mengunggah ulang berkas yang berubah — alamatnya tetap.
+Atau pakai skrip yang sudah disiapkan:
+
+```bash
+bash dorong.sh <username> warung-go-digital publik
+```
+
+Skrip itu memeriksa perubahan yang belum di-commit, menambah remote, membuat repo
+(bila `gh` CLI tersedia), lalu mendorong.
+
+> **Catatan repo publik:** berkas `Proposal_PKM-K_Warung_Go_Digital.pdf` ikut terlihat
+> siapa pun bila repo bersifat publik. Situs tidak memerlukannya. Kalau tidak ingin,
+> pakai repo privat — tetapi GitHub Pages gratis tidak melayani repo privat, jadi
+> pakailah Vercel atau Netlify untuk repo privat.
 
 ---
 
@@ -131,16 +166,18 @@ dijalankan manual lewat tab **Actions → Deploy ke GitHub Pages → Run workflo
 
 ## Berkas konfigurasi yang ikut dalam paket ini
 
-Selain folder situs, paket ini memuat tiga berkas kecil untuk deploy otomatis:
+Selain folder situs, paket ini memuat beberapa berkas kecil untuk deploy otomatis:
 
 | Berkas | Gunanya |
 |---|---|
-| `vercel.json` | Setelan untuk Vercel: menyalin isi `warung-go-digital/` lalu menyajikannya sebagai akar situs |
+| `vercel.json` | Setelan Vercel: menyalin isi `warung-go-digital/` lalu menyajikannya sebagai akar situs |
 | `.vercelignore` | Daftar berkas yang tidak perlu diunggah ke Vercel (ZIP, PDF, folder uji) |
+| `netlify.toml` | Setelan Netlify: folder publik `warung-go-digital`, tanpa perintah build |
 | `.github/workflows/deploy-pages.yml` | Deploy otomatis ke GitHub Pages setiap kali Anda push |
+| `dorong.sh` | Skrip bantu untuk mendorong repo ini ke GitHub |
 
 Berkas-berkas ini **opsional**. Kalau Anda memakai Netlify Drop, cukup seret folder
-`warung-go-digital` dan abaikan ketiganya.
+`warung-go-digital` dan abaikan semuanya.
 
 ---
 

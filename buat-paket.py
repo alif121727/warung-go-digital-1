@@ -20,6 +20,8 @@ DOKUMEN = [
 KONFIG = [
     ("vercel.json", "vercel.json"),
     (".vercelignore", ".vercelignore"),
+    ("netlify.toml", "netlify.toml"),
+    ("dorong.sh", "dorong.sh"),
     (".github/workflows/deploy-pages.yml", ".github/workflows/deploy-pages.yml"),
 ]
 

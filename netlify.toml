@@ -1,0 +1,9 @@
+# Konfigurasi Netlify — Warung Go Digital
+#
+# Dipakai kalau situs ini dihubungkan ke Netlify lewat GitHub (bukan seret folder).
+# Netlify menyajikan isi folder warung-go-digital/ sebagai akar situs, sehingga
+# landing page ada di "/" dan Panel Mitra di "/app/".
+
+[build]
+  publish = "warung-go-digital"
+  command = "echo 'Situs statis — tidak ada langkah build.'"

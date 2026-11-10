@@ -18,6 +18,8 @@ Sumber konten: `Proposal_PKM-K_Warung_Go_Digital.pdf`.
 ├── buat-paket.py                 # pembuat ZIP siap-pakai
 ├── vercel.json                   # setelan deploy Vercel (dist/ = isi situs)
 ├── .vercelignore
+├── netlify.toml                  # setelan Netlify (publish = warung-go-digital)
+├── dorong.sh                     # skrip bantu push ke GitHub
 ├── .github/workflows/deploy-pages.yml   # deploy otomatis ke GitHub Pages
 ├── warung-go-digital-siap-pakai.zip     # paket siap deploy (diabaikan git)
 ├── uji/                          # skrip uji Playwright + QR
