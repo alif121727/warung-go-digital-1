@@ -76,6 +76,9 @@ def main():
             # ── Panel Mitra di /app/ ──
             pg.goto(dasar + "app/", wait_until="load")
             pg.wait_for_timeout(900)
+            # Menu publik diuji lewat wr-001, jadi muat data contoh lebih dulu.
+            pg.evaluate("()=>Store.muatContoh()")
+            pg.wait_for_timeout(300)
             ids = pg.eval_on_selector_all("#nav .navitem", "e=>e.map(x=>x.dataset.go)")
             cek("menu navigasi terisi", len(ids) >= 8 and all(i and i != "undefined" for i in ids),
                 str(ids[:3]))

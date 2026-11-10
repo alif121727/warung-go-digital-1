@@ -104,13 +104,13 @@ const App = (() => {
     Store.load();
     bangunNav();
 
-    UI.q('#btnReset').addEventListener('click', async () => {
+    UI.q('#btnKosongkan').addEventListener('click', async () => {
       const ya = await UI.konfirmasi({
-        judul: 'Muat ulang data contoh?',
-        pesan: 'Seluruh perubahan yang Anda buat akan dihapus dan diganti data contoh awal. Tindakan ini tidak bisa dibatalkan.',
-        labelYa: 'Ya, muat ulang', bahaya: true,
+        judul: 'Hapus semua data?',
+        pesan: 'Seluruh data warung, transaksi, ulasan, dan lainnya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+        labelYa: 'Ya, hapus semua', bahaya: true,
       });
-      if (ya) { Store.reset(); UI.toast('Data contoh dimuat ulang', 'ok'); gambar(); }
+      if (ya) { Store.kosongkan(); UI.toast('Semua data dihapus', 'ok'); gambar(); }
     });
 
     UI.q('#btnEkspor').addEventListener('click', () => {
@@ -170,6 +170,36 @@ const App = (() => {
         peringatan.push({ jenis: 'biru', ikon: 'star', teks: `<b>${perluBalas} ulasan</b> belum dibalas`, aksi: 'rating' });
       if (r.belumBayar)
         peringatan.push({ jenis: 'merah', ikon: 'wallet', teks: `<b>${r.belumBayar} transaksi</b> menunggu pembayaran`, aksi: 'transaksi' });
+
+      // Belum ada data sama sekali: tampilkan ajakan mulai, bukan grafik kosong.
+      if (!r.totalWarung) {
+        root.innerHTML = `
+          <div class="card">
+            <div class="card__body">
+              ${UI.kosong({
+                ikon: 'store',
+                judul: 'Belum ada warung terdaftar',
+                pesan: 'Mulai dengan mendaftarkan warung pertama Anda. Data contoh juga tersedia bila ingin mencoba semua fitur lebih dulu.',
+                aksi: `
+                  <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
+                    <button class="btn btn--pri" data-aksi="warung">${UI.icon('plus')} Daftarkan Warung</button>
+                    <button class="btn" id="muatContoh">${UI.icon('refresh')} Muat data contoh</button>
+                  </div>`,
+              })}
+            </div>
+          </div>`;
+        UI.qa('[data-aksi]', root).forEach((b) =>
+          b.addEventListener('click', () => pergi(b.dataset.aksi))
+        );
+        const mc = UI.q('#muatContoh', root);
+        if (mc)
+          mc.addEventListener('click', () => {
+            Store.muatContoh();
+            UI.toast('Data contoh dimuat', 'ok');
+            gambar();
+          });
+        return;
+      }
 
       root.innerHTML = `
         <div class="grid grid--4" style="margin-bottom:15px">

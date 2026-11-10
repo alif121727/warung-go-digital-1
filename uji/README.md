@@ -6,10 +6,17 @@ Semua uji memakai Chromium di `/usr/bin/chromium` lewat Playwright Python.
 pip install playwright
 cd /workspace/project && python3 -m http.server 12000 &
 python3 uji/uji-fungsional.py     # 33 uji fungsional semua modul + navigasi menu
+python3 uji/uji-kosong.py         # 25 uji kondisi awal tanpa data + ikon pencarian
 python3 uji/uji-tata-letak.py     # 88 kombinasi lebar layar x modul
 python3 uji/uji-hp.py             # 190 uji dukungan HP (320-768 px, sentuh)
 python3 uji/uji-akar.py           # 8 uji situs saat disajikan dari akar domain
+python3 uji/uji-pwa.py            # 22 uji PWA (manifest, service worker, ikon, offline)
 ```
+
+Uji yang memeriksa data terisi memanggil `Store.muatContoh()` lebih dulu, karena
+aplikasi kini dimulai dengan data kosong. Perhatikan bahwa `b.new_page()` dan
+`new_context()` membuat penyimpanan baru, jadi tiap konteks perlu memuat data contoh
+sendiri.
 
 Uji QR membutuhkan Node + jsqr + pngjs:
 

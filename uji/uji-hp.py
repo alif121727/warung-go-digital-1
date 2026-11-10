@@ -72,6 +72,11 @@ with sync_playwright() as p:
         pg.tap("#burger")
         pg.wait_for_timeout(250)
 
+        # Aplikasi dimulai tanpa data. Uji tampilan modul butuh data contoh.
+        pg.goto(APP, wait_until="load")
+        pg.evaluate("()=>Store.muatContoh()")
+        pg.wait_for_timeout(300)
+
         # ── Panel Mitra: tiap modul ──
         for m in MODUL:
             pg.goto(APP, wait_until="load")
@@ -130,8 +135,13 @@ with sync_playwright() as p:
         ctx.close()
 
     # ── Halaman menu publik (tujuan pemindaian QR) ──
+    # Konteks baru punya penyimpanan sendiri, jadi muat data contoh di sini juga.
     ctx = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
     pg = ctx.new_page()
+    pg.goto(APP, wait_until="load")
+    pg.wait_for_timeout(700)
+    pg.evaluate("()=>Store.muatContoh()")
+    pg.wait_for_timeout(300)
     pg.goto(MENU, wait_until="load")
     pg.wait_for_timeout(900)
     periksa_halaman(pg, "menu publik")

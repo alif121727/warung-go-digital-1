@@ -10,6 +10,9 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 1440, "height": 950})
     pg.goto(BASE, wait_until="load")
     pg.wait_for_timeout(1200)
+    # Aplikasi dimulai tanpa data. Uji ini butuh warung untuk membuat QR.
+    pg.evaluate("()=>Store.muatContoh()")
+    pg.wait_for_timeout(400)
 
     # QR menu dari modul Warung
     pg.evaluate("location.hash='#/warung'")

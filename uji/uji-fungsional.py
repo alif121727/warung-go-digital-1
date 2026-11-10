@@ -17,6 +17,13 @@ with sync_playwright() as p:
     pg.goto(BASE, wait_until="load")
     pg.wait_for_timeout(1200)
 
+    # Aplikasi dimulai tanpa data (belum ada pelanggan). Uji ini menguji
+    # seluruh modul, jadi muat data contoh lebih dulu.
+    pg.evaluate("()=>Store.muatContoh()")
+    pg.wait_for_timeout(400)
+    pg.evaluate("()=>App.gambar()")
+    pg.wait_for_timeout(600)
+
     # ═══ DASBOR ═══
     cek("Dasbor: 4 kartu statistik", pg.eval_on_selector_all(".stat", "e=>e.length") >= 4)
     cek("Dasbor: grafik tren", pg.eval_on_selector_all(".chart__col", "e=>e.length") == 6)
@@ -120,9 +127,12 @@ with sync_playwright() as p:
     cek("Ekspor JSON utuh", ekspor >= 8, f"{ekspor} kunci")
 
     # ═══ MENU PUBLIK ═══
+    # Konteks baru punya penyimpanan sendiri, jadi muat data contoh di sini juga.
     pg2 = b.new_page(viewport={"width": 390, "height": 844})
     errs2 = []
     pg2.on("pageerror", lambda e: errs2.append(str(e)))
+    pg2.goto(BASE, wait_until="load"); pg2.wait_for_timeout(900)
+    pg2.evaluate("()=>Store.muatContoh()"); pg2.wait_for_timeout(300)
     pg2.goto(BASE + "menu.html?w=wr-001", wait_until="load"); pg2.wait_for_timeout(1200)
     cek("Menu publik: nama warung", pg2.text_content("#nama") == "Warung Bu Sari")
     cek("Menu publik: item menu", pg2.eval_on_selector_all(".item", "e=>e.length") >= 4)

@@ -42,9 +42,12 @@ const UI = (() => {
     filter: '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
   };
 
-  const icon = (name, cls = '') => {
+  // Ikon selalu diberi lebar/tinggi bawaan. Tanpa ini, SVG tanpa aturan CSS
+  // akan membengkak memenuhi wadahnya (ikon kaca pembesar pernah jadi 218px).
+  // Aturan CSS seperti `.btn svg` tetap menimpa nilai ini bila perlu.
+  const icon = (name, cls = '', ukuran = 18) => {
     const p = PATHS[name] || PATHS.info;
-    return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+    return `<svg class="${cls}" width="${ukuran}" height="${ukuran}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
   };
 
   /* ── Teks aman ─────────────────────────────────────────── */

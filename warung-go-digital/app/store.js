@@ -55,8 +55,18 @@ const Store = (() => {
   };
   const LANGGANAN = 15000;
 
-  /* ── Data contoh ───────────────────────────────────────── */
-  const seed = () => {
+  /* ── Data kosong (kondisi awal) ────────────────────────── */
+  // Pemilik warung baru belum punya pelanggan, jadi aplikasi dimulai
+  // tanpa data. Semua modul menampilkan keadaan kosong sampai data diisi.
+  const kosong = () => ({
+    meta: { versi: 1, dibuat: new Date().toISOString() },
+    warung: [], transaksi: [], rating: [], pantau: [],
+    katalog: [], promo: [], foto: [], ulasanQR: [],
+    log: [],
+  });
+
+  /* ── Data contoh (opsional, untuk uji coba) ────────────── */
+  const contoh = () => {
     const rnd = prng(20261110);
     const now = new Date();
 
@@ -273,9 +283,9 @@ const Store = (() => {
         if (db && db.meta && db.meta.versi === 1) return db;
       }
     } catch (e) {
-      console.warn('Data tersimpan tidak terbaca, memuat ulang data contoh.', e);
+      console.warn('Data tersimpan tidak terbaca, memuat data kosong.', e);
     }
-    db = seed();
+    db = kosong();
     save();
     return db;
   };
@@ -297,9 +307,17 @@ const Store = (() => {
     try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* diabaikan */ }
   };
 
-  const reset = () => {
+  // Hapus semua data (kembali ke kondisi awal yang kosong).
+  const kosongkan = () => {
     localStorage.removeItem(KEY);
-    db = seed();
+    db = kosong();
+    saveNow();
+    return db;
+  };
+
+  // Isi dengan data contoh untuk uji coba/demo.
+  const muatContoh = () => {
+    db = contoh();
     saveNow();
     return db;
   };
@@ -514,7 +532,7 @@ const Store = (() => {
   return {
     uid, rupiah, angka, tglID, BULAN, HARGA, LANGGANAN,
     periodeDari, labelPeriode, hariLalu,
-    load, save, saveNow, reset,
+    load, save, saveNow, kosongkan, muatContoh,
     all, find, where, add, update, remove, log,
     ringkas, trenPendapatan, perMetode, perPaket, topWarung,
     laporanBulanan, daftarPeriode, ekspor, impor,

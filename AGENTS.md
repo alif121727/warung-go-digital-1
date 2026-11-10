@@ -108,7 +108,9 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
 
 Aplikasi klien-sisi murni: **tanpa server, tanpa basis data**. Seluruh data disimpan di
 `localStorage` browser, jadi bisa dideploy ke hosting statis apa pun (Netlify, Vercel,
-GitHub Pages). Saat pertama dibuka, `store.js` mengisi data contoh.
+GitHub Pages). Saat pertama dibuka, `store.js` memulai dengan **data kosong** — pemilik
+warung baru belum punya pelanggan. Dasbor menampilkan ajakan **Daftarkan Warung** dan
+**Muat data contoh**; tombol tong sampah di bar atas mengosongkan semuanya kembali.
 
 ### Enam modul wajib
 
@@ -142,12 +144,29 @@ GitHub Pages). Saat pertama dibuka, `store.js` mengisi data contoh.
 menu. Setiap item punya tombol pesan WhatsApp dengan teks terisi otomatis. Membaca data
 dari `localStorage` yang sama, jadi foto produk yang diterbitkan otomatis muncul.
 
-### Data contoh
+### Data kosong & data contoh
 
-`store.js` mengisi: 8 warung (6 aktif), 35 transaksi, 47 produk katalog, 14 promosi,
-11 foto, 8 QR ulasan, dan 248 titik pantauan rating 90 hari. Tombol **Cadangan**
-mengunduh JSON; **Pulihkan** memuatnya kembali; tombol muat-ulang data contoh
-mengembalikan kondisi awal.
+Kondisi awal **kosong** (`Store.kosongkan()` / `kosong()` di `store.js`): semua koleksi
+berisi array kosong. `Store.muatContoh()` mengisi data contoh untuk uji coba/demo:
+8 warung (6 aktif), 35 transaksi, 47 produk katalog, 14 promosi, 11 foto, 8 QR ulasan,
+dan 248 titik pantauan rating 90 hari.
+
+Setiap modul punya **empty state** (`UI.kosong`) yang ramah, dan harus tahan data kosong
+tanpa `NaN`/`undefined`. Tombol **Cadangan** mengunduh JSON; **Pulihkan** memuatnya kembali.
+
+⚠️ **Batas penting:** halaman publik `app/menu.html` membaca data dari `localStorage`
+perangkat **pemilik**. Jadi QR hanya menampilkan menu di perangkat yang sudah punya data
+tersebut (mis. saat demo). Pelanggan yang memindai dari HP-nya sendiri akan melihat
+"Warung tidak ditemukan", karena perangkat mereka tidak punya data itu. Agar menu bisa
+dibuka pelanggan mana pun, data menu harus disajikan dari server (mis. berkas JSON per
+warung di hosting), bukan dari `localStorage`. Lihat bagian "Yang belum dikerjakan".
+
+### Ikon SVG wajib punya ukuran
+
+`UI.icon()` selalu menyetel `width`/`height` (bawaan 18). Tanpa itu, SVG tanpa aturan CSS
+akan membengkak memenuhi wadahnya — ikon kaca pembesar di kotak pencarian pernah
+membengkak jadi 218×218 px. Setiap kelas ikon baru (`.toolbar .search svg`, dst.) juga
+harus punya `width`/`height` sebagai jaring pengaman.
 
 ## Verifikasi (wajib sebelum menyatakan selesai)
 
@@ -210,6 +229,17 @@ pip install playwright pillow numpy
   sehingga dekode memakai berkas basi dan melaporkan "LULUS" palsu (hasil dekode
   memuat port 12040 dari uji lama, padahal server aktif 12000). Sekarang skrip menulis
   ke `tempfile.mkdtemp()` dan mengoper jalur berkasnya ke `decode-qr.js`.
+- **Ikon SVG tanpa `width`/`height` membengkak.** Kejadian nyata: `UI.icon()` menyusun
+  `<svg viewBox="0 0 24 24">` tanpa ukuran. Ikon tombol selamat karena ada aturan
+  `.btn svg { width: 15px }`, tetapi ikon kaca pembesar di kotak pencarian modul tidak
+  punya aturan CSS serupa, sehingga SVG-nya membengkak mengikuti wadah: **218×218 px**
+  di modul Warung, Transaksi, Katalog, dan Foto — tampak seperti logo raksasa yang
+  "tidak sinkron". Perbaikan: `UI.icon()` selalu menyetel `width`/`height` (bawaan 18),
+  dan `.search svg` diberi ukuran 15px sebagai jaring pengaman.
+- **Uji yang butuh data contoh harus memuatnya sendiri.** Kondisi awal aplikasi kini
+  kosong. Uji yang memeriksa tabel terisi atau halaman menu harus memanggil
+  `Store.muatContoh()` lebih dulu. Perhatikan juga: `b.new_page()` / `new_context()`
+  membuat penyimpanan baru, jadi setiap konteks perlu memuat data contoh sendiri.
 
 ### Dukungan HP (ponsel)
 
@@ -313,3 +343,11 @@ di tengah sesi panjang.
 
 Catatan lain: `playwright`, `pillow`, `numpy` sering hilang antar sesi — pasang ulang
 dengan `pip install playwright pillow numpy` sebelum menjalankan uji.
+
+## Yang belum dikerjakan (butuh keputusan pemilik)
+
+- **Menu publik belum bisa dibuka pelanggan dari HP lain.** `app/menu.html` membaca
+  `localStorage` perangkat pemilik, sehingga QR hanya menampilkan menu di perangkat
+  yang sudah punya datanya. Perbaikan sebenarnya: terbitkan berkas JSON menu per warung
+  saat pemilik menekan "Terbitkan" (mis. `menu/<id>.json`), lalu `menu.html` mengambil
+  dari sana. Ini butuh backend/penyimpanan berkas dan keputusan produk.

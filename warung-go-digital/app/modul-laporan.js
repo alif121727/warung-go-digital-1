@@ -14,6 +14,19 @@
       const daftar = Store.daftarPeriode();
       if (!periode || !daftar.includes(periode)) periode = daftar[0];
 
+      if (!Store.all('transaksi').length) {
+        root.innerHTML = `<div class="card"><div class="card__body">${UI.kosong({
+          ikon: 'chart',
+          judul: 'Belum ada data laporan',
+          pesan: 'Laporan bulanan disusun otomatis setelah ada transaksi tercatat.',
+          aksi: `<button class="btn btn--pri" data-aksi="transaksi">${UI.icon('plus')} Catat Transaksi</button>`,
+        })}</div></div>`;
+        UI.qa('[data-aksi]', root).forEach((b) =>
+          b.addEventListener('click', () => App.pergi(b.dataset.aksi))
+        );
+        return;
+      }
+
       const lap = Store.laporanBulanan(periode);
       const tren = Store.trenPendapatan(6);
       const idx = daftar.indexOf(periode);

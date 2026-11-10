@@ -85,8 +85,10 @@ internal mengarah ke sana.
   lalu **Pulihkan** di perangkat tujuan.
 - **Gunakan alamat HTTPS** (Netlify/Vercel/GitHub Pages sudah otomatis). Tombol *Salin*
   dan akses kamera memerlukannya.
-- **Isi awal adalah data contoh.** Buka Panel Mitra → **Pulihkan** / tombol muat ulang
-  data contoh untuk kembali ke kondisi awal kapan saja.
+- **Isi awal kosong.** Aplikasi dimulai tanpa data karena Anda belum punya pelanggan.
+  Isi sendiri lewat **Daftarkan Warung**, atau tekan **Muat data contoh** di dasbor bila
+  ingin mencoba semua fitur lebih dulu. Tombol tong sampah di bar atas menghapus semua
+  data dan kembali ke kondisi kosong.
 - **QR benar-benar bisa dipindai.** Buka modul Warung atau Rating, klik ikon QR, lalu
   pindai dengan kamera ponsel.
 - **Sudah rapi di HP.** Tampilan menyesuaikan layar ponsel: menu geser, tabel berubah

@@ -104,6 +104,13 @@ with sync_playwright() as p:
     pg = ctx.new_page()
     pg.goto(BASE, wait_until="load")
     pg.wait_for_timeout(2500)
+    # Uji offline memeriksa modul yang terisi, jadi muat data contoh dulu.
+    pg.goto(BASE + "app/", wait_until="load")
+    pg.wait_for_timeout(1500)
+    pg.evaluate("()=>Store.muatContoh()")
+    pg.wait_for_timeout(400)
+    pg.goto(BASE, wait_until="load")
+    pg.wait_for_timeout(1500)
     jumlah = pg.evaluate(
         """async()=>{const ks=await caches.keys();let n=0;
            for(const k of ks){const c=await caches.open(k);n+=(await c.keys()).length}

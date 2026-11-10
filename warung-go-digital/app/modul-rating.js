@@ -18,6 +18,19 @@
       const warung = Store.all('warung').filter((w) => w.status === 'aktif');
       const perluBalas = Store.where('rating', (x) => !x.balas);
 
+      if (!Store.all('warung').length) {
+        root.innerHTML = `<div class="card"><div class="card__body">${UI.kosong({
+          ikon: 'star',
+          judul: 'Belum ada ulasan',
+          pesan: 'Reputasi akan terpantau setelah warung terdaftar dan ulasan masuk.',
+          aksi: `<button class="btn btn--pri" data-aksi="warung">${UI.icon('plus')} Daftarkan Warung</button>`,
+        })}</div></div>`;
+        UI.qa('[data-aksi]', root).forEach((b) =>
+          b.addEventListener('click', () => App.pergi(b.dataset.aksi))
+        );
+        return;
+      }
+
       root.innerHTML = `
         <div class="grid grid--4" style="margin-bottom:15px">
           ${UI.stat({ ikon: 'star', warna: 'amber', label: 'Rating Google Maps', nilai: r.ratingRata.toFixed(2), sub: 'Rata-rata ' + warung.length + ' warung aktif' })}
