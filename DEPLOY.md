@@ -10,6 +10,10 @@ Paket ini berisi **tiga bagian** yang saling terhubung:
 
 Tombol **Panel Mitra** di bilah atas landing page mengarah ke `/app/`.
 
+> **Belum punya repo di GitHub?** Berkas `warung-go-digital-repo.bundle` (bila ada di
+> paket ini) adalah seluruh repositori beserta riwayat commit-nya. Lihat
+> **Lampiran — memulihkan repo dari bundle** di bagian bawah berkas ini.
+
 ---
 
 ## Berkas yang perlu diunggah
@@ -219,3 +223,36 @@ Contoh: `warunggodigital.id`
 3. Ikuti petunjuk DNS yang ditampilkan Netlify (biasanya `CNAME` untuk `www` dan
    `ALIAS`/`A` untuk akar domain).
 4. Tunggu propagasi DNS (biasanya di bawah 24 jam).
+
+---
+
+## Lampiran — memulihkan repo dari bundle
+
+Berkas `warung-go-digital-repo.bundle` adalah seluruh repositori (semua commit) dalam
+satu berkas. Pakai ini kalau Anda ingin mengunggah proyek ke GitHub lengkap dengan
+riwayatnya, tanpa perlu meng-clone dari tempat lain.
+
+**Langkah 1 — Buat repositori kosong di GitHub**
+
+Buka https://github.com/new, beri nama misal `warung-go-digital`, **jangan** centang
+"Add a README". Klik **Create repository**.
+
+**Langkah 2 — Pulihkan repo dari bundle**
+
+```bash
+git clone warung-go-digital-repo.bundle warung-go-digital-repo
+cd warung-go-digital-repo
+
+git remote set-url origin https://github.com/<username>/warung-go-digital.git
+git push -u origin master
+```
+
+Ganti `<username>` dengan nama akun GitHub Anda. Setelah itu, isi repo sama persis
+dengan aslinya, lengkap dengan 10 commit.
+
+**Langkah 3 — Nyalakan hosting**
+
+Lihat **Cara 3** (GitHub Pages), **Cara 4** (Vercel), atau **Cara 2** (Netlify) di atas.
+
+> **Repo privat?** Bundle juga bisa dipakai untuk repo privat. Ingat bahwa GitHub Pages
+> gratis tidak melayani repo privat, jadi pakai Vercel atau Netlify untuk repo privat.

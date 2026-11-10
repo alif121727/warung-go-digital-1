@@ -15,6 +15,7 @@ DOKUMEN = [
     ("BACA-DULU.md", "BACA-DULU.md"),
     ("DEPLOY.md", "PANDUAN-DEPLOY.md"),
     ("Proposal_PKM-K_Warung_Go_Digital.pdf", "Proposal_PKM-K_Warung_Go_Digital.pdf"),
+    ("warung-go-digital-repo.bundle", "warung-go-digital-repo.bundle"),
 ]
 # Konfigurasi deploy otomatis, diletakkan di akar ZIP
 KONFIG = [
@@ -52,6 +53,23 @@ def main():
             raise SystemExit("Paket rusak — ada berkas yang tidak utuh.")
         print(f"{KELUARAN}\n{len(z.infolist())} berkas, "
               f"{os.path.getsize(KELUARAN) / 1024:.0f} KB")
+    buat_bundle()
+
+
+def buat_bundle():
+    """Bungkus seluruh repo (dengan riwayat commit) untuk diunggah ke GitHub."""
+    import subprocess
+
+    berkas = os.path.join(AKAR, "warung-go-digital-repo.bundle")
+    coba = subprocess.run(
+        ["git", "-C", AKAR, "bundle", "create", berkas, "--all"],
+        capture_output=True, text=True,
+    )
+    if coba.returncode != 0:
+        print(f"peringatan: gagal membuat bundle: {coba.stderr.strip()}")
+        return
+    print(f"{berkas}\n{os.path.getsize(berkas) / 1024:.0f} KB "
+          f"(berisi seluruh riwayat commit)")
 
 
 if __name__ == "__main__":
