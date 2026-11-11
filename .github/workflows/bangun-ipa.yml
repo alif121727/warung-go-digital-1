@@ -79,6 +79,15 @@ jobs:
         working-directory: apk
         run: npx cap sync ios
 
+      - name: Cek perintah pembangun yang tersedia
+        working-directory: apk/ios/App
+        run: |
+          # Runner macOS punya beberapa versi Xcode. Catat mana yang ada agar
+          # kegagalan mudah ditelusuri dari log.
+          xcodebuild -version
+          xcodebuild -showsdks || true
+          ls -d /Applications/Xcode*.app 2>/dev/null || true
+
       - name: Bangun IPA tanpa tanda tangan
         working-directory: apk/ios/App
         run: |
