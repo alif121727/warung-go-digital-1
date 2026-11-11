@@ -43,6 +43,19 @@
     };
   };
 
+  // Memasukkan laporan yang ditarik dari server sinkron.
+  const imporDariSinkron = (daftar) => {
+    let baru = 0, tambah = 0;
+    for (const l of daftar || []) {
+      try {
+        const r = simpanLaporan(Data.bacaLaporan(JSON.stringify(l)));
+        if (r.baru) baru++;
+        tambah += r.tambah;
+      } catch (e) { /* laporan cacat dilewati */ }
+    }
+    return { baru, tambah, jumlah: (daftar || []).length };
+  };
+
   const imporBerkas = (berkas) =>
     new Promise((selesai) => {
       const hasil = { berhasil: [], gagal: [] };
@@ -474,12 +487,112 @@
     });
   };
 
+  const renderSinkron = (root) => {
+    Sinkron.aturPeran('pengelola');
+    const s = Sinkron.setelan();
+    const riwayat = (db().meta && db().meta.riwayatSinkron) || [];
+
+    root.innerHTML = `
+      <div class="card">
+        <div class="card__head"><h3>Server sinkron</h3></div>
+        <div class="card__body">
+          <p class="teks-biasa">Isi alamat server sinkron agar laporan pemilik masuk otomatis. Bila alamat ini kosong, panel tetap bekerja dengan cara lama: impor berkas dari WhatsApp.</p>
+          <div class="bidang">
+            <label for="alamatSinkron">Alamat server</label>
+            <input id="alamatSinkron" type="url" inputmode="url" placeholder="http://192.168.1.10:8787" value="${Inti.esc(s.alamat)}">
+            <div class="dim" style="font-size:12px;margin-top:4px">Contoh: <code>http://192.168.1.10:8787</code> (server di jaringan yang sama) atau alamat HTTPS bila server Anda punya domain.</div>
+          </div>
+          <div class="bidang">
+            <label for="kunciSinkron">Kunci baca (KUNCI_BACA di server)</label>
+            <input id="kunciSinkron" type="password" placeholder="Hanya Anda yang tahu kunci ini" value="${Inti.esc(s.kunciBaca)}">
+            <div class="dim" style="font-size:12px;margin-top:4px">Jangan berikan kunci ini kepada pemilik. Pemilik cukup memegang kunci tulis.</div>
+          </div>
+          <div class="baris-tombol">
+            <button class="btn btn--pri" id="simpanSinkron">${Inti.ikon('save')} Simpan</button>
+            <button class="btn" id="ujiSinkron">${Inti.ikon('refresh')} Uji sambungan</button>
+            <button class="btn" id="tarikSekarang" ${s.alamat ? '' : 'disabled'}>${Inti.ikon('download')} Tarik sekarang</button>
+          </div>
+          <div id="statusSinkron" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      ${riwayat.length ? `
+      <div class="card">
+        <div class="card__head"><h3>Penarikan terakhir</h3></div>
+        <div class="card__body"><div class="tumpuk">
+          ${riwayat.map((x) => `<div class="kv">
+            <span class="kv__k">${Inti.esc(x.ringkas)}<div class="dim" style="font-size:11.5px">${Inti.esc(Inti.waktuID(x.waktu))}</div></span>
+            <span class="kv__v">${Inti.esc(x.pesan || '')}</span>
+          </div>`).join('')}
+        </div></div>
+      </div>` : ''}
+
+      <div class="card">
+        <div class="card__head"><h3>Catatan penting</h3></div>
+        <div class="card__body">
+          <div class="notis notis--biru">${Inti.ikon('shield', '', 18)}<span>Pemilik hanya dapat <b>mengirim</b> ke server. Mereka tidak punya cara membaca data mitra lain.</span></div>
+          <div class="notis notis--kuning">${Inti.ikon('alert', '', 18)}<span>Server sinkron menyimpan data di komputer Anda. Cadangkan berkas <code>sinkron/data/laporan.json</code> secara berkala.</span></div>
+        </div>
+      </div>
+    `;
+
+    const kotakStatus = Inti.q('#statusSinkron', root);
+    const tulisStatus = (pesan, jenis = 'info') => {
+      kotakStatus.innerHTML = `<div class="notis notis--${jenis === 'ok' ? 'hijau' : jenis === 'err' ? 'merah' : 'biru'}">${Inti.ikon(jenis === 'ok' ? 'check' : jenis === 'err' ? 'alert' : 'info', '', 18)}<span>${Inti.esc(pesan)}</span></div>`;
+    };
+
+    Inti.q('#simpanSinkron', root).addEventListener('click', () => {
+      Sinkron.simpanSetelan({
+        alamat: Inti.q('#alamatSinkron', root).value,
+        kunciBaca: Inti.q('#kunciSinkron', root).value,
+      });
+      Inti.toast('Setelan sinkron disimpan', 'ok');
+      render();
+    });
+
+    Inti.q('#ujiSinkron', root).addEventListener('click', async () => {
+      Sinkron.simpanSetelan({
+        alamat: Inti.q('#alamatSinkron', root).value,
+        kunciBaca: Inti.q('#kunciSinkron', root).value,
+      });
+      tulisStatus('Menghubungi server…');
+      try {
+        const st = await Sinkron.uji();
+        tulisStatus(`Server terhubung. Laporan tersimpan di server: ${st.jumlahLaporan ?? 0}.`, 'ok');
+      } catch (e) {
+        tulisStatus(e.message, 'err');
+      }
+    });
+
+    Inti.q('#tarikSekarang', root).addEventListener('click', async () => {
+      tulisStatus('Menarik laporan…');
+      try {
+        const daftar = await Sinkron.tarikLaporan();
+        const r = imporDariSinkron(daftar);
+        const d = db();
+        const riwayat = (d.meta && d.meta.riwayatSinkron) || [];
+        riwayat.unshift({
+          waktu: new Date().toISOString(),
+          ringkas: `${r.jumlah} laporan dari server`,
+          pesan: r.baru || r.tambah ? `${r.baru} mitra baru, ${r.tambah} catatan baru` : 'Tidak ada data baru',
+        });
+        d.meta = { ...(d.meta || {}), riwayatSinkron: riwayat.slice(0, 20) };
+        S.simpanSegera();
+        Inti.toast(r.baru || r.tambah ? `${r.tambah} catatan baru masuk` : 'Tidak ada data baru', r.baru || r.tambah ? 'ok' : 'info');
+        render();
+      } catch (e) {
+        tulisStatus(e.message, 'err');
+      }
+    });
+  };
+
   /* ═══════════════ Kerangka ═══════════════ */
   const TAB = [
     { id: 'ringkasan', label: 'Ringkasan', ic: 'dashboard', judul: 'Ringkasan Mitra', sub: 'Semua warung dalam satu layar' },
     { id: 'mitra', label: 'Mitra', ic: 'store', judul: 'Daftar Mitra', sub: 'Pemilik warung terdaftar' },
     { id: 'peta', label: 'Lokasi', ic: 'pin', judul: 'Lokasi Warung', sub: 'Tempat jualan mitra' },
     { id: 'impor', label: 'Impor', ic: 'upload', judul: 'Impor Laporan', sub: 'Masukkan data dari pemilik' },
+    { id: 'sinkron', label: 'Sinkron', ic: 'refresh', judul: 'Sinkron Otomatis', sub: 'Sambungkan ke server Anda' },
   ];
 
   const bangunTabbar = () => {
@@ -509,6 +622,7 @@
       if (t.id === 'ringkasan') renderRingkasan(view);
       else if (t.id === 'mitra') renderMitra(view);
       else if (t.id === 'peta') renderPeta(view);
+      else if (t.id === 'sinkron') renderSinkron(view);
       else renderImpor(view);
     } catch (e) {
       console.error(e);
@@ -557,6 +671,25 @@
     });
 
     render();
+
+    // Sinkron otomatis: tarik laporan dari server secara berkala (bila alamat diisi).
+    Sinkron.pasangAutoTarik((hasil) => {
+      if (!hasil.ok) return;
+      const r = imporDariSinkron(hasil.daftar);
+      if (!r.baru && !r.tambah) return;
+      const d = db();
+      const riwayat = (d.meta && d.meta.riwayatSinkron) || [];
+      riwayat.unshift({
+        waktu: new Date().toISOString(),
+        ringkas: `Otomatis: ${r.jumlah} laporan`,
+        pesan: `${r.baru} mitra baru, ${r.tambah} catatan baru`,
+      });
+      d.meta = { ...(d.meta || {}), riwayatSinkron: riwayat.slice(0, 20) };
+      S.simpanSegera();
+      Inti.toast(`${r.tambah} catatan baru dari server`, 'ok');
+      // Jangan gambar ulang saat pengelola sedang mengisi tab Sinkron.
+      if (state.tab !== 'sinkron') render();
+    });
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mulai);

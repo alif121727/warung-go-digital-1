@@ -1,0 +1,133 @@
+name: Bangun IPA iPhone (tanpa tanda tangan)
+
+# Membangun berkas IPA untuk iPhone memakai Capacitor di runner macOS.
+# Berkas ini TIDAK ditandatangani Apple, jadi harus dipasang lewat alat
+# seperti Sideloadly atau AltStore dengan Apple ID Anda sendiri.
+#
+# Runner macOS gratis karena repo ini publik.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'warung-go-digital/pemilik/**'
+      - 'warung-go-digital/admin/**'
+      - 'warung-go-digital/bersama/**'
+      - 'warung-go-digital/ikon/**'
+      - 'apk/**'
+      - '.github/workflows/bangun-ipa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ipa:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Pasang Pillow (untuk ikon)
+        run: pip install pillow
+
+      - name: Siapkan berkas web
+        run: node apk/siapkan.mjs
+
+      - name: Pasang dependensi Capacitor
+        working-directory: apk
+        run: npm install --no-audit --no-fund
+
+      - name: Tambahkan platform iOS
+        working-directory: apk
+        run: npx cap add ios
+
+      - name: Pasang ikon aplikasi (iOS)
+        run: |
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import json
+
+          appikon = Path('apk/ios/App/App/Assets.xcassets/AppIcon.appiconset')
+          if not appikon.exists():
+              print('Katalog ikon iOS tidak ditemukan, dilewati.')
+              raise SystemExit(0)
+
+          dasar = Image.open('warung-go-digital/ikon/ikon-maskable-512.png').convert('RGBA')
+
+          # Ganti semua ukuran yang tercatat di Contents.json, sekaligus
+          # memastikan tidak ada gambar bawaan Capacitor yang tertinggal.
+          daftar = json.loads((appikon / 'Contents.json').read_text())
+          n = 0
+          for entri in daftar.get('images', []):
+              nama = entri.get('filename')
+              if not nama:
+                  continue
+              skala = float(str(entri.get('scale', '1x')).rstrip('x'))
+              sisi = float(entri.get('size', '0x0').split('x')[0])
+              px = max(1, int(round(sisi * skala)))
+              dasar.resize((px, px), Image.LANCZOS).save(appikon / nama, 'PNG')
+              n += 1
+          print(f'ikon iOS diganti: {n} berkas')
+          PY
+
+      - name: Selaraskan berkas web ke iOS
+        working-directory: apk
+        run: npx cap sync ios
+
+      - name: Bangun IPA tanpa tanda tangan
+        working-directory: apk/ios/App
+        run: |
+          # Tanpa akun Apple, aplikasi tetap bisa dibangun dengan
+          # CODE_SIGNING_ALLOWED=NO. Hasilnya adalah .app yang lalu
+          # dibungkus jadi .ipa agar mudah dipasang lewat Sideloadly.
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CONFIGURATION_BUILD_DIR=build/Release-iphoneos \
+            build
+
+          mkdir -p ../hasil/Payload
+          cp -R build/Release-iphoneos/App.app ../hasil/Payload/
+          cd ../hasil
+          zip -qry warung-go-digital.ipa Payload
+          rm -rf Payload
+          ls -lh
+
+      - name: Unggah sebagai artefak
+        uses: actions/upload-artifact@v4
+        with:
+          name: warung-go-digital-ipa
+          path: apk/ios/hasil/warung-go-digital.ipa
+          if-no-files-found: error
+
+      - name: Lampirkan ke Release (tautan unduh tetap)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ios-v1.0.0
+          name: Warung Go Digital 1.0.0 (iPhone)
+          body: |
+            Aplikasi Warung Go Digital untuk Android dan iPhone.
+
+            Berisi dua aplikasi dalam satu pemasangan:
+            - Aplikasi Warung (pemilik): catat penjualan, pendapatan, dan lokasi jualan harian.
+            - Panel Pengelola: rekap penjualan, pendapatan, dan lokasi seluruh mitra.
+
+            Keduanya berfungsi tanpa internet dan tidak membuka peramban.
+
+            Android: unduh berkas .apk, buka di HP, izinkan pemasangan dari sumber ini.
+            iPhone: berkas .ipa belum ditandatangani Apple. Pasang lewat Sideloadly
+            atau AltStore dengan Apple ID Anda (gratis, perlu diulang tiap 7 hari).
+          files: apk/ios/hasil/warung-go-digital.ipa
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

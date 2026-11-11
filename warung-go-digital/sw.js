@@ -14,7 +14,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v3';
+const VERSI = 'wgd-v4';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -42,6 +42,7 @@ const KERANGKA = [
   // Berkas bersama aplikasi baru
   './bersama/inti.js',
   './bersama/data.js',
+  './bersama/sinkron.js',
   './bersama/gaya.css',
 
   // Aplikasi Pemilik

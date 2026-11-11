@@ -585,7 +585,20 @@
           <input type="file" id="fileImpor" accept="application/json" hidden>
         </div>
       </div>
+
+      <div class="card">
+        <div class="card__head"><h3>Kirim otomatis</h3></div>
+        <div class="card__body">
+          <p class="dim kecil" style="margin-top:0">Bila pengelola memberi alamat server, catatan Anda bisa terkirim sendiri tanpa perlu menekan Kirim.</p>
+          <div class="kv"><span class="kv__k">Status</span><span class="kv__v">${Sinkron.aktif() ? 'Aktif' : 'Belum diatur'}</span></div>
+        </div>
+        <div class="card__foot">
+          <button class="btn btn--sm" id="bukaSinkron">${Inti.ikon('refresh', '', 14)} Atur kirim otomatis</button>
+        </div>
+      </div>
     `;
+
+    Inti.q('#bukaSinkron', root).addEventListener('click', () => pindah('sinkron'));
 
     Inti.q('#ambilLokasi', root).addEventListener('click', () => {
       if (!navigator.geolocation) { Inti.toast('Perangkat tidak mendukung lokasi', 'err'); return; }
@@ -665,7 +678,91 @@
     { id: 'riwayat', label: 'Riwayat', ic: 'chart', judul: 'Riwayat', sub: 'Rekap penjualan Anda' },
     { id: 'kirim', label: 'Kirim', ic: 'send', judul: 'Kirim Laporan', sub: 'Ke pengelola Warung Go' },
     { id: 'warung', label: 'Warung', ic: 'store', judul: 'Data Warung', sub: 'Profil & pengaturan' },
+    { id: 'sinkron', label: 'Sinkron', ic: 'refresh', judul: 'Kirim Otomatis', sub: 'Sambungkan ke server pengelola' },
   ];
+
+  // Laporan untuk dikirim otomatis: seluruh catatan + data warung.
+  const laporanSinkron = () => {
+    const w = warung();
+    if (!w || !catatan().length) return null;
+    return Data.buatLaporan(w, catatan());
+  };
+
+  const renderSinkron = (root) => {
+    Sinkron.aturPeran('pemilik');
+    const s = Sinkron.setelan();
+    root.innerHTML = `
+      <div class="card">
+        <div class="card__head"><h3>Kirim otomatis ke pengelola</h3></div>
+        <div class="card__body">
+          <p class="teks-biasa">Isi alamat server sinkron dari pengelola. Setelah itu catatan Anda terkirim sendiri setiap kali ada perubahan — Anda tidak perlu lagi menekan Kirim.</p>
+          <div class="bidang">
+            <label for="alamatSinkron">Alamat server</label>
+            <input id="alamatSinkron" type="url" inputmode="url" placeholder="http://192.168.1.10:8787" value="${Inti.esc(s.alamat)}">
+          </div>
+          <div class="bidang">
+            <label for="kunciSinkron">Kunci kirim (KUNCI_TULIS dari pengelola)</label>
+            <input id="kunciSinkron" type="password" placeholder="Dari pengelola" value="${Inti.esc(s.kunci)}">
+            <div class="dim" style="font-size:12px;margin-top:4px">Kunci ini hanya untuk mengirim. Pengelola memegang kunci lain untuk membaca.</div>
+          </div>
+          <div class="baris-tombol">
+            <button class="btn btn--pri" id="simpanSinkron">${Inti.ikon('save')} Simpan</button>
+            <button class="btn" id="ujiSinkron">${Inti.ikon('refresh')} Uji sambungan</button>
+            <button class="btn" id="kirimSekarang" ${s.alamat ? '' : 'disabled'}>${Inti.ikon('send')} Kirim sekarang</button>
+          </div>
+          <div id="statusSinkron" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__head"><h3>Catatan penting</h3></div>
+        <div class="card__body">
+          <div class="notis notis--hijau">${Inti.ikon('shield', '', 18)}<span>Anda hanya <b>mengirim</b> laporan ke pengelola. Tidak ada cara melihat data warung lain.</span></div>
+          <div class="notis notis--kuning">${Inti.ikon('alert', '', 18)}<span>Bila alamat ini dikosongkan, kirim laporan tetap bisa lewat tab <b>Kirim</b> (berkas atau WhatsApp).</span></div>
+        </div>
+      </div>
+    `;
+
+    const kotakStatus = Inti.q('#statusSinkron', root);
+    const tulisStatus = (pesan, jenis = 'info') => {
+      kotakStatus.innerHTML = `<div class="notis notis--${jenis === 'ok' ? 'hijau' : jenis === 'err' ? 'merah' : 'biru'}">${Inti.ikon(jenis === 'ok' ? 'check' : jenis === 'err' ? 'alert' : 'info', '', 18)}<span>${Inti.esc(pesan)}</span></div>`;
+    };
+
+    Inti.q('#simpanSinkron', root).addEventListener('click', () => {
+      Sinkron.simpanSetelan({
+        alamat: Inti.q('#alamatSinkron', root).value,
+        kunci: Inti.q('#kunciSinkron', root).value,
+      });
+      Inti.toast('Setelan sinkron disimpan', 'ok');
+      render();
+    });
+
+    Inti.q('#ujiSinkron', root).addEventListener('click', async () => {
+      Sinkron.simpanSetelan({
+        alamat: Inti.q('#alamatSinkron', root).value,
+        kunci: Inti.q('#kunciSinkron', root).value,
+      });
+      tulisStatus('Menghubungi server…');
+      try {
+        const st = await Sinkron.uji();
+        tulisStatus('Server terhubung dan siap menerima laporan.', 'ok');
+      } catch (e) {
+        tulisStatus(e.message, 'err');
+      }
+    });
+
+    Inti.q('#kirimSekarang', root).addEventListener('click', async () => {
+      const laporan = laporanSinkron();
+      if (!laporan) return tulisStatus('Belum ada catatan atau data warung untuk dikirim.', 'err');
+      tulisStatus('Mengirim laporan…');
+      try {
+        const hasil = await Sinkron.kirimLaporan(laporan);
+        tulisStatus(`Terkirim. Pengelola kini punya ${hasil.jumlahHari} hari catatan Anda.`, 'ok');
+      } catch (e) {
+        tulisStatus(e.message, 'err');
+      }
+    });
+  };
 
   const bangunTabbar = () => {
     const tb = Inti.q('#tabbar');
@@ -695,6 +792,7 @@
       if (t.id === 'catat') renderCatat(view);
       else if (t.id === 'riwayat') renderRiwayat(view);
       else if (t.id === 'kirim') renderKirim(view);
+      else if (t.id === 'sinkron') renderSinkron(view);
       else renderWarung(view);
     } catch (e) {
       console.error(e);
@@ -733,6 +831,9 @@
     // Kunjungan pertama: arahkan ke pengisian data warung.
     if (!warung()) state.tab = 'warung';
     render();
+
+    // Kirim otomatis ke server sinkron (bila pengelola memberi alamat).
+    Sinkron.pasangAutoKirim(laporanSinkron);
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mulai);

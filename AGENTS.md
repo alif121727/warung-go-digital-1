@@ -383,7 +383,26 @@ Pemilik **tidak bisa** melihat data pengelola — panel pengelola ada di folder
 berbeda dengan kunci penyimpanan berbeda, dan tidak ada tautan dari aplikasi
 pemilik ke panel pengelola. Pengelola melihat semua data pemilik (hasil impor).
 
-## Kemasan APK (Capacitor)
+Batas ini juga dijaga di server sinkron: pemilik hanya memegang kunci **tulis**,
+sehingga tidak punya cara membaca data mitra lain. Uji `uji/uji-sinkron.py`
+memeriksa hal ini secara khusus.
+
+### Cara data mengalir (Cara 1 — sinkron otomatis, opsional)
+
+Bila pengelola ingin data masuk sendiri, jalankan `sinkron/server.mjs` (Node,
+tanpa dependensi). Pemilik membuka tab **Sinkron**, mengisi alamat server +
+**kunci tulis**; catatan terkirim sendiri 4 detik setelah perubahan. Pengelola
+mengisi alamat + **kunci baca**; laporan ditarik tiap 30 detik.
+
+- Kunci dipisah: `KUNCI_TULIS` (untuk pemilik) dan `KUNCI_BACA` (untuk pengelola).
+  `KUNCI` tunggal masih didukung dan dipakai untuk keduanya.
+- Upsert per tanggal: mengirim ulang tanggal yang sama menimpa, tidak menggandakan.
+- Data di `sinkron/data/laporan.json` (di-`.gitignore`). Aplikasi tetap bekerja
+  penuh tanpa server — sinkron murni tambahan.
+- Klien ada di `bersama/sinkron.js`; `Sinkron.aturPeran('pemilik'|'pengelola')`
+  menentukan kunci mana yang dipakai.
+
+## Kemasan APK & IPA (Capacitor)
 
 Folder `apk/` berisi pembungkus Capacitor. Lingkungan kerja lokal **tidak** punya
 Java/Android SDK; APK dibangun di GitHub Actions (`.github/workflows/bangun-apk.yml`,
@@ -395,7 +414,17 @@ GitHub Release sebagai tautan unduh.
   dan membuat halaman pembuka pemilih aplikasi.
 - Capacitor dipakai, **bukan** TWA/Bubblewrap — TWA justru membuka Chrome Custom
   Tab, yang persis tidak diinginkan pemilik.
-- APK hanya untuk Android (iOS butuh akun Apple). Pemasangan lewat sideload.
+- **Android**: `assembleDebug` bila rahasia kunci belum ada; `assembleRelease` +
+  `zipalign` + `apksigner` (bukan konfigurasi signingConfig Gradle, supaya pasti)
+  bila `ANDROID_KEYSTORE_BASE64` tersedia. Pembuat kunci: `apk/buat-kunci.sh`.
+  Rahasia: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASS`, `ANDROID_KEY_ALIAS`,
+  `ANDROID_KEY_PASS`.
+- **iOS**: `.github/workflows/bangun-ipa.yml` (runner `macos-14`, gratis karena repo
+  publik) membangun IPA **tanpa tanda tangan** (`CODE_SIGNING_ALLOWED=NO`), lalu
+  membungkusnya jadi `.ipa`. Dipasang lewat Sideloadly/AltStore dengan Apple ID
+  pengguna. Rilis IPA memakai tag terpisah `ios-v1.0.0` agar tidak menimpa rilis APK.
+- Token GitHub yang tersedia **tidak punya izin menulis Secrets** (403), jadi kunci
+  tanda tangan dan sertifikat iOS harus diisi pengguna lewat UI GitHub.
 
 ## Yang belum dikerjakan (butuh keputusan pemilik)
 
@@ -405,15 +434,14 @@ GitHub Release sebagai tautan unduh.
   saat pemilik menekan "Terbitkan" (mis. `menu/<id>.json`), lalu `menu.html` mengambil
   dari sana. Ini butuh backend/penyimpanan berkas dan keputusan produk.
 
-- **Sinkron data masih manual (Cara 2).** Pemilik harus menekan Kirim tiap kali;
-  pengelola harus mengimpor berkasnya. Bila nanti ingin otomatis, pindah ke backend
-  ringan gratis (Supabase/Firebase) — butuh akun + kunci API dari pemilik produk.
-  Jangan buang struktur `Data` saat melakukannya: cukup ganti lapisan penyimpanannya.
+- **Cara 1 (sinkron) sudah ada tetapi belum dipakai.** `sinkron/server.mjs` dan tab
+  Sinkron siap; pengelola masih perlu menjalankan servernya dan membagi kunci.
+  Bila nanti ingin hosting permanen, pindah ke Supabase/Firebase — jangan buang
+  struktur `Data`, cukup ganti lapisan penyimpanannya.
 
-- **APK belum ditandatangani (release key).** Workflow sekarang membangun
-  `assembleDebug`, jadi APK tidak ditandatangani dan Android menampilkan peringatan
-  saat dipasang. Untuk `assembleRelease` perlu keystore (dibuat dengan `keytool`,
-  disimpan sebagai rahasia GitHub). Belum diminta pemilik.
+- **Penandatanganan APK & IPA menunggu rahasia dari pengguna.** Kode dan alur sudah
+  siap; yang kurang hanya 4 rahasia Android (atau akun Apple Developer untuk IPA
+  bertanda tangan). Agen tidak bisa menulis Secrets karena tokennya 403.
 
 - **Menu publik Panel Mitra lama masih membaca `localStorage`.** Belum diperbaiki;
   lihat butir di atas.

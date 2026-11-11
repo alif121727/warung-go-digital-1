@@ -1,0 +1,5 @@
+# Data laporan dan kunci penandatangan jangan pernah masuk git.
+data/
+*.jks
+*.keystore
+keystore.properties

@@ -92,15 +92,46 @@ jobs:
 
       - name: Bangun APK
         working-directory: apk/android
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          mkdir -p ../hasil
 
-      - name: Siapkan berkas untuk diunggah
-        run: |
-          mkdir -p hasil
-          cp apk/android/app/build/outputs/apk/debug/app-debug.apk hasil/warung-go-digital.apk
-          ls -lh hasil/
+          # Tanda tangan dilakukan dengan apksigner (bukan konfigurasi Gradle)
+          # agar hasilnya pasti: assembleRelease menghasilkan APK tanpa tanda
+          # tangan, lalu kita tandatangani sendiri dengan kunci rilis.
+          if [ -n "$KS_B64" ]; then
+            echo "Kunci rilis ditemukan — APK akan bertanda tangan rilis."
+            echo "$KS_B64" | base64 -d > keystore.jks
+            ./gradlew assembleRelease --no-daemon
+
+            TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+            echo "Memakai build-tools: $TOOLS"
+            "$TOOLS/zipalign" -f 4 \
+              app/build/outputs/apk/release/app-release-unsigned.apk \
+              ../hasil/warung-go-digital.apk
+            "$TOOLS/apksigner" sign \
+              --ks keystore.jks \
+              --ks-key-alias "$KEY_ALIAS" \
+              --ks-pass "pass:$KS_PASS" \
+              --key-pass "pass:$KEY_PASS" \
+              --out ../hasil/warung-go-digital.apk \
+              ../hasil/warung-go-digital.apk
+            "$TOOLS/apksigner" verify --print-certs ../hasil/warung-go-digital.apk
+            rm -f keystore.jks
+          else
+            echo "::warning::Kunci rilis belum diatur. APK memakai tanda tangan debug,"
+            echo "::warning::sehingga Android menampilkan peringatan saat pemasangan."
+            echo "::warning::Ikuti apk/buat-kunci.sh lalu isi 4 rahasia ANDROID_* di repo."
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk ../hasil/warung-go-digital.apk
+          fi
+
+          ls -lh ../hasil/
 
       - name: Unggah sebagai artefak
         uses: actions/upload-artifact@v4

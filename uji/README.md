@@ -12,6 +12,7 @@ python3 uji/uji-hp.py             # 190 uji dukungan HP (320-768 px, sentuh)
 python3 uji/uji-akar.py           # 10 uji situs saat disajikan dari akar domain
 python3 uji/uji-pwa.py            # 22 uji PWA (manifest, service worker, ikon, offline)
 python3 uji/uji-dua-aplikasi.py   # 38 uji alur Pemilik -> laporan -> Pengelola
+python3 uji/uji-sinkron.py        # 23 uji sinkron otomatis (menjalankan server asli)
 ```
 
 Uji yang memeriksa data terisi memanggil `Store.muatContoh()` lebih dulu, karena
@@ -40,6 +41,12 @@ pengelola mengimpor berkas itu dan menampilkannya (pendapatan harian, laba, loka
 Juga memeriksa: kunci penyimpanan terpisah (`wgd-pemilik-v1` vs `wgd-admin-v1`),
 impor berulang tidak menggandakan catatan, mode "lewat pesan" (salin rincian ke papan
 klip), service worker aktif, dan aplikasi tetap terbuka saat offline.
+
+`uji-sinkron.py` menjalankan `sinkron/server.mjs` sungguhan di port 8791 dengan dua
+kunci berbeda, lalu menguji alur lengkap: pemilik mengisi data dan mengirim, server
+menerima, pengelola menarik lewat tab Sinkron dan melihat omzet mitra. Termasuk uji
+keamanan penting — kunci tulis milik pemilik harus DITOLAK saat dipakai membaca data
+mitra — serta uji bahwa tanggal yang sama ditimpa, bukan digandakan.
 
 `uji-akar.py` menyalin isi `warung-go-digital/` ke folder sementara, menyajikannya
 sebagai akar domain (seperti GitHub Pages / Vercel), lalu memeriksa bahwa landing,

@@ -1,3 +1,9 @@
+# Jangan pernah menyimpan kunci penandatangan atau hasil bangun di git.
 www/
 android/
+ios/
 node_modules/
+*.jks
+*.keystore
+keystore.properties
+hasil/
