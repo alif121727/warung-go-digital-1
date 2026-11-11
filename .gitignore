@@ -11,3 +11,6 @@ node_modules/
 
 # Setelan editor
 .vscode/
+
+# Berkas hasil bangun APK/IPA dari CI
+hasil/
