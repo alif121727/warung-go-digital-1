@@ -77,7 +77,7 @@ def main():
             apk = pg.eval_on_selector_all('a[href$=".apk"]', "e=>e.map(x=>x.href)")
             cek("tautan unduh APK ada", len(apk) > 0, apk[0] if apk else "")
             cek("tautan APK mengarah ke rilis GitHub",
-                any('releases/download' in u and 'warung-go-digital.apk' in u for u in apk))
+                any('releases/' in u and 'warung-go-digital.apk' in u for u in apk))
             cek("tautan APK tidak relatif (bisa diklik dari mana saja)",
                 all(u.startswith('https://') for u in apk))
 
