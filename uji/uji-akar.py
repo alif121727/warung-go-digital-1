@@ -74,6 +74,12 @@ def main():
             cek("tombol aplikasi pemilik ada", pg.eval_on_selector_all('a[href="pemilik/"]', "e=>e.length") > 0)
             cek("tombol panel pengelola ada", pg.eval_on_selector_all('a[href="admin/"]', "e=>e.length") > 0)
             cek("tautan Panel Mitra lama masih ada", pg.eval_on_selector_all('a[href="app/"]', "e=>e.length") > 0)
+            apk = pg.eval_on_selector_all('a[href$=".apk"]', "e=>e.map(x=>x.href)")
+            cek("tautan unduh APK ada", len(apk) > 0, apk[0] if apk else "")
+            cek("tautan APK mengarah ke rilis GitHub",
+                any('releases/download' in u and 'warung-go-digital.apk' in u for u in apk))
+            cek("tautan APK tidak relatif (bisa diklik dari mana saja)",
+                all(u.startswith('https://') for u in apk))
 
             # ── Panel Mitra di /app/ ──
             pg.goto(dasar + "app/", wait_until="load")

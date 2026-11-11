@@ -441,6 +441,13 @@ h1 em, h2 em, .contact__head h2 em {
 .price__sub { font-size: .87rem; color: var(--t-muted); line-height: 1.5; margin: 0 0 1.1rem; }
 .price--feature .price__sub { color: var(--t-onDark-2); }
 .price__note { font-size: .78rem; color: var(--t-muted); margin: .8rem 0 0; text-align: center; }
+.unduh { display: flex; flex-wrap: wrap; gap: 1.4rem; align-items: center; justify-content: space-between;
+         margin-top: 2rem; padding: 1.5rem 1.7rem; border-radius: 18px; background: var(--cream);
+         border: 1px solid rgba(13,26,18,.09); }
+.unduh__teks { flex: 1 1 320px; }
+.unduh__teks h3 { font-size: 1.12rem; font-weight: 800; margin: 0 0 .45rem; color: var(--t-strong); }
+.unduh__teks p { font-size: .88rem; color: var(--t-muted); line-height: 1.55; margin: 0 0 .5rem; }
+.unduh__aksi { display: flex; flex-wrap: wrap; gap: .6rem; flex: 0 1 auto; }
 .price__list { display: flex; flex-direction: column; gap: .55rem; margin-bottom: 1.6rem; flex: 1; }
 .price__list li { font-size: .89rem; padding-left: 1.65rem; position: relative; line-height: 1.45; }
 .price__list li::before { position: absolute; left: 0; top: -.02em; font-weight: 700; }

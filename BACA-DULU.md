@@ -78,6 +78,30 @@ internal mengarah ke sana.
 
 ---
 
+## Aplikasi Android (APK) — cara memasang
+
+Bila pemilik warung ingin aplikasi yang berdiri sendiri (tidak lewat Chrome),
+unduh berkas APK-nya:
+
+**https://github.com/alif121727/warung-go-digital-1/releases/download/v1.0.0/warung-go-digital.apk**
+
+Langkah pemasangan di HP Android:
+
+1. Buka tautan di atas dari HP Android, lalu unduh berkasnya (3,6 MB).
+2. Buka berkas APK dari folder Unduhan. Android akan meminta izin
+   **"Instal aplikasi tidak dikenal"** — izinkan.
+3. Setelah terpasang, buka aplikasi **Warung Go Digital** di layar utama.
+4. Di dalamnya ada dua pilihan: **Aplikasi Warung** (untuk pemilik) dan
+   **Panel Pengelola** (untuk Anda).
+
+Satu berkas APK memuat kedua aplikasi, dan keduanya tetap berjalan tanpa internet.
+APK ini dibuat otomatis oleh GitHub Actions setiap kali berkas aplikasi berubah.
+
+> Catatan: APK ini tidak ditandatangani dengan kunci rilis, jadi Android akan
+> menampilkan peringatan saat pemasangan. Itu normal untuk aplikasi di luar Play Store.
+
+---
+
 ## Beberapa hal yang perlu Anda tahu
 
 - **Tidak butuh server atau database.** Semua data aplikasi disimpan di peramban
