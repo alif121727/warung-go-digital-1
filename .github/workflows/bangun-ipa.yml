@@ -110,7 +110,24 @@ jobs:
           path: apk/ios/hasil/warung-go-digital.ipa
           if-no-files-found: error
 
+      - name: Cek rilis (rilis lama bersifat tetap/tidak bisa ditimpa)
+        id: rilis
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Rilis yang sudah ada (dan immutable) tidak bisa ditimpa GitHub.
+          # Bila aset IPA sudah ada, lewati langkah lampirkan agar alur kerja
+          # tidak merah; untuk menerbitkan IPA baru, naikkan tag_name.
+          if gh release view ios-v1.0.0 --repo "$GITHUB_REPOSITORY" --json assets \
+               --jq '.assets[].name' 2>/dev/null | grep -qx 'warung-go-digital.ipa'; then
+            echo "ada=true" >> "$GITHUB_OUTPUT"
+            echo "Rilis ios-v1.0.0 sudah punya IPA. Langkah lampirkan dilewati."
+          else
+            echo "ada=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Lampirkan ke Release (tautan unduh tetap)
+        if: steps.rilis.outputs.ada != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ios-v1.0.0
@@ -128,6 +145,6 @@ jobs:
             iPhone: berkas .ipa belum ditandatangani Apple. Pasang lewat Sideloadly
             atau AltStore dengan Apple ID Anda (gratis, perlu diulang tiap 7 hari).
           files: apk/ios/hasil/warung-go-digital.ipa
-          make_latest: true
+          make_latest: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -97,7 +97,7 @@ Landing page dan semua tautan internal mengarah ke sana.
 Bila pemilik warung ingin aplikasi yang berdiri sendiri (tidak lewat peramban),
 unduh berkas APK-nya:
 
-**https://github.com/alif121727/warung-go-digital-1/releases/download/v1.1.0/warung-go-digital.apk**
+**https://github.com/alif121727/warung-go-digital-1/releases/latest/download/warung-go-digital.apk**
 
 Langkah pemasangan di HP Android:
 
