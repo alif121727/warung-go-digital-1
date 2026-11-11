@@ -344,6 +344,59 @@ di tengah sesi panjang.
 Catatan lain: `playwright`, `pillow`, `numpy` sering hilang antar sesi — pasang ulang
 dengan `pip install playwright pillow numpy` sebelum menjalankan uji.
 
+## Dua aplikasi: Pemilik & Pengelola
+
+Situs ini punya **tiga** aplikasi:
+
+| Folder | Untuk | Isi |
+|---|---|---|
+| `app/` | Panel Mitra lama | Menu QR, katalog, rating, promosi, foto, laporan (data contoh) |
+| `pemilik/` | Pemilik warung | Catat penjualan/pendapatan/lokasi harian, kirim laporan |
+| `admin/` | Pengelola (Anda) | Rekap penjualan/pendapatan/lokasi semua mitra |
+
+Berkas bersama ada di `bersama/`: `inti.js` (DOM, format, komponen), `data.js`
+(penyimpanan + perhitungan laporan), `gaya.css` (sistem desain mobile-first).
+
+### Cara data mengalir (Cara 2 — tanpa server)
+
+Tidak ada backend. Penyimpanan memakai `localStorage` dengan kunci terpisah
+(`wgd-pemilik-v1`, `wgd-admin-v1`), sehingga data pemilik dan pengelola tidak
+pernah tercampur.
+
+```
+Pemilik catat harian  ->  tab Kirim  ->  berkas JSON  ->  WhatsApp  ->  Pengelola impor
+```
+
+Berkas laporan ditandai `{ wgd: 1, jenis: 'laporan-harian' }`. `Data.bacaLaporan()`
+memvalidasi isinya; `Data.gabungCatatan()` menggabungkan impor berulang tanpa
+menggandakan tanggal yang sama.
+
+**Dua cara kirim di aplikasi pemilik** (penting untuk APK):
+- **Lewat berkas** — unduh JSON lalu lampirkan di WhatsApp. Paling rapi, tapi
+  `a.download` sering tidak jalan di dalam WebView Android.
+- **Lewat pesan** — ringkasan + rincian disalin ke papan klip, ditempel di obrolan.
+  Ini jalur yang andal di dalam APK.
+
+### Batas peran (disengaja)
+
+Pemilik **tidak bisa** melihat data pengelola — panel pengelola ada di folder
+berbeda dengan kunci penyimpanan berbeda, dan tidak ada tautan dari aplikasi
+pemilik ke panel pengelola. Pengelola melihat semua data pemilik (hasil impor).
+
+## Kemasan APK (Capacitor)
+
+Folder `apk/` berisi pembungkus Capacitor. Lingkungan kerja lokal **tidak** punya
+Java/Android SDK; APK dibangun di GitHub Actions (`.github/workflows/bangun-apk.yml`,
+runner `ubuntu-latest` sudah punya Java + Android SDK) lalu dilampirkan ke
+GitHub Release sebagai tautan unduh.
+
+- `node apk/siapkan.mjs` menyalin `pemilik/`, `admin/`, `bersama/`, `ikon/` ke
+  `apk/www/`, **melepas** pendaftaran service worker (berkas sudah di perangkat),
+  dan membuat halaman pembuka pemilih aplikasi.
+- Capacitor dipakai, **bukan** TWA/Bubblewrap — TWA justru membuka Chrome Custom
+  Tab, yang persis tidak diinginkan pemilik.
+- APK hanya untuk Android (iOS butuh akun Apple). Pemasangan lewat sideload.
+
 ## Yang belum dikerjakan (butuh keputusan pemilik)
 
 - **Menu publik belum bisa dibuka pelanggan dari HP lain.** `app/menu.html` membaca
@@ -351,3 +404,16 @@ dengan `pip install playwright pillow numpy` sebelum menjalankan uji.
   yang sudah punya datanya. Perbaikan sebenarnya: terbitkan berkas JSON menu per warung
   saat pemilik menekan "Terbitkan" (mis. `menu/<id>.json`), lalu `menu.html` mengambil
   dari sana. Ini butuh backend/penyimpanan berkas dan keputusan produk.
+
+- **Sinkron data masih manual (Cara 2).** Pemilik harus menekan Kirim tiap kali;
+  pengelola harus mengimpor berkasnya. Bila nanti ingin otomatis, pindah ke backend
+  ringan gratis (Supabase/Firebase) — butuh akun + kunci API dari pemilik produk.
+  Jangan buang struktur `Data` saat melakukannya: cukup ganti lapisan penyimpanannya.
+
+- **APK belum ditandatangani (release key).** Workflow sekarang membangun
+  `assembleDebug`, jadi APK tidak ditandatangani dan Android menampilkan peringatan
+  saat dipasang. Untuk `assembleRelease` perlu keystore (dibuat dengan `keytool`,
+  disimpan sebagai rahasia GitHub). Belum diminta pemilik.
+
+- **Menu publik Panel Mitra lama masih membaca `localStorage`.** Belum diperbaiki;
+  lihat butir di atas.

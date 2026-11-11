@@ -1,0 +1,13 @@
+{
+  "appId": "id.warunggodigital.app",
+  "appName": "Warung Go Digital",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#f7f5f0"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

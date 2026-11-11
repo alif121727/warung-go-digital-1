@@ -1,0 +1,126 @@
+name: Bangun APK Android
+
+# Membangun APK (aplikasi mandiri, tanpa membuka Chrome) memakai Capacitor,
+# lalu melampirkannya ke GitHub Release sebagai tautan unduh.
+#
+# Runner ubuntu-latest sudah menyertakan Java dan Android SDK, sehingga
+# pembangunan tidak perlu dilakukan di komputer lokal.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'warung-go-digital/pemilik/**'
+      - 'warung-go-digital/admin/**'
+      - 'warung-go-digital/bersama/**'
+      - 'warung-go-digital/ikon/**'
+      - 'apk/**'
+      - '.github/workflows/bangun-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Pasang Pillow (untuk ikon)
+        run: pip install pillow
+
+      - name: Siapkan berkas web
+        run: node apk/siapkan.mjs
+
+      - name: Pasang dependensi Capacitor
+        working-directory: apk
+        run: npm install --no-audit --no-fund
+
+      - name: Tambahkan platform Android
+        working-directory: apk
+        run: npx cap add android
+
+      - name: Pasang ikon aplikasi
+        run: |
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import shutil
+
+          res = Path('apk/android/app/src/main/res')
+          dasar = Image.open('warung-go-digital/ikon/ikon-maskable-512.png').convert('RGBA')
+          ikon = dasar.resize((1024, 1024), Image.LANCZOS)
+
+          # Ikon adaptif bawaan Capacitor menunjuk ke gambar contohnya sendiri.
+          # Hapus supaya Android memakai ic_launcher.png milik kita.
+          for d in res.glob('mipmap-anydpi-v26'):
+              shutil.rmtree(d, ignore_errors=True)
+
+          ukuran = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}
+          n = 0
+          for nama, px in ukuran.items():
+              folder = res / f'mipmap-{nama}'
+              if not folder.exists():
+                  continue
+              gambar = ikon.resize((px, px), Image.LANCZOS)
+              for berkas in ('ic_launcher.png', 'ic_launcher_round.png'):
+                  gambar.save(folder / berkas, 'PNG', optimize=True)
+                  n += 1
+          print(f'ikon diganti: {n} berkas')
+          PY
+
+      - name: Selaraskan berkas web ke Android
+        working-directory: apk
+        run: npx cap sync android
+
+      - name: Bangun APK
+        working-directory: apk/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Siapkan berkas untuk diunggah
+        run: |
+          mkdir -p hasil
+          cp apk/android/app/build/outputs/apk/debug/app-debug.apk hasil/warung-go-digital.apk
+          ls -lh hasil/
+
+      - name: Unggah sebagai artefak
+        uses: actions/upload-artifact@v4
+        with:
+          name: warung-go-digital-apk
+          path: hasil/warung-go-digital.apk
+          if-no-files-found: error
+
+      - name: Lampirkan ke Release (tautan unduh tetap)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: Warung Go Digital 1.0.0
+          body: |
+            Aplikasi Android Warung Go Digital — dapat dipasang langsung di HP.
+
+            Berisi dua aplikasi dalam satu pemasangan:
+            - Aplikasi Warung (pemilik): catat penjualan, pendapatan, dan lokasi jualan harian.
+            - Panel Pengelola: rekap penjualan, pendapatan, dan lokasi seluruh mitra.
+
+            Keduanya berfungsi tanpa internet dan tidak membuka Chrome.
+
+            Cara memasang: unduh berkas APK di bawah, lalu buka di HP Android dan
+            izinkan pemasangan dari sumber ini bila diminta.
+          files: hasil/warung-go-digital.apk
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

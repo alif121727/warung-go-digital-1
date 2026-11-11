@@ -14,7 +14,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v2';
+const VERSI = 'wgd-v3';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -38,6 +38,23 @@ const KERANGKA = [
   './app/modul-promosi.js',
   './app/modul-foto.js',
   './app/modul-laporan.js',
+
+  // Berkas bersama aplikasi baru
+  './bersama/inti.js',
+  './bersama/data.js',
+  './bersama/gaya.css',
+
+  // Aplikasi Pemilik
+  './pemilik/',
+  './pemilik/index.html',
+  './pemilik/app.js',
+  './pemilik/manifest.webmanifest',
+
+  // Panel Pengelola
+  './admin/',
+  './admin/index.html',
+  './admin/app.js',
+  './admin/manifest.webmanifest',
   './manifest.webmanifest',
   './ikon/ikon-192.png',
   './ikon/ikon-512.png',

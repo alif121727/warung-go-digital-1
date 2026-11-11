@@ -438,6 +438,9 @@ h1 em, h2 em, .contact__head h2 em {
 .price__num span { font-size: .8rem; color: var(--t-muted); }
 .price--feature .price__num span { color: var(--t-onDark-2); }
 
+.price__sub { font-size: .87rem; color: var(--t-muted); line-height: 1.5; margin: 0 0 1.1rem; }
+.price--feature .price__sub { color: var(--t-onDark-2); }
+.price__note { font-size: .78rem; color: var(--t-muted); margin: .8rem 0 0; text-align: center; }
 .price__list { display: flex; flex-direction: column; gap: .55rem; margin-bottom: 1.6rem; flex: 1; }
 .price__list li { font-size: .89rem; padding-left: 1.65rem; position: relative; line-height: 1.45; }
 .price__list li::before { position: absolute; left: 0; top: -.02em; font-weight: 700; }

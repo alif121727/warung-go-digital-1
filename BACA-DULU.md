@@ -38,7 +38,9 @@ python3 -m http.server 8000
 Lalu buka:
 
 - Landing page → http://localhost:8000/
-- Panel Mitra → http://localhost:8000/app/
+- **Aplikasi Warung (pemilik)** → http://localhost:8000/pemilik/
+- **Panel Pengelola (Anda)** → http://localhost:8000/admin/
+- Panel Mitra lama → http://localhost:8000/app/
 
 Hentikan server dengan `Ctrl + C`.
 

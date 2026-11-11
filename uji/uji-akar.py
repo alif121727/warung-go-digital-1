@@ -71,7 +71,9 @@ def main():
             cek("landing tampil", pg.eval_on_selector_all("h1, h2", "e=>e.length") > 0)
             cek("landing tanpa overflow",
                 pg.evaluate("()=>document.documentElement.scrollWidth<=window.innerWidth+1"))
-            cek("tombol Panel Mitra ada", pg.eval_on_selector_all('a[href="app/"]', "e=>e.length") > 0)
+            cek("tombol aplikasi pemilik ada", pg.eval_on_selector_all('a[href="pemilik/"]', "e=>e.length") > 0)
+            cek("tombol panel pengelola ada", pg.eval_on_selector_all('a[href="admin/"]', "e=>e.length") > 0)
+            cek("tautan Panel Mitra lama masih ada", pg.eval_on_selector_all('a[href="app/"]', "e=>e.length") > 0)
 
             # ── Panel Mitra di /app/ ──
             pg.goto(dasar + "app/", wait_until="load")
