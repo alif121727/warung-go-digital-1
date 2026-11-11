@@ -99,7 +99,7 @@ jobs:
           KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
         run: |
           chmod +x gradlew
-          mkdir -p ../hasil
+          mkdir -p ../../hasil
 
           # Tanda tangan dilakukan dengan apksigner (bukan konfigurasi Gradle)
           # agar hasilnya pasti: assembleRelease menghasilkan APK tanpa tanda
@@ -113,25 +113,25 @@ jobs:
             echo "Memakai build-tools: $TOOLS"
             "$TOOLS/zipalign" -f 4 \
               app/build/outputs/apk/release/app-release-unsigned.apk \
-              ../hasil/warung-go-digital.apk
+              ../../hasil/warung-go-digital.apk
             "$TOOLS/apksigner" sign \
               --ks keystore.jks \
               --ks-key-alias "$KEY_ALIAS" \
               --ks-pass "pass:$KS_PASS" \
               --key-pass "pass:$KEY_PASS" \
-              --out ../hasil/warung-go-digital.apk \
-              ../hasil/warung-go-digital.apk
-            "$TOOLS/apksigner" verify --print-certs ../hasil/warung-go-digital.apk
+              --out ../../hasil/warung-go-digital.apk \
+              ../../hasil/warung-go-digital.apk
+            "$TOOLS/apksigner" verify --print-certs ../../hasil/warung-go-digital.apk
             rm -f keystore.jks
           else
             echo "::warning::Kunci rilis belum diatur. APK memakai tanda tangan debug,"
             echo "::warning::sehingga Android menampilkan peringatan saat pemasangan."
             echo "::warning::Ikuti apk/buat-kunci.sh lalu isi 4 rahasia ANDROID_* di repo."
             ./gradlew assembleDebug --no-daemon
-            cp app/build/outputs/apk/debug/app-debug.apk ../hasil/warung-go-digital.apk
+            cp app/build/outputs/apk/debug/app-debug.apk ../../hasil/warung-go-digital.apk
           fi
 
-          ls -lh ../hasil/
+          ls -lh ../../hasil/
 
       - name: Unggah sebagai artefak
         uses: actions/upload-artifact@v4
