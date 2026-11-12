@@ -5,6 +5,10 @@ name: Bangun IPA iPhone (tanpa tanda tangan)
 # seperti Sideloadly atau AltStore dengan Apple ID Anda sendiri.
 #
 # Runner macOS gratis karena repo ini publik.
+#
+# Catatan: label `macos-13` sudah dihentikan GitHub (hanya tersisa macos-15,
+# macos-26, dan macos-latest). Selama memakai label yang sudah pensiun,
+# pekerjaan tidak pernah dapat mesin dan terus berstatus "queued" selamanya.
 
 on:
   push:
@@ -23,7 +27,7 @@ permissions:
 
 jobs:
   ipa:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
