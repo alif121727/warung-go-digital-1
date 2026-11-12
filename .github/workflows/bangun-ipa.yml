@@ -33,10 +33,18 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Capacitor 8 menuntut Node 22+ (engines: node >=22).
+          node-version: '22'
+
+      # Runner macOS menyediakan Python yang "externally managed" (PEP 668),
+      # sehingga `pip install` ditolak. setup-python memberi Python terpisah
+      # yang bisa memasang Pillow tanpa mengganggu sistem.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Pasang Pillow (untuk ikon)
-        run: python3 -m pip install pillow
+        run: python -m pip install --upgrade pip pillow
 
       - name: Siapkan berkas web
         run: node apk/siapkan.mjs

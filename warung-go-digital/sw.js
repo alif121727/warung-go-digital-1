@@ -14,7 +14,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v6';
+const VERSI = 'wgd-v7';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -43,6 +43,7 @@ const KERANGKA = [
   './bersama/inti.js',
   './bersama/data.js',
   './bersama/sinkron.js',
+  './bersama/native.js',
   './bersama/gaya.css',
 
   // Aplikasi Pemilik

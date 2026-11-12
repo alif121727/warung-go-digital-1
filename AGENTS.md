@@ -419,10 +419,47 @@ GitHub Release sebagai tautan unduh.
   bila `ANDROID_KEYSTORE_BASE64` tersedia. Pembuat kunci: `apk/buat-kunci.sh`.
   Rahasia: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASS`, `ANDROID_KEY_ALIAS`,
   `ANDROID_KEY_PASS`.
-- **iOS**: `.github/workflows/bangun-ipa.yml` (runner `macos-14`, gratis karena repo
+- **iOS**: `.github/workflows/bangun-ipa.yml` (runner `macos-latest`, gratis karena repo
   publik) membangun IPA **tanpa tanda tangan** (`CODE_SIGNING_ALLOWED=NO`), lalu
   membungkusnya jadi `.ipa`. Dipasang lewat Sideloadly/AltStore dengan Apple ID
   pengguna. Rilis IPA memakai tag terpisah `ios-v1.0.0` agar tidak menimpa rilis APK.
+  Runner macOS memakai Python "externally managed" (PEP 668), sehingga
+  `python3 -m pip install pillow` ditolak — pasang lewat `actions/setup-python`.
+- **Versi Android**: diambil dari `apk/package.json`. Jalankan
+  `python3 apk/setel-versi-android.py` **setelah** `npx cap sync android` untuk
+  menulis `versionCode`/`versionName`. Rumus `versionCode = mayor×10000 + minor×100 +
+  patch` (1.2.0 → 10200), karena Play menolak unggahan yang nomornya tidak naik.
+- **AAB untuk Play Store**: `bundleRelease` lalu ditandatangani dengan `jarsigner`
+  (AAB berbentuk arsip; `apksigner` hanya untuk APK). Hanya dibuat bila rahasia kunci
+  rilis tersedia. Panduan unggah: `PANDUAN-PLAY-STORE.md`.
+
+### Jebakan Capacitor 8 (jangan terulang)
+
+1. **Java 21, bukan 17.** `capacitor.build.gradle` yang dibuat `cap add android`
+   menetapkan `sourceCompatibility VERSION_21`; runner dengan Java 17 gagal dengan
+   "invalid source release: 21". Gradle 8.14.3 + AGP 8.13.0.
+2. **Folder `apk/android/` dan `apk/www/` diabaikan git** (`apk/.gitignore`). Proyek
+   Android tidak di-commit; ia dibuat ulang di CI dengan `npx cap add android`. Jadi
+   **jangan** mengedit berkas di dalam `apk/android/` — perubahan akan hilang. Semua
+   penyesuaian native harus lewat `apk/capacitor.config.json`, `apk/siapkan-aset-android.py`,
+   atau skrip lain yang dijalankan CI.
+3. **`npx cap sync android` menimpa `capacitor.build.gradle`** (daftar plugin +
+   `capacitor.plugins.json`). Tambah plugin = `npm install` lalu sync; jangan
+   mengedit berkas hasil generate.
+4. **Unduhan `blob:`/`a.download` tidak berjalan di WebView Android.** Karena itu
+   `bersama/native.js` mengganti `Inti.unduh` menjadi Filesystem `writeFile` +
+   Share saat berjalan di dalam aplikasi. Di peramban, berkas ini tidak melakukan
+   apa pun (no-op) — perilaku situs tidak berubah.
+5. **Tombol kembali perangkat** ditangani plugin `@capacitor/app` (`backButton`).
+   Urutannya: tutup dialog → pindah ke tab pertama → keluar. Logika ini juga di
+   `bersama/native.js`.
+6. **Uji tanpa perangkat Android**: `uji/uji-native.py` menirukan jembatan Capacitor
+   (`window.Capacitor` + `Plugins`) lewat `add_init_script`, lalu memeriksa penulisan
+   berkas, menu bagikan, dan urutan tombol kembali. Jalan di Chromium biasa.
+7. **Ikon bulat & splash jangan menempelkan gambar persegi penuh** ke latar warna —
+   tepinya terlihat sebagai garis. `apk/siapkan-aset-android.py` menempelkan hanya
+   huruf W (latar transparan) ke lingkaran/kotak warna merek.
+
 - Token GitHub yang tersedia **tidak punya izin menulis Secrets** (403), jadi kunci
   tanda tangan dan sertifikat iOS harus diisi pengguna lewat UI GitHub.
 

@@ -35,13 +35,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Capacitor 8 menuntut Node 22+ (engines: node >=22).
+          node-version: '22'
 
-      # Capacitor 6 memakai Gradle 8.2, yang belum mendukung Java 21. Pakai 17.
+      # Capacitor 8 memakai Gradle 8.14 dengan AGP 8.13, yang menargetkan
+      # Java 21 (lihat capacitor.build.gradle). Java 17 akan gagal dengan
+      # "invalid source release: 21".
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Pasang Pillow (untuk ikon)
         run: python3 -m pip install pillow
@@ -57,40 +60,17 @@ jobs:
         working-directory: apk
         run: npx cap add android
 
-      - name: Pasang ikon aplikasi
-        run: |
-          python3 - <<'PY'
-          from PIL import Image
-          from pathlib import Path
-          import shutil
+      - name: Pasang ikon & splash aplikasi
+        run: python3 apk/siapkan-aset-android.py
 
-          res = Path('apk/android/app/src/main/res')
-          dasar = Image.open('warung-go-digital/ikon/ikon-maskable-512.png').convert('RGBA')
-          ikon = dasar.resize((1024, 1024), Image.LANCZOS)
-
-          # Ikon adaptif bawaan Capacitor menunjuk ke gambar contohnya sendiri.
-          # Hapus supaya Android memakai ic_launcher.png milik kita.
-          for d in res.glob('mipmap-anydpi-v26'):
-              shutil.rmtree(d, ignore_errors=True)
-
-          ukuran = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}
-          n = 0
-          for nama, px in ukuran.items():
-              folder = res / f'mipmap-{nama}'
-              if not folder.exists():
-                  continue
-              gambar = ikon.resize((px, px), Image.LANCZOS)
-              for berkas in ('ic_launcher.png', 'ic_launcher_round.png'):
-                  gambar.save(folder / berkas, 'PNG', optimize=True)
-                  n += 1
-          print(f'ikon diganti: {n} berkas')
-          PY
+      - name: Samakan versi Android dengan package.json
+        run: python3 apk/setel-versi-android.py
 
       - name: Selaraskan berkas web ke Android
         working-directory: apk
         run: npx cap sync android
 
-      - name: Bangun APK
+      - name: Bangun APK (unduh langsung) & AAB (Play Store)
         working-directory: apk/android
         env:
           KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -101,16 +81,18 @@ jobs:
           chmod +x gradlew
           mkdir -p ../../hasil
 
-          # Tanda tangan dilakukan dengan apksigner (bukan konfigurasi Gradle)
-          # agar hasilnya pasti: assembleRelease menghasilkan APK tanpa tanda
+          # Tanda tangan dilakukan dengan apksigner/jarsigner (bukan konfigurasi
+          # Gradle) agar hasilnya pasti: Gradle menghasilkan berkas tanpa tanda
           # tangan, lalu kita tandatangani sendiri dengan kunci rilis.
           if [ -n "$KS_B64" ]; then
-            echo "Kunci rilis ditemukan — APK akan bertanda tangan rilis."
+            echo "Kunci rilis ditemukan — APK & AAB akan bertanda tangan rilis."
             echo "$KS_B64" | base64 -d > keystore.jks
-            ./gradlew assembleRelease --no-daemon
+            ./gradlew assembleRelease bundleRelease --no-daemon
 
             TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
             echo "Memakai build-tools: $TOOLS"
+
+            # APK: sejajarkan lalu tandatangani dengan apksigner.
             "$TOOLS/zipalign" -f 4 \
               app/build/outputs/apk/release/app-release-unsigned.apk \
               ../../hasil/warung-go-digital.apk
@@ -122,10 +104,24 @@ jobs:
               --out ../../hasil/warung-go-digital.apk \
               ../../hasil/warung-go-digital.apk
             "$TOOLS/apksigner" verify --print-certs ../../hasil/warung-go-digital.apk
+
+            # AAB untuk Google Play: berkas ini berbentuk arsip, jadi
+            # ditandatangani dengan jarsigner (cara resmi Google Play).
+            cp app/build/outputs/bundle/release/app-release.aab \
+              ../../hasil/warung-go-digital.aab
+            jarsigner -verbose \
+              -sigalg SHA256withRSA -digestalg SHA-256 \
+              -keystore keystore.jks \
+              -storepass "$KS_PASS" \
+              -keypass "$KEY_PASS" \
+              ../../hasil/warung-go-digital.aab "$KEY_ALIAS"
+            jarsigner -verify -verbose -certs ../../hasil/warung-go-digital.aab \
+              | tail -3
             rm -f keystore.jks
           else
             echo "::warning::Kunci rilis belum diatur. APK memakai tanda tangan debug,"
             echo "::warning::sehingga Android menampilkan peringatan saat pemasangan."
+            echo "::warning::AAB tidak dibuat karena Play Store wajib memakai kunci rilis."
             echo "::warning::Ikuti apk/buat-kunci.sh lalu isi 4 rahasia ANDROID_* di repo."
             ./gradlew assembleDebug --no-daemon
             cp app/build/outputs/apk/debug/app-debug.apk ../../hasil/warung-go-digital.apk
@@ -137,7 +133,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: warung-go-digital-apk
-          path: hasil/warung-go-digital.apk
+          path: |
+            hasil/warung-go-digital.apk
+            hasil/warung-go-digital.aab
           if-no-files-found: error
 
       - name: Cek rilis (rilis lama bersifat tetap/tidak bisa ditimpa)
@@ -148,10 +146,10 @@ jobs:
           # Rilis yang sudah ada (dan immutable) tidak bisa ditimpa GitHub.
           # Bila aset sudah ada, lewati langkah lampirkan agar alur kerja tidak
           # merah; untuk menerbitkan APK baru, naikkan tag_name.
-          if gh release view v1.1.0 --repo "$GITHUB_REPOSITORY" --json assets \
+          if gh release view v1.2.0 --repo "$GITHUB_REPOSITORY" --json assets \
                --jq '.assets[].name' 2>/dev/null | grep -qx 'warung-go-digital.apk'; then
             echo "ada=true" >> "$GITHUB_OUTPUT"
-            echo "Rilis v1.1.0 sudah punya APK. Langkah lampirkan dilewati."
+            echo "Rilis v1.2.0 sudah punya APK. Langkah lampirkan dilewati."
           else
             echo "ada=false" >> "$GITHUB_OUTPUT"
           fi
@@ -160,8 +158,8 @@ jobs:
         if: steps.rilis.outputs.ada != 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.0
-          name: Warung Go Digital 1.1.0
+          tag_name: v1.2.0
+          name: Warung Go Digital 1.2.0
           body: |
             Aplikasi Android Warung Go Digital — dapat dipasang langsung di HP.
 
@@ -170,12 +168,22 @@ jobs:
             - Panel Pengelola: rekap penjualan, pendapatan, dan lokasi seluruh mitra.
 
             Keduanya berfungsi tanpa internet dan tidak membuka peramban.
-            Versi 1.1.0 menambah tab Sinkron untuk mengirim laporan otomatis
-            ke server pengelola (opsional; tanpa itu, kirim manual tetap ada).
+
+            Versi 1.2.0 memperbaiki perilaku di dalam aplikasi:
+            - Tombol kembali HP: menutup dialog → pindah ke tab pertama → keluar.
+            - Unduh berkas (CSV, cadangan JSON, poster) kini benar-benar
+              tersimpan di perangkat, lalu muncul menu Bagikan Android.
+            - Ikon adaptif, ikon bulat, dan splash screen baru bermerek.
+
+            Tersedia dua berkas:
+            - warung-go-digital.apk — pasang langsung di HP Android.
+            - warung-go-digital.aab — untuk diunggah ke Google Play Store.
 
             Cara memasang: unduh berkas APK di bawah, lalu buka di HP Android dan
             izinkan pemasangan dari sumber ini bila diminta.
-          files: hasil/warung-go-digital.apk
+          files: |
+            hasil/warung-go-digital.apk
+            hasil/warung-go-digital.aab
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -5,9 +5,33 @@
   "bundledWebRuntime": false,
   "android": {
     "allowMixedContent": false,
-    "backgroundColor": "#f7f5f0"
+    "backgroundColor": "#f7f5f0",
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "backgroundColor": "#f7f5f0",
+    "contentInset": "always"
   },
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "iosScheme": "capacitor"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#0d1a12",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "iosSpinnerStyle": "small",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0d1a12",
+      "overlaysWebView": false
+    }
   }
 }

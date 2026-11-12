@@ -12,5 +12,8 @@ node_modules/
 # Setelan editor
 .vscode/
 
+# Berkas sementara Python
+__pycache__/
+
 # Berkas hasil bangun APK/IPA dari CI
 hasil/
