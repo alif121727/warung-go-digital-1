@@ -175,9 +175,11 @@ jobs:
               tersimpan di perangkat, lalu muncul menu Bagikan Android.
             - Ikon adaptif, ikon bulat, dan splash screen baru bermerek.
 
-            Tersedia dua berkas:
+            Tersedia berkas:
             - warung-go-digital.apk — pasang langsung di HP Android.
             - warung-go-digital.aab — untuk diunggah ke Google Play Store.
+              Hanya dibuat bila rahasia kunci rilis (ANDROID_*) sudah diisi;
+              lihat PANDUAN-PLAY-STORE.md.
 
             Cara memasang: unduh berkas APK di bawah, lalu buka di HP Android dan
             izinkan pemasangan dari sumber ini bila diminta.
