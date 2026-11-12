@@ -460,6 +460,27 @@ GitHub Release sebagai tautan unduh.
    tepinya terlihat sebagai garis. `apk/siapkan-aset-android.py` menempelkan hanya
    huruf W (latar transparan) ke lingkaran/kotak warna merek.
 
+### Jebakan Capacitor 8 di iOS (jangan terulang)
+
+Capacitor 8 memasang plugin lewat **Swift Package Manager**, bukan CocoaPods.
+Akibatnya `npx cap add ios` hanya menghasilkan `App.xcodeproj` — **tidak ada
+`App.xcworkspace`** — sehingga `xcodebuild -workspace App.xcworkspace` gagal dengan
+"App.xcworkspace does not exist". Alur kerja memilih otomatis: pakai workspace bila
+ada, selain itu `-project App.xcodeproj`.
+
+Dua hal lain yang wajib diperhatikan saat membangun IPA di Xcode 26:
+
+1. **Jangan menimpa `CONFIGURATION_BUILD_DIR`.** Menimpanya membuat Xcode menaruh
+   hasil tiap paket SPM di folder terpisah, sehingga `FilesystemPlugin` gagal
+   menemukan `IONFilesystemLib` ("no such module 'IONFilesystemLib'"). Pakai lokasi
+   bawaan Xcode, lalu ambil berkas `.app` dari
+   `build/Build/Products/Release-iphoneos` untuk dibungkus jadi IPA.
+2. **`SWIFT_ENABLE_EXPLICIT_MODULES=NO`.** Pada Xcode 26 "explicit module build"
+   kadang gagal menemukan modul dari paket SPM tidak langsung (mis.
+   `ion-ios-filesystem` yang dipakai plugin filesystem) dengan pesan
+   "unable to resolve module dependency". Mematikannya membuat pencarian modul
+   kembali memakai jalur `-I` biasa.
+
 - Token GitHub yang tersedia **tidak punya izin menulis Secrets** (403), jadi kunci
   tanda tangan dan sertifikat iOS harus diisi pengguna lewat UI GitHub.
 
