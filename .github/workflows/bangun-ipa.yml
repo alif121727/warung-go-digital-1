@@ -118,11 +118,17 @@ jobs:
           fi
           echo "Memakai: $PROYEK"
 
+          # Xcode 26 kadang gagal menemukan modul dari paket SPM tidak langsung
+          # (mis. IONFilesystemLib yang dipakai plugin filesystem) saat
+          # "explicit module build" aktif: "unable to resolve module dependency".
+          # Mematikannya membuat compiler mencari modul lewat -I biasa.
           xcodebuild $PROYEK \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
             -derivedDataPath build \
+            SWIFT_ENABLE_EXPLICIT_MODULES=NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
