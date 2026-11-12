@@ -39,6 +39,15 @@ memakai Capacitor — tanpa membuka peramban sama sekali.
 Package name: `id.warunggodigital.app`. Panduan lengkap mengunggah ke Play Store
 ada di [PANDUAN-PLAY-STORE.md](PANDUAN-PLAY-STORE.md).
 
+Bahan unggah Play Store sudah jadi dan bisa langsung dipakai:
+
+| Kebutuhan | Berkas |
+|---|---|
+| Ikon 512×512 | `playstore/ikon-512.png` |
+| Feature graphic 1024×500 | `playstore/feature-graphic-1024x500.png` |
+| Tangkapan layar HP (5 buah) | `playstore/tangkapan/` |
+| Deskripsi, Data safety, catatan rilis | `playstore/teks-listing.md` |
+| Kebijakan privasi | `warung-go-digital/privasi.html` |
 
 ## Coba sekarang
 
@@ -93,6 +102,7 @@ python3 uji/uji-qr.py           # QR terbaca kembali
 python3 uji/uji-dua-aplikasi.py # aplikasi Pemilik & Panel Pengelola berjalan bersama
 python3 uji/uji-sinkron.py      # server sinkron otomatis
 python3 uji/uji-native.py       # perilaku di dalam aplikasi (tombol kembali, unduh berkas)
+python3 uji/uji-playstore.py    # aset & izin untuk Google Play Store
 ```
 
 Semua uji memakai Playwright + Chromium dan server statis sementara.

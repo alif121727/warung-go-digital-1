@@ -484,6 +484,30 @@ Dua hal lain yang wajib diperhatikan saat membangun IPA di Xcode 26:
 - Token GitHub yang tersedia **tidak punya izin menulis Secrets** (403), jadi kunci
   tanda tangan dan sertifikat iOS harus diisi pengguna lewat UI GitHub.
 
+### Izin lokasi (Android & iOS)
+
+Aplikasi Pemilik memakai `navigator.geolocation` untuk tombol "Ambil titik
+lokasi". Jembatan Capacitor hanya meneruskan permintaan itu bila izinnya
+**dideklarasikan di berkas asli aplikasi** — kalau tidak, jembatan membalas
+"ditolak" dan tombolnya diam saja tanpa pesan apa pun.
+
+Karena `apk/android/` dan `apk/ios/` diabaikan git (hasil generate), penyesuaian
+harus lewat skrip yang dijalankan alur kerja setelah `npx cap add`:
+
+- `apk/siapkan-manifest-android.py` — menambah `ACCESS_COARSE_LOCATION` ke
+  `AndroidManifest.xml`.
+- `apk/siapkan-izin-ios.py` — menambah `NSLocationWhenInUseUsageDescription` ke
+  `Info.plist`. Tanpa kunci ini iOS langsung menutup aplikasi saat lokasi diminta.
+
+### Bahan Google Play Store
+
+`buat-aset-playstore.py` menghasilkan `playstore/` (ikon 512, feature graphic
+1024×500, dan tangkapan layar 1080×1920) dengan menyuntikkan data contoh ke
+`localStorage` lalu memotret lewat Playwright pada viewport 480×853 dengan
+`device_scale_factor` 2.25. Tangkapan Play Store wajib **tepat 1080×1920**
+(rasio 9:16), jadi hasilnya dinormalkan ke ukuran itu. Teks listing, jawaban
+Data safety, dan catatan rilis ada di `playstore/teks-listing.md`.
+
 ## Yang belum dikerjakan (butuh keputusan pemilik)
 
 - **Menu publik belum bisa dibuka pelanggan dari HP lain.** `app/menu.html` membaca
@@ -500,6 +524,13 @@ Dua hal lain yang wajib diperhatikan saat membangun IPA di Xcode 26:
 - **Penandatanganan APK & IPA menunggu rahasia dari pengguna.** Kode dan alur sudah
   siap; yang kurang hanya 4 rahasia Android (atau akun Apple Developer untuk IPA
   bertanda tangan). Agen tidak bisa menulis Secrets karena tokennya 403.
+
+- **Unggahan ke Google Play butuh akun pengembang milik pengguna.** Semua bahan
+  teknis sudah siap (`playstore/`, `PANDUAN-PLAY-STORE.md`, AAB). Yang tersisa:
+  membuat akun Play Console (±25 USD, sekali bayar), menerima perjanjian Google,
+  mengisi email kontak pengembang, lalu mengunggah AAB dan menekan "Start rollout".
+  Ini hanya bisa dilakukan pemilik akun — agen tidak punya akses ke pembayaran atau
+  akun Google.
 
 - **Menu publik Panel Mitra lama masih membaca `localStorage`.** Belum diperbaiki;
   lihat butir di atas.

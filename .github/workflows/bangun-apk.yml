@@ -63,6 +63,9 @@ jobs:
       - name: Pasang ikon & splash aplikasi
         run: python3 apk/siapkan-aset-android.py
 
+      - name: Sesuaikan AndroidManifest (izin lokasi)
+        run: python3 apk/siapkan-manifest-android.py
+
       - name: Samakan versi Android dengan package.json
         run: python3 apk/setel-versi-android.py
 

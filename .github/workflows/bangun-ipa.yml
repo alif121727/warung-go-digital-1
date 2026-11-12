@@ -87,6 +87,9 @@ jobs:
           print(f'ikon iOS diganti: {n} berkas')
           PY
 
+      - name: Tambahkan izin lokasi (iOS)
+        run: python3 apk/siapkan-izin-ios.py
+
       - name: Selaraskan berkas web ke iOS
         working-directory: apk
         run: npx cap sync ios

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Kebijakan Privasi — Warung Go Digital</title>
+<meta name="description" content="Kebijakan privasi aplikasi dan situs Warung Go Digital: data disimpan di perangkat Anda, tidak ada pelacakan, tidak ada iklan." />
+<meta name="theme-color" content="#0d1a12" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230d1a12'/%3E%3Cpath d='M3 10.5 12 4l9 6.5M5 10v9h14v-9M9 19v-5h6v5' fill='none' stroke='%23f5a524' stroke-width='1.9' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { background: var(--cream); }
+  .legal { max-width: 760px; margin: 0 auto; padding: clamp(28px, 6vw, 72px) clamp(18px, 5vw, 40px) 96px; }
+  .legal__head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  .legal h1 { font-size: clamp(28px, 5.2vw, 42px); line-height: 1.08; margin: 18px 0 6px; }
+  .legal h2 { font-size: clamp(19px, 3.2vw, 24px); margin: 38px 0 10px; }
+  .legal p, .legal li { color: var(--t-body); line-height: 1.68; font-size: 16.5px; }
+  .legal ul { padding-left: 22px; margin: 10px 0; }
+  .legal li { margin: 6px 0; }
+  .legal .meta { color: var(--t-muted); font-size: 14.5px; }
+  .legal .card { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; margin: 18px 0; }
+  .legal .card h2 { margin-top: 0; }
+  .legal code { font-family: 'JetBrains Mono', monospace; font-size: .92em; background: var(--cream-2); padding: 2px 6px; border-radius: 6px; }
+  .legal a { color: var(--ink); font-weight: 600; }
+  .legal .back { display: inline-flex; align-items: center; gap: 8px; margin-top: 40px; font-weight: 600; }
+</style>
+</head>
+<body>
+<main class="legal">
+  <div class="legal__head">
+    <span class="logo__mark" aria-hidden="true" style="display:inline-flex;width:40px;height:40px;align-items:center;justify-content:center;background:var(--ink);border-radius:12px;color:var(--amber)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/>
+      </svg>
+    </span>
+    <strong style="font-size:19px">Warung Go Digital</strong>
+  </div>
+
+  <h1>Kebijakan Privasi</h1>
+  <p class="meta">Berlaku sejak 12 November 2026 · Berlaku untuk aplikasi Android/iOS dan situs web Warung Go Digital</p>
+
+  <p>
+    Warung Go Digital adalah aplikasi pencatatan penjualan, pendapatan, dan lokasi jualan
+    harian untuk pemilik warung dan UMKM, beserta panel pengelola untuk merekap laporan
+    mitra. Kami merancang aplikasi ini agar <strong>data Anda tetap di perangkat Anda</strong>.
+  </p>
+
+  <div class="card">
+    <h2>Ringkas</h2>
+    <ul>
+      <li>Kami <strong>tidak</strong> memiliki server yang menyimpan data warung Anda secara bawaan.</li>
+      <li>Kami <strong>tidak</strong> memakai iklan, analitik, atau pelacak pihak ketiga.</li>
+      <li>Kami <strong>tidak</strong> mengumpulkan nama, nomor telepon, atau kontak Anda.</li>
+      <li>Lokasi hanya diambil saat Anda menekan tombol "Ambil titik peta", dan tetap di perangkat.</li>
+      <li>Anda dapat menghapus seluruh data kapan saja dari dalam aplikasi.</li>
+    </ul>
+  </div>
+
+  <h2>1. Data yang disimpan</h2>
+  <p>
+    Aplikasi menyimpan data berikut <strong>hanya di penyimpanan lokal perangkat</strong>
+    (untuk aplikasi: penyimpanan internal aplikasi; untuk situs: <code>localStorage</code> peramban):
+  </p>
+  <ul>
+    <li>Identitas warung yang Anda isi sendiri: nama warung, nama pemilik, nomor WhatsApp, alamat, dan jenis usaha.</li>
+    <li>Catatan harian: tanggal, omzet, pengeluaran, jumlah transaksi, rincian barang, dan catatan bebas.</li>
+    <li>Titik peta (opsional) bila Anda menekan "Ambil titik peta".</li>
+  </ul>
+  <p>
+    Data ini tidak dikirim ke kami. Aplikasi tetap berfungsi penuh tanpa internet.
+  </p>
+
+  <h2>2. Izin perangkat</h2>
+  <ul>
+    <li><strong>Lokasi (perkiraan)</strong> — hanya dipakai saat Anda menekan tombol "Ambil titik peta",
+      untuk menyimpan koordinat warung. Boleh ditolak; fitur lain tetap berjalan.</li>
+    <li><strong>Penyimpanan berkas</strong> — dipakai saat Anda menyimpan berkas ekspor
+      (CSV, cadangan JSON, poster) atau membagikannya lewat menu Bagikan Android/iOS.</li>
+  </ul>
+
+  <h2>3. Membagikan data (tindakan Anda sendiri)</h2>
+  <p>
+    Aplikasi tidak mengirim data apa pun secara otomatis. Data hanya keluar bila
+    <strong>Anda sendiri</strong> yang melakukannya, yaitu lewat:
+  </p>
+  <ul>
+    <li>tombol <em>Kirim</em> — berkas laporan dibuat di perangkat, lalu Anda lampirkan ke WhatsApp;</li>
+    <li>tombol <em>Bagikan</em> — berkas dibagikan ke aplikasi lain yang Anda pilih;</li>
+    <li>tab <em>Sinkron</em> (opsional) — bila Anda mengisi alamat server, catatan dikirim
+      ke alamat tersebut. Server itu milik pengelola Anda, bukan milik kami. Fitur ini
+      nonaktif bila alamat dibiarkan kosong.</li>
+  </ul>
+
+  <h2>4. Pihak ketiga</h2>
+  <p>
+    Aplikasi tidak menyertakan iklan, SDK analitik, atau pustaka pelacak. Situs web memuat
+    huruf (font) dari Google Fonts; permintaan itu tunduk pada kebijakan privasi Google.
+    Selain itu tidak ada layanan pihak ketiga lain.
+  </p>
+
+  <h2>5. Anak-anak</h2>
+  <p>
+    Aplikasi ini ditujukan untuk pemilik usaha dewasa (18 tahun ke atas), bukan untuk anak-anak.
+    Kami tidak sengaja mengumpulkan data anak.
+  </p>
+
+  <h2>6. Menghapus data Anda</h2>
+  <ul>
+    <li><strong>Di aplikasi:</strong> buka menu Cadangan/Setelan lalu pilih hapus data, atau
+      hapus aplikasi dari perangkat.</li>
+    <li><strong>Di situs:</strong> bersihkan data situs (localStorage) dari pengaturan peramban.</li>
+    <li>Karena kami tidak menyimpan data Anda di server, tidak ada permintaan penghapusan
+      yang perlu diajukan ke kami.</li>
+  </ul>
+
+  <h2>7. Keamanan</h2>
+  <p>
+    Data tersimpan di dalam ruang terbatas milik aplikasi pada perangkat Anda. Kami sarankan
+    mengunci layar perangkat dan memakai fitur cadangan aplikasi untuk menyimpan salinan aman
+    pada perangkat atau akun cloud pribadi Anda.
+  </p>
+
+  <h2>8. Perubahan kebijakan</h2>
+  <p>
+    Bila kebijakan ini berubah, kami akan memperbarui tanggal di atas dan menampilkan versi
+    terbaru di halaman ini.
+  </p>
+
+  <h2>9. Hubungi kami</h2>
+  <p>
+    Pertanyaan tentang privasi dapat dikirim lewat WhatsApp
+    <a href="https://wa.me/6281563324546?text=Halo%20Warung%20Go%20Digital%2C%20saya%20ingin%20bertanya%20soal%20privasi." target="_blank" rel="noopener noreferrer">0815-6332-4546</a>
+    atau lewat halaman kontak di situs ini. Warung Go Digital dikelola oleh Program Studi
+    Bisnis Digital, Universitas Amikom Purwokerto.
+  </p>
+
+  <a class="back" href="./">← Kembali ke beranda</a>
+</main>
+</body>
+</html>

@@ -76,23 +76,49 @@ Untuk mencoba membangun di komputer sendiri, lihat `AGENTS.md` bagian
 
 ## 4. Mengunggah ke Google Play Console
 
+Semua berkas dan teks yang diminta Play Console **sudah disiapkan** di repo ini:
+
+| Kebutuhan Play Console | Berkas siap pakai |
+| --- | --- |
+| Ikon aplikasi 512×512 | `playstore/ikon-512.png` |
+| Feature graphic 1024×500 | `playstore/feature-graphic-1024x500.png` |
+| Tangkapan layar HP (min. 2) | `playstore/tangkapan/` — 5 berkas 1080×1920 |
+| Deskripsi singkat & panjang | `playstore/teks-listing.md` §2 |
+| Jawaban Data safety | `playstore/teks-listing.md` §3 |
+| Jawaban App content | `playstore/teks-listing.md` §4 |
+| Catatan rilis | `playstore/teks-listing.md` §6 |
+| Kebijakan privasi (URL wajib) | `https://alif121727.github.io/warung-go-digital-1/privasi.html` |
+
+Bila ingin menyegarkan tangkapan layar (mis. setelah tampilan berubah):
+
+```bash
+python3 -m pip install pillow playwright
+python3 -m playwright install chromium
+bash jalankan.sh 12001                    # jalankan situs
+python3 buat-aset-playstore.py http://localhost:12001
+```
+
+Lalu ikuti langkah berikut:
+
 1. Buka <https://play.google.com/console> dan buat akun pengembang
    (sekali bayar ±25 USD).
 2. **Create app** → isi nama "Warung Go Digital", bahasa Indonesia,
    jenis **App**, kategori **Business**.
 3. Isi **App content** (wajib sebelum bisa dirilis):
-   - Privacy policy — gunakan tautan ke halaman kebijakan privasi Anda.
-   - Data safety — data tersimpan **lokal di perangkat**; laporan hanya
-     dikirim bila pengguna mengisi alamat server sinkron. Nyatakan bahwa
-     aplikasi tidak mengumpulkan data pribadi tanpa tindakan pengguna.
+   - Privacy policy — pakai tautan di tabel atas.
+   - Data safety — salin jawaban dari `playstore/teks-listing.md` §3.
    - Ads — pilih "No ads".
    - Target audience — dewasa (18+), bukan untuk anak.
 4. **Store listing**: unggah ikon 512×512, feature graphic 1024×500,
-   minimal 2 tangkapan layar HP, dan deskripsi singkat + panjang.
-   Ikon 512×512 sudah tersedia di `warung-go-digital/ikon/ikon-512.png`.
+   minimal 2 tangkapan layar HP, dan deskripsi singkat + panjang dari
+   `playstore/teks-listing.md` §2.
 5. **Production → Create new release** → unggah
    `warung-go-digital.aab` → isi catatan rilis → **Review release** → **Start
    rollout**.
+
+> **Langkah yang hanya bisa Anda lakukan:** membuat akun, membayar biaya
+> pendaftaran, menerima perjanjian Google Play, dan menekan tombol rilis.
+> Semua bahan teknis lainnya sudah siap di repo.
 
 ### Play App Signing (disarankan)
 
@@ -105,13 +131,18 @@ sebagai "upload key".
 
 ## 5. Yang perlu Anda siapkan untuk halaman listing
 
-- Deskripsi singkat (maks. 80 karakter), mis.
-  *"Catat penjualan warung & kirim laporan ke pengelola, tanpa internet."*
-- Deskripsi panjang (maks. 4000 karakter).
-- Tangkapan layar dari aplikasi Pemilik (tab Catat, Riwayat, Kirim) dan
-  Panel Pengelola.
-- Feature graphic 1024×500 px.
-- Alamat kebijakan privasi (bisa halaman statis di GitHub Pages repo ini).
+Semuanya **sudah dibuat**; Anda tinggal mengunggah:
+
+- Deskripsi singkat (78 karakter) dan deskripsi panjang → `playstore/teks-listing.md` §2.
+- Tangkapan layar aplikasi Pemilik (Catat, Riwayat, Kirim) dan Panel Pengelola
+  → `playstore/tangkapan/` (5 berkas, 1080×1920).
+- Feature graphic 1024×500 → `playstore/feature-graphic-1024x500.png`.
+- Ikon 512×512 → `playstore/ikon-512.png`.
+- Alamat kebijakan privasi →
+  `https://alif121727.github.io/warung-go-digital-1/privasi.html`.
+
+Yang masih perlu Anda isi sendiri: **email kontak pengembang** di Play Console
+(Play menolak alamat contoh seperti `contoh@email.com`).
 
 ---
 
@@ -129,3 +160,9 @@ sebagai "upload key".
   ke perangkat lalu dibuka menu Bagikan Android, karena unduhan lewat
   `blob:` tidak berjalan di WebView.
 - Aplikasi berjalan penuh **tanpa internet**; tab Sinkron opsional.
+- **Izin lokasi** (`ACCESS_COARSE_LOCATION`) ditambahkan lewat
+  `apk/siapkan-manifest-android.py` agar tombol "Ambil titik lokasi" berfungsi
+  di dalam aplikasi. Folder `apk/android/` diabaikan git, jadi penyesuaian
+  manifest harus lewat skrip, bukan mengedit hasil generate.
+- **Kebijakan privasi** tersedia di `warung-go-digital/privasi.html`
+  (dibutuhkan Play Store) dan tertaut dari footer beranda.

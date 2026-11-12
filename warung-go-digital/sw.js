@@ -14,7 +14,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v7';
+const VERSI = 'wgd-v8';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -58,6 +58,7 @@ const KERANGKA = [
   './admin/app.js',
   './admin/manifest.webmanifest',
   './manifest.webmanifest',
+  './privasi.html',
   './ikon/ikon-192.png',
   './ikon/ikon-512.png',
   './ikon/ikon-maskable-512.png',
