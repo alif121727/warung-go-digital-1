@@ -106,7 +106,19 @@ jobs:
           # Tanpa akun Apple, aplikasi tetap bisa dibangun dengan
           # CODE_SIGNING_ALLOWED=NO. Hasilnya adalah .app yang lalu
           # dibungkus jadi .ipa agar mudah dipasang lewat Sideloadly.
-          xcodebuild -workspace App.xcworkspace \
+          #
+          # Capacitor 8 memakai Swift Package Manager (bukan CocoaPods),
+          # sehingga yang ada adalah App.xcodeproj — bukan App.xcworkspace.
+          # Bila kelak CocoaPods dipakai lagi, workspace akan dibuat dan
+          # harus dipakai sebagai gantinya.
+          if [ -d App.xcworkspace ]; then
+            PROYEK="-workspace App.xcworkspace"
+          else
+            PROYEK="-project App.xcodeproj"
+          fi
+          echo "Memakai: $PROYEK"
+
+          xcodebuild $PROYEK \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
