@@ -122,6 +122,10 @@ jobs:
           # (mis. IONFilesystemLib yang dipakai plugin filesystem) saat
           # "explicit module build" aktif: "unable to resolve module dependency".
           # Mematikannya membuat compiler mencari modul lewat -I biasa.
+          #
+          # CONFIGURATION_BUILD_DIR sengaja TIDAK diubah: menimpanya membuat
+          # Xcode menaruh hasil tiap paket SPM di folder berbeda, sehingga
+          # FilesystemPlugin tidak menemukan IONFilesystemLib ("no such module").
           xcodebuild $PROYEK \
             -scheme App \
             -configuration Release \
@@ -132,11 +136,14 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            CONFIGURATION_BUILD_DIR=build/Release-iphoneos \
             build
 
+          APP=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' | head -1)
+          echo "Hasil bangun: $APP"
+          test -n "$APP"
+
           mkdir -p ../hasil/Payload
-          cp -R build/Release-iphoneos/App.app ../hasil/Payload/
+          cp -R "$APP" ../hasil/Payload/App.app
           cd ../hasil
           zip -qry warung-go-digital.ipa Payload
           rm -rf Payload
