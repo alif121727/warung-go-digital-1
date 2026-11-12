@@ -44,7 +44,7 @@ jobs:
           java-version: '17'
 
       - name: Pasang Pillow (untuk ikon)
-        run: pip install pillow
+        run: python3 -m pip install pillow
 
       - name: Siapkan berkas web
         run: node apk/siapkan.mjs
