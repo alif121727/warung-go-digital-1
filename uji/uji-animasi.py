@@ -482,6 +482,9 @@ with sync_playwright() as p:
     }""")
     cek("kedalaman 3D: panggung terpasang", r["panggung"], r["panggung"])
     cek("kedalaman 3D: ada beberapa lapisan", r["lapis"] >= 5, r["lapis"])
+    # Tanpa `preserve-3d` pada kartunya, isi glowcard menempel datar dan
+    # kedalaman lapisan di dalamnya hilang.
+    cek("kedalaman 3D: kartu dalam punya kedalaman", r["dalam"], r["dalam"])
     kotak = pg.query_selector(".hero__visual").bounding_box()
     pg.mouse.move(kotak["x"] + kotak["width"] * 0.85, kotak["y"] + kotak["height"] * 0.2)
     pg.wait_for_timeout(800)
@@ -689,9 +692,174 @@ with sync_playwright() as p:
     # Cukup pastikan versi sudah dinaikkan minimal ke angka saat berkas
     # animasi didaftarkan, bukan nomor persisnya.
     v = re.search(r"VERSI = 'wgd-v(\d+)'", sw)
-    cek("sw.js versi cache minimal v15", bool(v) and int(v.group(1)) >= 15,
+    cek("sw.js versi cache minimal v16", bool(v) and int(v.group(1)) >= 16,
         v.group(0) if v else "tidak ditemukan")
     pg.close()
+
+    # ── 7q. Efek gerak menjangkau SELURUH halaman ────────────
+    # Sebelumnya parallax, kanvas, dan 3D hanya hidup di bagian hero yang
+    # gelap. Bagian ini menjaga supaya tidak kembali begitu.
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(2400)
+
+    # Kanvas: tepat satu, dan dipasang pada <body> supaya menutupi semua
+    # bagian. Lebih dari satu berarti bagiannya kembali dibuat per seksi.
+    r = pg.evaluate("""()=>({
+      jumlah:document.querySelectorAll('.ax-kanvas').length,
+      diBadan:!!document.querySelector('body > .ax-kanvas'),
+      pos:document.querySelector('.ax-kanvas')
+            ?getComputedStyle(document.querySelector('.ax-kanvas')).position:'-',
+      pointer:document.querySelector('.ax-kanvas')
+            ?getComputedStyle(document.querySelector('.ax-kanvas')).pointerEvents:'-',
+    })""")
+    cek("kanvas menyeluruh: tepat satu kanvas", r["jumlah"] == 1, r["jumlah"])
+    cek("kanvas menyeluruh: dipasang di <body>, bukan per bagian",
+        r["diBadan"], r["diBadan"])
+    cek("kanvas menyeluruh: posisi tetap mengikuti layar",
+        r["pos"] == "fixed", r["pos"])
+    cek("kanvas menyeluruh: tidak menangkap klik",
+        r["pointer"] == "none", r["pointer"])
+
+    # Kanvas tidak boleh menutupi isi halaman.
+    r = pg.evaluate("""()=>{
+      const t=document.elementFromPoint(window.innerWidth/2, 300);
+      return {atas:(t.className||t.tagName).toString()};
+    }""")
+    cek("kanvas menyeluruh: konten tetap di atas kanvas",
+        "ax-kanvas" not in r["atas"], r["atas"])
+
+    # Parallax harus menjangkau banyak bagian, bukan hanya hero.
+    r = pg.evaluate("""()=>{
+      const semua=[...document.querySelectorAll('.ax-parallax')];
+      const bagianBaru=semua.filter(e=>!e.closest('.hero'));
+      return {total:semua.length, diLuarHero:bagianBaru.length};
+    }""")
+    cek("parallax menyeluruh: banyak lapisan bergerak", r["total"] >= 15,
+        r["total"])
+    cek("parallax menyeluruh: ada di luar bagian hero",
+        r["diLuarHero"] >= 5, r["diLuarHero"])
+
+    # Kedalaman 3D juga dipasang pada bagian isi, dengan sudut lebih halus.
+    r = pg.evaluate("""()=>{
+      const panggung=[...document.querySelectorAll('.ax-3d')];
+      const halus=panggung.filter(e=>e.classList.contains('ax-3d--halus'));
+      return {total:panggung.length, halus:halus.length,
+              lapis:document.querySelectorAll('.ax-3d__lapis').length};
+    }""")
+    cek("kedalaman 3D menyeluruh: lebih dari satu panggung",
+        r["total"] >= 3, r["total"])
+    cek("kedalaman 3D menyeluruh: bagian isi pakai sudut halus",
+        r["halus"] >= 2, r["halus"])
+    cek("kedalaman 3D menyeluruh: lapisan bertambah banyak",
+        r["lapis"] >= 12, r["lapis"])
+
+    # Claymorphism harus tersebar di banyak jenis elemen, bukan hanya chip.
+    r = pg.evaluate("""()=>{
+      const semua=[...document.querySelectorAll('.ax-clay')];
+      const jenis=new Set(semua.map(e=>(e.className||'').toString()
+        .split(' ').find(c=>c && !c.startsWith('ax-clay'))));
+      return {jumlah:semua.length, jenis:jenis.size};
+    }""")
+    cek("clay menyeluruh: menjangkau banyak elemen", r["jumlah"] >= 20,
+        r["jumlah"])
+    cek("clay menyeluruh: lebih dari tiga jenis elemen", r["jenis"] >= 4,
+        r["jenis"])
+
+    # Sorotan teks harus ada di halaman selain beranda juga.
+    pg.goto(LANDING.replace("/warung-go-digital/", "/warung-go-digital/privasi.html"),
+            wait_until="load")
+    pg.wait_for_timeout(2000)
+    r = pg.evaluate("""()=>({
+      sorot:document.querySelectorAll('.ax-sorot').length,
+      kanvas:document.querySelectorAll('.ax-kanvas').length,
+    })""")
+    cek("halaman privasi: sorotan teks ikut hadir", r["sorot"] >= 1, r["sorot"])
+    cek("halaman privasi: kanvas ikut hadir", r["kanvas"] == 1, r["kanvas"])
+    # Sapuan baru terisi setelah kalimatnya masuk layar — itu memang
+    # perilaku yang diinginkan. Jadi gulir dulu, baru periksa terisi.
+    pg.evaluate("""()=>{
+      const s=document.querySelectorAll('.ax-sorot');
+      if(s.length) s[Math.min(2,s.length-1)].scrollIntoView({block:'center'});
+    }""")
+    pg.wait_for_timeout(1600)
+    r = pg.evaluate("""()=>{
+      const s=[...document.querySelectorAll('.ax-sorot.ax-in')];
+      return {masuk:s.length,
+              kosong:s.filter(e=>getComputedStyle(e).backgroundSize.startsWith('0')).length};
+    }""")
+    cek("halaman privasi: sorotan terisi setelah masuk layar",
+        r["masuk"] >= 1 and r["kosong"] == 0, r)
+    pg.close()
+
+    # ── 7r. Kanvas berganti warna antara bagian gelap dan terang ─
+    # Titik di bagian gelap harus lebih muda daripada di bagian terang,
+    # kalau tidak ia akan hilang di salah satunya.
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(2600)
+
+    def warna_kanvas():
+        return pg.evaluate("""()=>{
+          const c=document.querySelector('.ax-kanvas');
+          const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+          let r=0,g=0,bl=0,n=0;
+          for(let i=0;i<d.length;i+=4){if(d[i+3]>0){r+=d[i];g+=d[i+1];bl+=d[i+2];n++;}}
+          return n?[r/n,g/n,bl/n]:null;
+        }""")
+
+    gelap = warna_kanvas()
+    pg.evaluate("()=>document.querySelector('#layanan').scrollIntoView()")
+    pg.wait_for_timeout(1600)
+    terang = warna_kanvas()
+    cek("kanvas berganti warna: terisi di kedua bagian",
+        gelap is not None and terang is not None, [gelap, terang])
+    if gelap and terang:
+        cek("kanvas berganti warna: titik di bagian gelap lebih muda",
+            sum(gelap) > sum(terang) + 60,
+            f"gelap={sum(gelap):.0f} terang={sum(terang):.0f}")
+    pg.close()
+
+    # ── 7s. Kurangi gerak & tanpa JS tetap aman di halaman lain ─
+    ctx = b.new_context(viewport={"width": 1280, "height": 900},
+                        reduced_motion="reduce")
+    pg = ctx.new_page()
+    pg.goto(LANDING.replace("/warung-go-digital/", "/warung-go-digital/unduh.html"),
+            wait_until="load")
+    pg.wait_for_timeout(1800)
+    r = pg.evaluate("""()=>({
+      kanvas:[...document.querySelectorAll('.ax-kanvas')]
+        .filter(e=>getComputedStyle(e).display!=='none').length,
+      p3d:[...document.querySelectorAll('.ax-3d')]
+        .filter(e=>getComputedStyle(e).transform!=='none').length,
+      tersembunyi:[...document.querySelectorAll('.ax-reveal,.ax-stagger>*')]
+        .filter(e=>getComputedStyle(e).display!=='none' &&
+                   Number(getComputedStyle(e).opacity)<.05).length,
+    })""")
+    cek("halaman unduh kurangi gerak: kanvas dimatikan", r["kanvas"] == 0,
+        r["kanvas"])
+    cek("halaman unduh kurangi gerak: 3D dinetralkan", r["p3d"] == 0, r["p3d"])
+    cek("halaman unduh kurangi gerak: tidak ada isi tersembunyi",
+        r["tersembunyi"] == 0, r["tersembunyi"])
+    ctx.close()
+
+    ctx = b.new_context(viewport={"width": 1280, "height": 900},
+                        java_script_enabled=False)
+    pg = ctx.new_page()
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(900)
+    r = pg.evaluate("""()=>({
+      teks:document.body.innerText.trim().length,
+      kanvas:document.querySelectorAll('.ax-kanvas').length,
+      takTerlihat:[...document.querySelectorAll('main *')].filter(e=>
+        getComputedStyle(e).opacity==='0' &&
+        e.textContent.trim().length>20).length,
+    })""")
+    cek("tanpa JS beranda: isi tetap terbaca", r["teks"] > 3000, r["teks"])
+    cek("tanpa JS beranda: kanvas tidak dibuat", r["kanvas"] == 0, r["kanvas"])
+    cek("tanpa JS beranda: tidak ada isi tersembunyi",
+        r["takTerlihat"] == 0, r["takTerlihat"])
+    ctx.close()
 
     b.close()
 

@@ -149,13 +149,24 @@
   // sudah bergradasi (seperti `em` di judul hero) akan menghapus gradasinya
   // karena keduanya memakai `background` — sorotan akan menang dan teksnya
   // jadi pudar di atas latar terang.
-  document.querySelectorAll('.hero__lead strong, .pengantar strong')
-    .forEach((el) => {
-      if (!el.closest('.ax-reveal, .ax-stagger')) {
-        el.classList.add('ax-sorot');
-        penanda.push(el);
-      }
-    });
+  //
+  // Dipilih dengan sengaja, bukan semua `<strong>`: halaman ini memakai
+  // `<strong>` juga untuk label pendek di dalam daftar langkah ("Unduh APK",
+  // "Setelan"), dan menyorot semua itu membuat halamannya terasa penuh
+  // stabilo. Yang disorot hanya kalimat penentu di dalam paragraf.
+  document.querySelectorAll(
+    '.hero__lead strong, .pengantar strong, .blok p strong, .legal p strong'
+  ).forEach((el) => {
+    // Hanya sorot yang berada di tengah kalimat. Label pendek seperti
+    // "Unduh APK" atau "Lokasi (perkiraan)" berdiri di awal paragraf dan
+    // sengaja dilewati — menyorot semuanya membuat halaman terasa penuh.
+    const sebelum = el.previousSibling;
+    if (!sebelum || !sebelum.textContent.trim()) return;
+    if (el.parentElement && el.parentElement.textContent.trim().length < 40) return;
+    if (el.closest('.ax-reveal, .ax-stagger')) return;
+    el.classList.add('ax-sorot');
+    penanda.push(el);
+  });
 
   // Judul seksi diberi garis aksen yang memanjang saat masuk layar.
   // Beberapa judul seksi tidak berada di dalam `.head`, jadi pemilihnya
@@ -269,18 +280,43 @@
       });
   }
 
-  // ── 6. Parallax: lapisan dekoratif bergeser beda kecepatan ─
-  // Angka `--ax-depth` menentukan seberapa jauh lapisan bergeser. Yang
-  // bernilai besar terasa lebih dekat ke pengunjung.
+  // ── 6. Parallax: lapisan bergeser beda kecepatan ─────────
+  // Berlaku di seluruh halaman, bukan hanya hero. Angka `--ax-depth`
+  // menentukan seberapa jauh lapisan bergeser; makin besar, makin terasa
+  // dekat ke pengunjung.
+  //
+  // PENTING: gerak di sini memakai properti `translate`, BUKAN `transform`.
+  // Elemen-elemen ini sudah dianimasikan oleh styles.css memakai `transform`
+  // (aurora bergerak, kartu miring). Kalau parallax menulis `transform` juga,
+  // salah satu akan menghapus yang lain.
+  //
+  // Elemen yang punya animasi kemunculan SENDIRI sengaja DILEWATI: animasi
+  // itu juga memakai `translate`, dan yang belakangan menang — parallax-nya
+  // akan mati begitu saja. Yang dilewati hanya elemen ber-`ax-reveal` dan
+  // anak langsung wadah berjenjang (`ax-stagger`), sebab keduanya yang
+  // benar-benar dianimasikan. Anak dari wadah ber-`ax-reveal` tetap boleh:
+  // `translate` anak menambah di atas `translate` induk, jadi keduanya
+  // hidup bersama.
   if (!kurangi) {
     const LAPISAN = [
-      ['.hero__glow', -46], ['.fx-aurora', -30], ['.hero__lines', -18],
-      ['.fx-scan', -12], ['.hero__visual', 22], ['.ticker', 10],
-      ['.head', 14], ['.maskot__card', 18],
+      // Hero
+      ['.hero__glow', -46], ['.hero__lines', -18], ['.hero__visual', 22],
+      ['.ticker', 10],
+      // Dekorasi antarbagian
+      ['.fx-aurora', -30], ['.fx-scan', -12], ['.fx-grain', 0],
+      // Kepala bagian dan wadah isi, di seluruh halaman
+      ['.head', 14], ['.pilihan', 10], ['.maskot__grid', 16],
+      ['.bento', 12], ['.plans', 10], ['.flow', 12], ['.target__stats', 14],
+      ['.contact', 12], ['.kaki', 8],
+      // Halaman unduh & privasi
+      ['.blok > h2', 10], ['.blok > .pengantar', 8],
     ];
     const parallax = [];
     LAPISAN.forEach(([sel, depth]) => {
       document.querySelectorAll(sel).forEach((el) => {
+        if (el.classList.contains('ax-reveal') ||
+            (el.parentElement &&
+             el.parentElement.classList.contains('ax-stagger'))) return;
         el.classList.add('ax-parallax');
         el.style.setProperty('--ax-depth', depth + 'px');
         parallax.push(el);
@@ -292,10 +328,11 @@
     let menungguP = false;
     const geserParallax = () => {
       menungguP = false;
-      const tengah = window.innerHeight / 2;
+      const tinggi = window.innerHeight;
+      const tengah = tinggi / 2;
       for (const el of parallax) {
         const r = el.getBoundingClientRect();
-        if (r.bottom < -200 || r.top > window.innerHeight + 200) continue;
+        if (r.bottom < -200 || r.top > tinggi + 200) continue;
         // -1 saat elemen masih di bawah layar, 1 saat sudah lewat di atas.
         const p = (tengah - (r.top + r.height / 2)) / tengah;
         el.style.setProperty('--ax-p', Math.max(-1, Math.min(1, p)).toFixed(3));
@@ -310,30 +347,37 @@
     geserParallax();
   }
 
-  // ── 7. Rendering waktu nyata: kanvas titik cahaya ────────
-  // Digambar ulang setiap bingkai. Titik-titik melayang pelan dan berkelip
-  // redup, memberi kesan panggung yang hidup.
+  // ── 7. Rendering waktu nyata: kanvas partikel ────────────
+  // Satu kanvas tetap untuk seluruh halaman, digambar ulang setiap bingkai.
+  // Titik-titik melayang pelan dan menyala redup.
   //
-  // Dua penghematan yang disengaja: berhenti saat tab tidak aktif, dan
-  // berhenti saat kanvas di luar layar. Tanpa keduanya, halaman ini terus
-  // memakai baterai walau tidak dilihat. Jumlah titik dibatasi oleh luas
-  // layar supaya ponsel kecil tidak keberatan.
-  const kanvas = document.querySelector('.ax-kanvas');
-  if (kanvas && !kurangi && kanvas.getContext) {
-    const ctx = kanvas.getContext('2d');
-    let titik = [];
+  // Warnanya ikut bagian yang sedang dilihat: bagian gelap memakai titik
+  // muda yang bercahaya, bagian terang memakai titik amber tua yang terbaca.
+  // Warna dibaca dari latar bagian di belakang titik itu, jadi transisinya
+  // terjadi sendiri saat pengunjung menggulir dari bagian terang ke gelap.
+  //
+  // Penghematan yang disengaja: berhenti saat tab tidak aktif, jumlah titik
+  // dibatasi luas layar, dan gambar baru mulai setelah halaman tenang —
+  // ini hiasan, bukan isi.
+  const kanvas = document.createElement('canvas');
+  kanvas.className = 'ax-kanvas';
+  kanvas.setAttribute('aria-hidden', 'true');
+  const ctx = !kurangi && kanvas.getContext && kanvas.getContext('2d');
+  if (ctx) {
+    document.body.prepend(kanvas);
     let lebar = 0, tinggi = 0;
-    let jalan = false, terlihat = true, halus = false;
+    let titik = [];
+    let jalan = false, halus = false, bagianGelap = true;
 
     const ukur = () => {
-      const r = kanvas.getBoundingClientRect();
-      if (!r.width || !r.height) return;
       const rasio = Math.min(window.devicePixelRatio || 1, 2);
-      lebar = r.width; tinggi = r.height;
+      lebar = window.innerWidth;
+      tinggi = window.innerHeight;
       kanvas.width = Math.round(lebar * rasio);
       kanvas.height = Math.round(tinggi * rasio);
       ctx.setTransform(rasio, 0, 0, rasio, 0, 0);
-      const jumlah = Math.max(18, Math.min(58, Math.round(lebar * tinggi / 15000)));
+      const jumlah = Math.max(20, Math.min(60,
+        Math.round(lebar * tinggi / 16000)));
       titik = Array.from({ length: jumlah }, () => ({
         x: Math.random() * lebar,
         y: Math.random() * tinggi,
@@ -345,108 +389,181 @@
       }));
     };
 
+    // Bagian mana yang sedang berada di tengah layar? Warnanya menentukan
+    // warna titik. Hanya dihitung saat menggulir, bukan tiap bingkai.
+    const bagianGelapSekarang = () => {
+      const tengah = window.innerHeight / 2;
+      let hasil = bagianGelap;
+      document.querySelectorAll('section.sec, .hero, .foot, .blok, .legal')
+        .forEach((w) => {
+          const r = w.getBoundingClientRect();
+          if (r.top <= tengah && r.bottom >= tengah) {
+            hasil = w.classList.contains('sec--dark') ||
+                    w.classList.contains('hero') ||
+                    w.classList.contains('foot') ||
+                    w.classList.contains('blok--gelap');
+          }
+        });
+      return hasil;
+    };
+
     const gambar = () => {
       ctx.clearRect(0, 0, lebar, tinggi);
+      const warna = bagianGelap ? '245 214 150' : '196 118 42';
+      const dasar = bagianGelap ? 0.30 : 0.24;
+      const puncak = bagianGelap ? 0.42 : 0.34;
       for (const t of titik) {
         t.x += t.vx; t.y += t.vy; t.f += 0.012 * t.d;
         if (t.y < -8) { t.y = tinggi + 8; t.x = Math.random() * lebar; }
         if (t.x < -8) t.x = lebar + 8;
         if (t.x > lebar + 8) t.x = -8;
-        const nyala = 0.30 + 0.42 * (0.5 + 0.5 * Math.sin(t.f));
+        const nyala = dasar + puncak * (0.5 + 0.5 * Math.sin(t.f));
         ctx.beginPath();
         ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(245, 214, 150, ${nyala.toFixed(3)})`;
+        ctx.fillStyle = `rgba(${warna} / ${nyala.toFixed(3)})`;
         ctx.fill();
       }
       if (jalan) requestAnimationFrame(gambar);
     };
 
     const mulai = () => {
-      if (jalan || !terlihat || !halus || document.hidden) return;
+      if (jalan || !halus || document.hidden) return;
       jalan = true;
       requestAnimationFrame(gambar);
     };
     const henti = () => { jalan = false; };
 
     ukur();
-    // Jangan menggambar sebelum elemennya benar-benar terlihat.
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver((es) => {
-        terlihat = es.some((e) => e.isIntersecting);
-        terlihat ? mulai() : henti();
-      }, { threshold: 0 }).observe(kanvas);
-    }
+    // Warna bagian dihitung ulang saat menggulir, dengan penahan bingkai.
+    let menungguW = false;
+    window.addEventListener('scroll', () => {
+      if (menungguW) return;
+      menungguW = true;
+      requestAnimationFrame(() => {
+        menungguW = false;
+        bagianGelap = bagianGelapSekarang();
+      });
+    }, { passive: true });
+
     // Baru mulai setelah halaman tenang; ini hiasan, bukan isi.
     const tenang = () => { halus = true; mulai(); };
-    if (document.readyState === 'complete') setTimeout(tenang, 600);
-    else window.addEventListener('load', () => setTimeout(tenang, 600), { once: true });
+    if (document.readyState === 'complete') setTimeout(tenang, 700);
+    else window.addEventListener('load', () => setTimeout(tenang, 700), { once: true });
     document.addEventListener('visibilitychange', () => {
       document.hidden ? henti() : mulai();
     });
+
+    // Ukur ulang saat lebar benar-benar berubah — bukan saat tinggi berubah,
+    // karena bilah alamat ponsel yang menyembunyikan diri memicu itu terus.
     let menungguU = false;
     window.addEventListener('resize', () => {
       if (menungguU) return;
       menungguU = true;
-      setTimeout(() => { menungguU = false; ukur(); }, 180);
+      setTimeout(() => { menungguU = false; ukur(); }, 200);
     }, { passive: true });
   }
 
-  // ── 8. Kedalaman 3D pada visual hero ─────────────────────
-  // Panggung ber-`perspective`, lapisan pada kedalaman berbeda, bergeser
-  // mengikuti kursor. Ini memberi kedalaman sungguhan yang bisa dipakai
-  // di situs biasa — berbeda dari AR/VR yang butuh kamera dan kacamata.
+  // ── 8. Kedalaman 3D pada kartu yang menonjol ─────────────
+  // Selain kartu hero, bagian isi juga diberi kedalaman: saat kursor bergerak
+  // di atasnya, seluruh bagiannya miring sedikit dan isinya bergeser pada
+  // kedalaman berbeda. Sudutnya sengaja lebih kecil daripada kartu hero
+  // (lihat `.ax-3d--halus` di animasi.css) supaya bacaan tetap nyaman.
+  //
+  // Ini dikerjakan sebagai kedalaman 3D, bukan AR/VR penuh: AR/VR butuh
+  // kamera dan kacamata, memberatkan situs publik UMKM, dan tidak menambah
+  // apa pun bagi pengunjung warung yang membuka dari HP.
   if (!kurangi && presisi) {
-    const wadah3d = document.querySelector('.hero__visual');
-    if (wadah3d) {
-      wadah3d.classList.add('ax-3d');
-      // Kartunya sendiri perlu `preserve-3d` supaya isinya tidak menempel
-      // datar — tanpa itu, lapisan di dalamnya kehilangan kedalamannya.
-      wadah3d.querySelector('.glowcard')?.classList.add('ax-3d__dalam');
-      // Lapisan diberi kedalaman berbeda: chip paling dekat, QR menonjol,
-      // maskot agak mundur.
-      const lapis = [
-        ['.qrfloat', 46], ['.chip--a', 60], ['.chip--b', 52],
-        ['.hero__maskot', 26], ['.glowcard', 10],
-        ['.glowcard__banner', 14], ['.glowcard__items', 8],
-      ];
+    // Elemen yang memang sudah dipakai kursor untuk hal lain dilewati:
+    // tombol dan tautan harus tetap bisa diklik tanpa bidang yang bergerak.
+    const LEWATI = 'a, button, input, textarea, select, summary';
+
+    const pasangPanggung = (wadah, lapis, halus) => {
+      if (!wadah) return;
+      wadah.classList.add('ax-3d');
+      if (halus) wadah.classList.add('ax-3d--halus');
+      // Kartu yang punya lapisan di dalamnya perlu `preserve-3d`, kalau tidak
+      // isinya menempel datar pada kartunya dan kedalamannya hilang.
+      wadah.querySelector('.glowcard')?.classList.add('ax-3d__dalam');
       lapis.forEach(([sel, z]) => {
-        const el = wadah3d.querySelector(sel);
-        if (!el) return;
-        el.classList.add('ax-3d__lapis');
-        el.style.setProperty('--ax-z', z);
+        wadah.querySelectorAll(sel).forEach((el) => {
+          if (el.closest(LEWATI)) return;
+          // Anak wadah berjenjang dianimasikan kemunculannya memakai
+          // `translate`, dan animasi itu menang atas nilai dari sini —
+          // kedalamannya tidak akan terlihat. Panggungnya tetap miring,
+          // jadi efeknya tidak hilang seluruhnya.
+          if (el.parentElement &&
+              el.parentElement.classList.contains('ax-stagger')) return;
+          el.classList.add('ax-3d__lapis');
+          el.style.setProperty('--ax-z', z);
+        });
       });
 
-      let tx = 0, ty = 0, tx2 = 0, ty2 = 0, hidup3d = false;
-      const panggung = () => {
+      let tx = 0, ty = 0, tx2 = 0, ty2 = 0, hidup = false;
+      const jalan = () => {
         tx2 += (tx - tx2) * 0.14;
         ty2 += (ty - ty2) * 0.14;
-        wadah3d.style.setProperty('--ax-tx', tx2.toFixed(2));
-        wadah3d.style.setProperty('--ax-ty', ty2.toFixed(2));
-        if (hidup3d || Math.abs(tx - tx2) > 0.01) requestAnimationFrame(panggung);
-        else hidup3d = false;
+        wadah.style.setProperty('--ax-tx', tx2.toFixed(2));
+        wadah.style.setProperty('--ax-ty', ty2.toFixed(2));
+        if (hidup || Math.abs(tx - tx2) > 0.01) requestAnimationFrame(jalan);
+        else hidup = false;
       };
-      wadah3d.addEventListener('mousemove', (e) => {
-        const r = wadah3d.getBoundingClientRect();
-        tx = ((e.clientX - r.left) / r.width - 0.5) * 2;   // -1 .. 1
+      const bangun = () => { if (!hidup) { hidup = true; requestAnimationFrame(jalan); } };
+      wadah.addEventListener('mousemove', (e) => {
+        const r = wadah.getBoundingClientRect();
+        tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
         ty = ((e.clientY - r.top) / r.height - 0.5) * 2;
-        if (!hidup3d) { hidup3d = true; requestAnimationFrame(panggung); }
+        bangun();
       }, { passive: true });
-      wadah3d.addEventListener('mouseleave', () => {
-        tx = 0; ty = 0;
-        if (!hidup3d) { hidup3d = true; requestAnimationFrame(panggung); }
+      wadah.addEventListener('mouseleave', () => { tx = 0; ty = 0; bangun(); });
+    };
+
+    // Kartu hero: kedalaman penuh, beberapa lapisan menonjol.
+    pasangPanggung(
+      document.querySelector('.hero__visual'),
+      [['.qrfloat', 46], ['.chip--a', 60], ['.chip--b', 52],
+       ['.hero__maskot', 26], ['.glowcard', 10],
+       ['.glowcard__banner', 14], ['.glowcard__items', 8]],
+      false
+    );
+    // Kartu isi di seluruh halaman: kedalaman lebih tipis, hanya isinya yang
+    // bergeser supaya tidak ada bidang yang terasa berputar.
+    document.querySelectorAll('.bento, .plans, .pilihan, .maskot__grid, .inno__grid')
+      .forEach((w) => {
+        pasangPanggung(w, [['article', 22], ['figure', 16], ['li', 14]], true);
       });
-    }
   }
 
   // ── 9. Claymorphism ──────────────────────────────────────
-  // Elemen kecil yang empuk dipandang: lencana, nomor langkah, ikon kartu.
-  // Sengaja tidak menyentuh kartu besar maupun angka statistik — di sana
-  // efek ini justru membuat tata letak terasa berat, dan sudut bulat penuh
-  // pada angka besar terlihat aneh.
-  document.querySelectorAll('.pill').forEach((el) => el.classList.add('ax-clay', 'ax-clay--bulat'));
-  document.querySelectorAll('.chip').forEach((el) => el.classList.add('ax-clay', 'ax-clay--bulat'));
-  document.querySelectorAll('.panduan__nomor').forEach((el) => el.classList.add('ax-clay', 'ax-clay--bulat', 'ax-clay--gelap'));
-  document.querySelectorAll('.kartu__ico').forEach((el) => el.classList.add('ax-clay', 'ax-clay--gelap'));
+  // Semua elemen kecil yang empuk dipandang, di seluruh halaman.
+  //
+  // `ax-clay` hanya menambah bayangan dalam dan tidak pernah menimpa warna
+  // latar — lihat catatan di animasi.css. Karena itu hanya elemen yang SUDAH
+  // punya latar sendiri yang boleh diberi kelas ini; pada elemen tanpa latar
+  // bayangannya tidak akan terlihat.
+  const clay = (sel, kelas) => document.querySelectorAll(sel)
+    .forEach((el) => el.classList.add('ax-clay', ...kelas));
+
+  // Elemen yang sudah punya latar sendiri.
+  clay('.pill', ['ax-clay--bulat']);
+  clay('.chip', ['ax-clay--bulat']);
+  clay('.fx-tag', ['ax-clay--bulat', 'ax-clay--gelap']);
+  clay('.price__badge', ['ax-clay--bulat']);
+  clay('.market__tags span', ['ax-clay--bulat', 'ax-clay--gelap']);
+  clay('.report__row', ['ax-clay--gelap']);
+  clay('.panduan__nomor', ['ax-clay--bulat', 'ax-clay--gelap']);
+  clay('.flow__n', ['ax-clay--bulat', 'ax-clay--gelap']);
+  clay('.kartu__ico', ['ax-clay--gelap']);
+  clay('.inno__no', ['ax-clay--bulat', 'ax-clay--gelap']);
+  // Kotak ikon di halaman unduh sudah punya latar dan ukuran tetap, jadi
+  // aman diberi bayangan clay tanpa varian `--latar`. Varian itu justru
+  // berbahaya di sini: kotak tombolnya berlatar tinta gelap, dan menimpanya
+  // dengan latar krem membuat ikon amber di atasnya nyaris tak terbaca
+  // (kontras 1.96:1).
+  //
+  // Ikon emoji di beranda sengaja TIDAK disentuh sama sekali: menambah latar
+  // dan jarak dalam di sana menambah tinggi kartu, dan tata letak beranda
+  // ikut bergeser — efek yang tidak sepadan.
+  clay('.panduan__gambar', []);
 
   // ── 10. Tombol WhatsApp mengambang diberi gerak melayang ──
   // Perhatikan: gerak ini memakai properti `translate`, bukan `transform`,

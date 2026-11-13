@@ -188,7 +188,7 @@ digeser samping. Uji anti-geser samping: `uji/uji-landing.py`.
 
 ### Aturan lapisan gerak (`ax-`)
 
-Sepuluh aturan yang gampang dilanggar dan akibatnya tidak kelihatan sampai
+Tiga belas aturan yang gampang dilanggar dan akibatnya tidak kelihatan sampai
 seseorang mengeluh. Uji semuanya ada di `uji/uji-animasi.py`.
 
 1. **Pakai `translate`/`scale`, jangan `transform`, untuk kemunculan.**
@@ -226,21 +226,51 @@ seseorang mengeluh. Uji semuanya ada di `uji/uji-animasi.py`.
    geraknya, bukan isinya.
 7. **Parallax dan kedalaman 3D juga tidak boleh menulis `transform`.**
    Parallax memakai `translate`, kedalaman 3D memakai `translate: x y z` pada
-   lapisan dan `transform` HANYA pada wadah `.hero__visual` — satu-satunya
-   elemen di situ yang belum memakai `transform` untuk apa pun. Menulisnya di
-   chip, kotak QR, atau glowcard akan menghapus kemiringan dan sorot hovemya.
+   lapisan dan `transform` HANYA pada wadah panggung (`.hero__visual`, dan
+   wadah bagian seperti `.plans`/`.bento`/`.pilihan`) — satu-satunya elemen
+   yang belum memakai `transform` untuk apa pun. Menulisnya di chip, kotak
+   QR, atau glowcard akan menghapus kemiringan dan sorot hovemya.
+   Lapisan juga **tidak boleh** menulis `transition`: kartunya sudah memakai
+   `transition` untuk sorot hover, dan dua aturan `transition` saling
+   menghapus. Penghalusan geraknya dikerjakan `animasi.js` per bingkai.
 8. **Claymorphism tidak boleh menimpa `background`.** Percobaan pertama
    menggantinya dengan krem, dan lencana hijau jadi putih dengan teks putih di
    atasnya — tak terbaca. Clay hanya menambah bayangan dalam, memakai putih
    dan hitam tembus pandang, sehingga resep yang sama bekerja di latar amber,
    hijau, maupun tinta gelap.
-9. **Kanvas waktu nyata wajib berhenti.** Saat tab tidak aktif, saat kanvas
-   di luar layar, dan saat "kurangi gerak" aktif. Tanpa itu halaman memakai
-   baterai walau tidak dilihat. Jumlah titik juga dibatasi oleh luas layar,
-   dan baru mulai digambar setelah halaman tenang — ini hiasan, bukan isi.
+9. **Kanvas waktu nyata wajib berhenti.** Saat tab tidak aktif dan saat
+   "kurangi gerak" aktif. Tanpa itu halaman memakai baterai walau tidak
+   dilihat. Jumlah titik dibatasi oleh luas layar, dan baru mulai digambar
+   setelah halaman tenang — ini hiasan, bukan isi.
+   **Kanvasnya satu saja, dipasang di `<body>` dengan `position: fixed`.**
+   Satu kanvas per bagian berarti bitmap setinggi beberapa layar, dan sepuluh
+   bagian berarti sepuluh bitmap. Karena kanvas kini `fixed`, ia berada di
+   atas latar setiap bagian; wadah yang punya latar cukup diberi
+   `position: relative` (TANPA `z-index` — menambahkannya mengubah pembulatan
+   pecahan dan menggeser 17 elemen tabel 1px). Warnanya ikut bagian yang
+   sedang di tengah layar: muda di bagian gelap, amber tua di bagian terang.
 10. **Sorotan teks tidak boleh menyentuh elemen bergradasi.** Keduanya
     memakai `background`; sorotan akan menang dan menghapus gradasinya.
-    Judul hero (`em.fx-grad`) karena itu dikecualikan.
+    Judul hero (`em.fx-grad`) karena itu dikecualikan. Sorotan juga hanya
+    dipasang pada kalimat penentu, bukan setiap `<strong>`: halaman unduh
+    memakai `<strong>` untuk label pendek ("Unduh APK"), dan menyorot semuanya
+    membuat halaman terasa penuh stabilo. Karena itu hanya yang berada di
+    tengah kalimat yang dipilih.
+11. **Efek gerak berlaku di SELURUH halaman, bukan hanya hero.** Parallax,
+    kanvas, claymorphism, dan sorotan teks harus ada di bagian terang maupun
+    gelap, di `index.html`, `unduh.html`, dan `privasi.html`. Sebelumnya
+    semuanya hanya hidup di hero yang gelap; uji bagian 7q–7s di
+    `uji/uji-animasi.py` menjaga supaya tidak kembali begitu.
+12. **Parallax jangan dipasang pada elemen yang punya animasi kemunculan.**
+    Keduanya memakai `translate`, dan animasi kemunculan menang — parallax
+    diam-diam tidak bekerja. `animasi.js` karena itu melewati elemen
+    ber-`ax-reveal` dan anak langsung wadah ber-`ax-stagger`. Kedalaman 3D
+    pada anak wadah berjenjang juga dilewati, dengan alasan yang sama.
+13. **Ubah efek gerak harus disertai sidik jari tata letak.** Bandingkan
+    posisi setiap elemen sebelum dan sesudah (versi lama vs baru, dua putaran
+    bergantian untuk membatalkan derau pemuatan font). Tata letak harus
+    identik. Dua percobaan awal gagal di sini: padding pada ikon emoji
+    menambah tinggi kartu, dan `z-index` pada wadah menggeser kolom tabel.
 
 Jaring pengaman berlapis: bila `IntersectionObserver` tidak ada atau sesuatu
 menghalangi, `animasi.js` menampilkan semua setelah 4 detik. Jangan dihapus.

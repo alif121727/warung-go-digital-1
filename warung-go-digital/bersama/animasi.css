@@ -324,18 +324,37 @@ details.tanya[open] summary::before { transform: rotate(180deg); }
 }
 
 /* ── Rendering waktu nyata: kanvas partikel ───────────────
-   Kanvas digambar ulang setiap bingkai oleh animasi.js. Titik-titik cahaya
-   melayang pelan dan menyala redup — bukan hujan partikel yang ramai.
+   Kanvas digambar ulang setiap bingkai oleh animasi.js. Titik-titik melayang
+   pelan dan menyala redup — bukan hujan partikel yang ramai.
 
-   Kanvas ini murni hiasan: `aria-hidden` di HTML, tidak menangkap klik, dan
-   bila JavaScript mati ia hanya tinggal kosong tanpa merusak apa pun. */
+   Satu kanvas tetap (fixed) untuk SELURUH halaman, bukan satu per bagian.
+   Alasannya memori: bagian setinggi beberapa layar berarti bitmap raksasa,
+   dan sepuluh bagian berarti sepuluh bitmap. Satu kanvas seukuran layar
+   memberi efek yang sama dengan biaya jauh lebih kecil.
+
+   Kanvas dibuat oleh animasi.js, bukan ditulis di HTML: tanpa JavaScript
+   tidak ada yang perlu digambar, jadi lebih baik elemennya tidak ada sama
+   sekali daripada tinggal sebagai kotak kosong.
+
+   Posisi `fixed` membuatnya berada di atas latar setiap bagian, jadi efeknya
+   terlihat di seluruh halaman. Itu berarti isi halaman harus berada di atas
+   kanvas — lihat aturan di bawah. */
 .ax-kanvas {
-  position: absolute; inset: 0; z-index: 0;
+  position: fixed; inset: 0; z-index: 0;
   width: 100%; height: 100%;
   pointer-events: none;
-  opacity: .85;
-  mix-blend-mode: screen;
 }
+
+/* Wadah yang punya latar sendiri dibuat `position: relative`, sehingga
+   seluruh isinya — termasuk anak yang masih statis — ikut berada di atas
+   kanvas. Kanvas sendiri berada paling awal di dalam <body>, jadi pada
+   lapisan yang sama ia selalu kalah oleh wadah yang menyusul.
+
+   `z-index` sengaja TIDAK dipakai di sini. Menambahkannya membuat setiap
+   wadah menjadi konteks penumpukan tersendiri, dan itu mengubah pembulatan
+   pecahan pada kolom tabel: 17 elemen bergeser 1px. Tanpa `z-index`,
+   hasilnya sama tapi tata letaknya persis seperti semula. */
+.sec, .hero, .foot, .isi, .legal { position: relative; }
 
 /* ── Kedalaman 3D ─────────────────────────────────────────
    Panggung ber-`perspective` dengan lapisan-lapisan pada kedalaman
@@ -358,12 +377,21 @@ details.tanya[open] summary::before { transform: rotate(180deg); }
    Sudut dan geseran sengaja kecil supaya teks tetap tajam dan tidak ada
    elemen yang keluar dari tepi layar. */
 .ax-3d {
-  perspective: 1000px;
+  perspective: var(--ax-3d-persp, 1000px);
   transform-style: preserve-3d;
   transition: transform .35s var(--ax-ease);
   transform:
-    rotateX(calc(var(--ax-ty, 0) * -1deg))
-    rotateY(calc(var(--ax-tx, 0) * 1deg));
+    rotateX(calc(var(--ax-ty, 0) * var(--ax-3d-rx, -1deg)))
+    rotateY(calc(var(--ax-tx, 0) * var(--ax-3d-ry, 1deg)));
+}
+/* Bagian isi jauh lebih luas daripada kartu hero, dan memiringkan bidang
+   seluas itu dengan sudut 1° membuat bacaan tidak nyaman. Karena itu sudut
+   dan jarak pandangnya dilonggarkan: efeknya terasa sebagai lapisan kaca,
+   bukan sebagai bidang yang berputar. */
+.ax-3d--halus {
+  --ax-3d-persp: 1800px;
+  --ax-3d-rx: -.5deg;
+  --ax-3d-ry: .5deg;
 }
 /* Agar anak-anak glowcard juga punya kedalaman, bukan menempel datar pada
    kartunya. `transform-style` bukan properti yang dipakai glowcard, jadi
@@ -374,8 +402,13 @@ details.tanya[open] summary::before { transform: rotate(180deg); }
     calc(var(--ax-tx, 0) * var(--ax-z, 0) * -.35px)
     calc(var(--ax-ty, 0) * var(--ax-z, 0) * -.35px)
     calc(var(--ax-z, 0) * 1px);
-  transition: translate .35s var(--ax-ease);
 }
+/* TIDAK ada `transition` di sini dengan sengaja. Kartu-kartu ini sudah
+   memakai `transition` untuk sorot hovemya (transform, box-shadow,
+   border-color), dan dua aturan yang menulis `transition` saling menghapus —
+   yang belakangan menang membunuh yang lain. Akibatnya sorot hover kartu
+   mati begitu saja. Penghalusan gerak di sini dikerjakan animasi.js, yang
+   mendekati nilai sasaran sedikit demi sedikit setiap bingkai. */
 
 /* ── Claymorphism ─────────────────────────────────────────
    Tampilan tanah liat: sudut sangat membulat dan bayangan dalam berlapis —
