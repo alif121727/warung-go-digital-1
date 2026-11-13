@@ -29,7 +29,7 @@
 
   --t1: #0d1a12;
   --t2: #4a574f;
-  --t3: #8a948d;
+  --t3: #646d66;
 
   --r-xs: 6px;
   --r-sm: 9px;
@@ -229,9 +229,12 @@ input, select, textarea { font: inherit; font-size: 16px; }
 .btn--ghost { background: transparent; border-color: transparent; }
 .btn--ghost:hover { background: var(--line-2); }
 .btn--blok { width: 100%; }
-.btn--sm { min-height: 34px; padding: 6px 11px; font-size: 12.5px; border-radius: var(--r-xs); }
+/* Sasaran sentuh sekurangnya 40px. Panduan umum memakai 44px; 40 dipilih
+   sebagai jalan tengah karena tombol ini kerap berjajar di bilah atas yang
+   sempit — lebih pendek dari 40 membuatnya sering salah tekan. */
+.btn--sm { min-height: 40px; padding: 8px 13px; font-size: 13px; border-radius: var(--r-xs); }
 .btn--sm svg { width: 14px; height: 14px; }
-.btn--icon { min-height: 38px; min-width: 38px; padding: 8px; }
+.btn--icon { min-height: 40px; min-width: 40px; padding: 8px; }
 .btn[disabled] { opacity: 0.5; pointer-events: none; }
 
 .baris-tombol { display: flex; gap: 9px; flex-wrap: wrap; }

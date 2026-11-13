@@ -212,8 +212,8 @@ const UI = (() => {
         <path d="${area}" fill="url(#${id})"/>
         <path d="${d}" fill="none" stroke="${warna}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
         <circle cx="${X(titik.length - 1).toFixed(1)}" cy="${Y(akhir.v).toFixed(1)}" r="4.5" fill="${warna}" stroke="#fff" stroke-width="2"/>
-        <text x="${pad}" y="${h - 6}" font-size="11" fill="#8a948d" font-family="JetBrains Mono, monospace">${format(lo)}</text>
-        <text x="${w - pad}" y="${h - 6}" font-size="11" fill="#8a948d" text-anchor="end" font-family="JetBrains Mono, monospace">${format(hi)}</text>
+        <text x="${pad}" y="${h - 6}" font-size="11" fill="#646d66" font-family="JetBrains Mono, monospace">${format(lo)}</text>
+        <text x="${w - pad}" y="${h - 6}" font-size="11" fill="#646d66" text-anchor="end" font-family="JetBrains Mono, monospace">${format(hi)}</text>
       </svg>`;
   };
 
