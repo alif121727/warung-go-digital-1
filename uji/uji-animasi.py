@@ -865,6 +865,115 @@ with sync_playwright() as p:
     cek("tanpa JS beranda: tidak ada isi tersembunyi",
         r["takTerlihat"] == 0, r["takTerlihat"])
     ctx.close()
+    # Lencana "Paling dicari" menonjol di atas tepi kartunya. Kilau `.ax-glide`
+    # dulu memakai `overflow: hidden` pada kartu untuk memangkas lapisannya,
+    # dan pemangkas itu ikut memotong lencananya. Uji ini menjaga agar kartu
+    # tidak lagi memangkas apa pun — sekaligus memastikan kilaunya masih ada
+    # dan masih bergerak. Tanpa bagian kedua, "perbaikan" bisa keliru berupa
+    # penghapusan efek.
+    ctx = b.new_context(viewport={"width": 1280, "height": 900})
+    pg = ctx.new_page()
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(1200)
+    pg.evaluate("()=>document.querySelector('#layanan').scrollIntoView({block:'start'})")
+    pg.wait_for_timeout(1200)
+    r = pg.evaluate("""()=>{
+      const badge=document.querySelector('.price__badge');
+      if(!badge) return {ada:false};
+      const kartu=badge.closest('.price');
+      const s=getComputedStyle(kartu);
+      const rb=badge.getBoundingClientRect();
+      // Tinggi lencana yang benar-benar terlihat: irisan kotaknya dengan kotak
+      // setiap leluhur yang memangkas. Cara ini yang menangkap pemotongan —
+      // `elementFromPoint` tidak, karena lencana tetap elemen teratas di titik
+      // yang terpotong sekalipun.
+      let atas=rb.top, bawah=rb.bottom, n=badge.parentElement;
+      while(n && n!==document.documentElement){
+        const ns=getComputedStyle(n);
+        if(ns.overflowX!=='visible' || ns.overflowY!=='visible'){
+          const nr=n.getBoundingClientRect();
+          atas=Math.max(atas,nr.top); bawah=Math.min(bawah,nr.bottom);
+        }
+        n=n.parentElement;
+      }
+      return {ada:true,
+              overflowY:s.overflowY,
+              menonjol:kartu.getBoundingClientRect().top-rb.top,
+              tinggiAsli:rb.height,
+              tinggiTerlihat:Math.max(0,bawah-atas),
+              kilau:getComputedStyle(kartu,'::after').backgroundImage.includes('gradient')};
+    }""")
+    cek("lencana Paling dicari ada", r.get("ada"), r)
+    if r.get("ada"):
+        cek("lencana menonjol di atas tepi kartu", r["menonjol"] > 4, r["menonjol"])
+        cek("kartu tidak memangkas lencana (overflow terlihat)",
+            r["overflowY"] == "visible", r["overflowY"])
+        cek("lencana utuh, tidak terpotong",
+            r["tinggiTerlihat"] >= r["tinggiAsli"] - 0.5,
+            f'{r["tinggiTerlihat"]:.1f} dari {r["tinggiAsli"]:.1f}px')
+        cek("kilau kartu masih terpasang", r["kilau"], r["kilau"])
+        # Kartu harus benar-benar ada di layar sebelum disorot — kalau tidak,
+        # gerakan tetikus tidak mengenai apa pun dan ujinya gagal palsu.
+        pg.evaluate("""()=>document.querySelector('.price--feature')
+            .scrollIntoView({block:'center'})""")
+        pg.wait_for_timeout(700)
+        kotak = pg.query_selector(".price--feature").bounding_box()
+        pg.mouse.move(kotak["x"] + kotak["width"] / 2, kotak["y"] + kotak["height"] / 2)
+        posisi = pg.evaluate("""async ()=>{
+          const el=document.querySelector('.price--feature');
+          const out=[];
+          for(let i=0;i<8;i++){
+            out.push(getComputedStyle(el,'::after').backgroundPosition);
+            await new Promise(r=>setTimeout(r,110));
+          }
+          return out;}""")
+        cek("kilau bergerak saat kartu disorot", len(set(posisi)) > 2, posisi[:3])
+    ctx.close()
+    # Warna tiap bagian dan warna label kecilnya. Label `.eyebrow` hanya 11 px,
+    # jadi ia butuh kontras 4,5:1 — warna merek apa adanya tidak cukup di atas
+    # latar krem. Uji ini menghitung rasionya sendiri, termasuk di atas titik
+    # semburat yang paling pekat, supaya "berwarna" tidak diam-diam merusak
+    # keterbacaan.
+    ctx = b.new_context(viewport={"width": 1280, "height": 900})
+    pg = ctx.new_page()
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(1200)
+    pg.evaluate("()=>window.scrollTo(0,document.body.scrollHeight)")
+    pg.wait_for_timeout(1500)
+    r = pg.evaluate("""()=>{
+      function parseBg(c){const m=c.match(/rgba?\\(([^)]+)\\)/); if(!m) return null;
+        const v=m[1].split(',').map(t=>parseFloat(t.trim()));
+        return [v[0],v[1],v[2],v.length>3?v[3]:1];}
+      function lum(p){const f=c=>{c/=255; return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4);};
+        return .2126*f(p[0])+.7152*f(p[1])+.0722*f(p[2]);}
+      function rasio(a,b){let l1=lum(a),l2=lum(b); if(l1<l2){const t=l1;l1=l2;l2=t;}
+        return (l1+.05)/(l2+.05);}
+      const wash=document.querySelectorAll('.sec--wash-leaf,.sec--wash-clay,.sec--wash-amber').length;
+      const gagal=[];
+      for(const e of document.querySelectorAll('.eyebrow')){
+        const g=getComputedStyle(e);
+        const seksi=e.closest('.sec,.hero,.foot');
+        if(!seksi) continue;
+        const sg=getComputedStyle(seksi);
+        let bg=parseBg(sg.backgroundColor); if(!bg) continue;
+        // titik semburat paling pekat
+        const m=sg.backgroundImage.match(/rgba?\\(([^)]+)\\)/);
+        if(m){const v=m[1].split(',').map(t=>parseFloat(t.trim()));
+          const a=v.length>3?v[3]:1;
+          bg=[bg[0]*(1-a)+v[0]*a, bg[1]*(1-a)+v[1]*a, bg[2]*(1-a)+v[2]*a];}
+        const fg=parseBg(g.color);
+        const k=rasio([fg[0],fg[1],fg[2]], bg);
+        if(k<4.5) gagal.push(e.textContent.trim().slice(0,22)+' '+k.toFixed(2));
+      }
+      return {wash, gagal, label:document.querySelectorAll('.eyebrow').length};
+    }""")
+    cek("beranda: bagian diberi semburat warna", r["wash"] >= 6, r["wash"])
+    cek("beranda: label kecil lolos kontras di atas semburat",
+        not r["gagal"], r["gagal"][:3])
+    ctx.close()
+
+
+
 
     b.close()
 

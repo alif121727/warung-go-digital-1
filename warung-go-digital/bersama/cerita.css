@@ -1,0 +1,230 @@
+/* ══════════════════════════════════════════════════════════
+   cerita.css — bagian "Cerita Bu Tini" di halaman pertama.
+
+   Enam adegan dari proposal. Bentuk dasarnya adalah daftar adegan biasa:
+   gambar dan teks berdampingan, ditumpuk berurutan. Itulah yang dilihat
+   pengunjung bila JavaScript mati, bila layarnya kecil, atau bila ia memilih
+   "kurangi gerak".
+
+   Bila JavaScript hidup, `cerita.js` memindahkan gambar dan teks tiap adegan
+   ke dalam panggung lengket, lalu menambahkan penanda "adegan aktif" saat
+   pengunjung menggulir. Panggungnya tetap di tempat; isinya yang berganti —
+   sehingga terasa seperti menonton, bukan menggulir daftar.
+
+   Kelas `.cerita--panggung` hanya ditambahkan oleh JS. Karena itu seluruh
+   aturan panggung tidak pernah berlaku tanpa JS.
+   ══════════════════════════════════════════════════════════ */
+
+.cerita {
+  background: var(--ink);
+  color: var(--t-onDark);
+  position: relative;
+  /* Sengaja TANPA `overflow: hidden`. Pemangkas pada leluhur akan membuat
+     panggung lengket tidak lagi menempel ke layar, sebab pemangkas itu
+     menjadi wadah gulir terdekat. Pemangkasan aurora ditangani lapisan
+     `.cerita__latar` di bawah ini. */
+}
+.cerita__latar {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.cerita__aurora {
+  position: absolute; inset: auto -20% -30% auto;
+  width: 70%; aspect-ratio: 1;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(245,165,36,.20), rgba(224,107,60,.10) 42%, transparent 70%);
+  filter: blur(12px);
+  pointer-events: none;
+}
+.cerita .wrap { position: relative; z-index: 1; }
+.cerita__head { max-width: 680px; }
+.cerita__head h2 { color: var(--cream); }
+.cerita__head p { color: var(--t-onDark-2); }
+
+/* ── Judul kecil tiap adegan ────────────────────────────── */
+.cerita__nomor {
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: flex; align-items: center; gap: .7rem;
+  margin-bottom: 1rem;
+}
+.cerita__nomor::after {
+  content: ""; flex: 1; min-width: 40px; height: 1px;
+  background: linear-gradient(90deg, rgba(245,165,36,.5), transparent);
+}
+.cerita__adegan h3 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: var(--cream);
+  margin-bottom: .8rem;
+  letter-spacing: -.02em;
+}
+.cerita__adegan p {
+  color: var(--t-onDark-2);
+  font-size: 1.02rem;
+  max-width: 48ch;
+  margin-bottom: .8rem;
+}
+.cerita__adegan p:last-child { margin-bottom: 0; }
+.cerita__adegan strong { color: var(--amber-2); font-weight: 600; }
+
+/* Kalimat tokoh ditandai garis di kiri, seperti kutipan. */
+.cerita__ucap {
+  border-left: 3px solid rgba(245,165,36,.55);
+  padding-left: .95rem;
+  font-style: italic;
+  color: var(--t-onDark) !important;
+}
+
+/* ── Bentuk dasar: daftar adegan ────────────────────────── */
+.cerita__daftar {
+  display: grid;
+  gap: clamp(1.8rem, 4vw, 2.6rem);
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+.cerita__adegan {
+  display: grid;
+  grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+  gap: clamp(1.1rem, 3vw, 2rem);
+  align-items: center;
+}
+.cerita__adegan img {
+  width: 100%; height: auto; display: block;
+  border-radius: var(--r-lg);
+}
+.cerita__penggulung { display: none; }
+
+/* ── Bentuk panggung (hanya bila JS menambahkan kelas ini) ─ */
+.cerita--panggung .cerita__daftar { display: none; }
+.cerita--panggung .cerita__penggulung { display: block; position: relative; }
+
+/* Jalur gulir. Tiap penanda menyumbang satu layar gulir; panggungnya yang
+   lengket di atas. Tanpa tinggi ini penanda saling menumpuk di satu titik
+   dan adegan tidak pernah berganti. */
+.cerita--panggung .cerita__titik { height: 74vh; }
+.cerita--panggung .cerita__titik:first-child { height: 38vh; }
+.cerita--panggung .cerita__titik:last-child { height: 52vh; }
+
+.cerita--panggung .cerita__panggung {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(1.4rem, 4vw, 3.2rem);
+  align-items: center;
+  min-height: min(64vh, 500px);
+}
+
+.cerita--panggung .cerita__gambar {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 400px;
+  justify-self: center;
+}
+.cerita--panggung .cerita__gambar img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border-radius: 0;
+  opacity: 0; visibility: hidden;
+  transform: scale(.94);
+  transition: opacity .55s var(--ax-ease, cubic-bezier(.22,.68,.24,1)),
+              transform .7s var(--ax-ease, cubic-bezier(.22,.68,.24,1)),
+              visibility 0s linear .55s;
+}
+.cerita--panggung .cerita__gambar img.aktif {
+  opacity: 1; visibility: visible; transform: none;
+  transition-delay: 0s, 0s, 0s;
+}
+
+.cerita--panggung .cerita__teks {
+  /* Adegan ditumpuk di satu sel grid yang sama. Dengan begitu tinggi kolom
+     teks mengikuti adegan TERPANJANG dengan sendirinya — tanpa perlu mengukur
+     apa pun dari JavaScript, dan tanpa risiko teks terpotong saat adegan
+     kebetulan panjang atau hurufnya membesar. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.cerita--panggung .cerita__isi {
+  grid-area: 1 / 1;
+  display: block;
+  /* Disembunyikan dengan opasitas saja, bukan `visibility`. Alasannya
+     aksesibilitas: `visibility: hidden` mengeluarkan teks dari pohon
+     aksesibilitas, sehingga pembaca layar tidak akan menemukan ceritanya
+     sama sekali. Dengan opasitas, seluruh adegan tetap terbaca pembaca layar
+     (urut sesuai adegan) sementara mata hanya melihat adegan yang aktif. */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(14px);
+  transition: opacity .5s var(--ax-ease, cubic-bezier(.22,.68,.24,1)),
+              transform .5s var(--ax-ease, cubic-bezier(.22,.68,.24,1));
+}
+.cerita--panggung .cerita__isi.aktif {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+.cerita__kaki { grid-area: 2 / 1; }
+
+/* ── Penunjuk langkah & bilah kemajuan ──────────────────── */
+.cerita__langkah {
+  display: flex; gap: .5rem; margin-top: 1.8rem; flex-wrap: wrap;
+}
+.cerita__langkah button {
+  width: 34px; height: 6px; padding: 0;
+  border: 0; border-radius: 999px;
+  background: rgba(219,229,220,.22);
+  cursor: pointer;
+  transition: background .3s ease, width .3s ease;
+}
+.cerita__langkah button[aria-current="true"] {
+  background: var(--amber);
+  width: 54px;
+  box-shadow: 0 0 16px -2px rgba(245,165,36,.8);
+}
+.cerita__langkah button:hover { background: rgba(219,229,220,.45); }
+.cerita__langkah button[aria-current="true"]:hover { background: var(--amber); }
+.cerita__langkah button:focus-visible {
+  outline: 2px solid var(--amber-2); outline-offset: 3px;
+}
+
+.cerita__jalur {
+  height: 2px; width: 100%; margin-top: 1.1rem;
+  background: rgba(219,229,220,.14);
+  border-radius: 999px; overflow: hidden;
+}
+.cerita__jalur i {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--amber), var(--clay) 55%, var(--leaf));
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+
+.cerita__penutup {
+  margin-top: clamp(1.8rem, 4vw, 2.6rem);
+  font-family: var(--f-mono);
+  font-size: .74rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--t-onDark-2);
+  text-align: center;
+}
+
+/* ── Layar sempit: kembali ke bentuk daftar ─────────────── */
+@media (max-width: 900px) {
+  .cerita--panggung .cerita__daftar { display: grid; }
+  .cerita--panggung .cerita__penggulung { display: none; }
+  .cerita__adegan { grid-template-columns: 1fr; }
+  .cerita__adegan img { max-width: 260px; }
+}
+
+/* ── Kurangi gerak: cerita tetap utuh, hanya tanpa panggung ─ */
+@media (prefers-reduced-motion: reduce) {
+  .cerita--panggung .cerita__daftar { display: grid; }
+  .cerita--panggung .cerita__penggulung { display: none; }
+  .cerita__jalur i { transition: none !important; }
+}

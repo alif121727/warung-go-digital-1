@@ -208,18 +208,36 @@
 }
 
 /* ── Kilau menyapu saat disorot ───────────────────────────
-   Satu sapuan cahaya saat kursor masuk — meniru pantulan pada kaca. */
-.ax-glide { position: relative; overflow: hidden; }
+   Satu sapuan cahaya saat kursor masuk — meniru pantulan pada kaca.
+
+   Sapuannya digeser lewat `background-position`, bukan lewat `transform`
+   pada lapisan yang lebih lebar dari kartunya. Cara lama mengharuskan kartu
+   memakai `overflow: hidden` untuk menyembunyikan lapisan itu di luar tepi —
+   dan `overflow: hidden` ikut memotong lencana "Paling dicari" yang memang
+   menonjol di atas tepi kartu. Dengan cara ini kartu tidak memotong apa pun.
+
+   Gradasinya dibuat lebih lebar daripada kartu (300%) supaya ada ruang untuk
+   bergeser tanpa tepinya terlihat. Yang bergerak dari kiri ke kanan adalah
+   posisinya, dan nilainya turun dari 100% ke 0% — pada ukuran 300%, itulah
+   arah sapuan dari tepi kiri ke tepi kanan. */
+.ax-glide { position: relative; }
 .ax-glide::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(115deg, transparent 34%,
-              rgba(255,255,255,.28) 50%, transparent 66%);
-  transform: translateX(-140%);
+  background-image: linear-gradient(115deg, transparent 44%,
+                    rgba(255,255,255,.28) 50%, transparent 56%);
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  /* Ikut lengkung kartunya. Dulu ini tidak perlu karena `overflow: hidden`
+     pada kartu yang memangkasnya; kini pemangkas itu sudah tidak ada, jadi
+     lengkungnya harus disebut sendiri — kalau tidak, kilau akan tampak
+     menyiku di keempat sudut kartu. */
+  border-radius: inherit;
 }
 .ax-glide:hover::after { animation: ax-glide .85s var(--ax-ease-io); }
 @keyframes ax-glide {
-  from { transform: translateX(-140%); }
-  to   { transform: translateX(140%); }
+  from { background-position: 100% 0; }
+  to   { background-position: 0% 0; }
 }
 
 /* ── Buka-tutup bagian (details/summary) ──────────────────
