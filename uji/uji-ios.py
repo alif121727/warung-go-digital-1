@@ -16,6 +16,7 @@ letak risiko yang mudah luput:
 Jalankan: python3 uji/uji-ios.py
 Perlu server aktif di http://localhost:12000/warung-go-digital/
 """
+import re
 from playwright.sync_api import sync_playwright
 
 LANDING = "http://localhost:12000/warung-go-digital/"
@@ -211,7 +212,13 @@ with sync_playwright() as p:
     sw = pg.goto(LANDING + "sw.js").text()
     cek("sw.js memuat pasang-ios.js", "'./pasang-ios.js'" in sw)
     cek("sw.js memuat unduh.html", "'./unduh.html'" in sw)
-    cek("sw.js versi cache dinaikkan", "wgd-v12" in sw)
+    # Yang penting bukan nomor persisnya, melainkan bahwa versi cache sudah
+    # dinaikkan minimal ke angka saat berkas panduan mulai didaftarkan.
+    # Mengunci nomor persis membuat uji ini gagal setiap kali cache
+    # dinaikkan, padahal justru itu yang diinginkan.
+    v = re.search(r"VERSI = 'wgd-v(\d+)'", sw)
+    cek("sw.js versi cache minimal v12", bool(v) and int(v.group(1)) >= 12,
+        v.group(0) if v else "tidak ditemukan")
     pg.close()
 
     b.close()

@@ -105,6 +105,10 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
 - Token warna/radius/shadow ada di `:root` di `styles.css`.
 - Lapisan futuristik memakai kelas berawalan `fx-` dan `maskot*` (aurora, kaca,
   HUD, teks bergradasi, cincin berputar, butir halus) — tetap memakai palet merek.
+- **Lapisan gerak** ada di `bersama/animasi.css` + `bersama/animasi.js`, memakai
+  kelas berawalan `ax-`. Dipasang di `index.html`, `unduh.html`, dan
+  `privasi.html`. Berisi bilah kemajuan gulir, sorotan kursor, kemunculan
+  berjenjang, kilau gradasi, denyut, dan kemiringan 3D.
 - **Maskot**: 4 ilustrasi SVG di `warung-go-digital/ilustrasi/` (Pak Warung,
   Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
   terbaca di latar gelap maupun krem. Bebas dipakai untuk poster/stand QR.
@@ -173,6 +177,33 @@ Penting saat menambah seksi yang memakai `.fx-aurora`: seksi induk **wajib**
 `position: relative` (atau `overflow: hidden`). Bila tidak, elemen absolut
 memakai viewport sebagai acuan, lolos dari klip, dan halaman jadi bisa
 digeser samping. Uji anti-geser samping: `uji/uji-landing.py`.
+
+### Aturan lapisan gerak (`ax-`)
+
+Empat aturan yang gampang dilanggar dan akibatnya tidak kelihatan sampai
+seseorang mengeluh. Uji semuanya ada di `uji/uji-animasi.py`.
+
+1. **Pakai `translate`/`scale`, jangan `transform`, untuk kemunculan.**
+   Banyak kartu memakai `transform` untuk animasi sorotnya sendiri. Dua
+   aturan yang menulis properti sama akan saling menghapus — yang menang
+   membunuh yang kalah. Properti `translate`/`scale` berdiri sendiri dan
+   otomatis digabung dengan `transform`.
+2. **Jangan pernah menulis kelas `ax-reveal` di HTML.** Kelas itu dipasang
+   oleh `animasi.js`, yang juga menambahkan `ax-in`. Kalau ditulis di HTML,
+   tanpa JavaScript tidak ada yang menambahkan `ax-in`, dan seluruh isi
+   halaman jadi tak terlihat. Hal yang sama berlaku untuk animasi hero:
+   keadaan awal ditaruh di dalam `@keyframes`, bukan di luar.
+3. **Jangan animasikan `transform` pada `.fab`.** Tombol WhatsApp mengambang
+   disembunyikan dengan `transform: translateY(120%)` dan muncul lewat kelas
+   `.show`. Animasi yang menulis `transform` mengalahkan aturan itu dan
+   membuat tombol muncul terus — area tak terlihat yang masih bisa diklik.
+4. **Kurangi gerak harus benar-benar mengurangi.** Saat
+   `prefers-reduced-motion: reduce`, semua gerak mati tetapi tidak ada isi
+   yang boleh tersembunyi. Gerak yang bergantung kursor juga tidak boleh
+   dipasang di perangkat sentuh.
+
+Jaring pengaman berlapis: bila `IntersectionObserver` tidak ada atau sesuatu
+menghalangi, `animasi.js` menampilkan semua setelah 4 detik. Jangan dihapus.
 
 ## Panel Mitra (aplikasi)
 
@@ -249,6 +280,11 @@ pip install playwright pillow numpy
 **Landing page + halaman unduh** — jalankan `python3 uji/uji-landing.py`
 (server di `http://localhost:12000/warung-go-digital/`). Mencakup anti-geser
 samping 9 lebar, maskot termuat, tautan unduh tepat, dan QR terdekode.
+
+**Lapisan gerak** — jalankan `python3 uji/uji-animasi.py`. Menjaga empat
+aturan di atas: halaman terbaca tanpa JavaScript, kurangi-gerak tidak
+menyembunyikan isi, tidak ada animasi ganda dengan `app.js`, tidak ada geser
+samping di 8 lebar layar, dan tombol WhatsApp tetap tersembunyi di puncak.
 
 **Panduan pasang iPhone** (bagian di `unduh.html`) — jalankan
 `python3 uji/uji-ios.py`. Mencakup penyesuaian perangkat (Safari, Chrome iOS,
