@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" role="img" aria-label="Pemilik warung memegang ponsel berisi QR menu">
+  <defs>
+    <radialGradient id="pwGlow" cx="50%" cy="46%" r="60%">
+      <stop offset="0%" stop-color="#f5a524" stop-opacity=".30"/>
+      <stop offset="62%" stop-color="#f5a524" stop-opacity=".07"/>
+      <stop offset="100%" stop-color="#f5a524" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pwPhone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1b3324"/>
+      <stop offset="100%" stop-color="#0d1a12"/>
+    </linearGradient>
+      <radialGradient id="__PLATE" cx="38%" cy="28%" r="86%">
+      <stop offset="0%" stop-color="#24503a"/>
+      <stop offset="58%" stop-color="#16301f"/>
+      <stop offset="100%" stop-color="#0d1a12"/>
+    </radialGradient>
+    <linearGradient id="__RIM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5a524"/>
+      <stop offset="55%" stop-color="#e06b3c"/>
+      <stop offset="100%" stop-color="#3ba55d"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="120" cy="120" r="113" fill="url(#__PLATE)" stroke="url(#__RIM)" stroke-width="3"/>
+  <circle cx="120" cy="120" r="103" fill="none" stroke="#0d1a12" stroke-opacity=".10" stroke-width="1.6"/>
+
+  <circle cx="120" cy="120" r="96" fill="url(#pwGlow)" opacity=".55"/>
+
+  <rect x="92" y="206" width="22" height="20" rx="9" fill="#132419"/>
+  <rect x="124" y="206" width="22" height="20" rx="9" fill="#132419"/>
+
+  <path d="M119 144c25 0 43 16 43 39v19a8 8 0 0 1-8 8H84a8 8 0 0 1-8-8v-19c0-23 18-39 43-39Z" fill="#fffdf7" stroke="#0d1a12" stroke-width="3.4"/>
+  <path d="M119 144c12 0 21 4 27 11l-11 9v42H103v-42l-11-9c6-7 15-11 27-11Z" fill="#f6f0e2" stroke="#0d1a12" stroke-width="2.8"/>
+  <path d="M112 150v50M126 150v50" stroke="#e0d5bd" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="97" cy="152" r="3.4" fill="#f5a524"/>
+  <circle cx="141" cy="152" r="3.4" fill="#f5a524"/>
+
+  <path d="M84 170c-9 6-14 15-13 25" stroke="#0d1a12" stroke-width="13" stroke-linecap="round"/>
+  <circle cx="72" cy="197" r="9.5" fill="#f6f0e2" stroke="#0d1a12" stroke-width="3.2"/>
+
+  <path d="M152 168c12 2 21-3 27-12" stroke="#0d1a12" stroke-width="13" stroke-linecap="round"/>
+
+  <g transform="rotate(9 190 122)">
+    <rect x="171" y="94" width="40" height="62" rx="10" fill="url(#pwPhone)" stroke="#0d1a12" stroke-width="3.2"/>
+    <rect x="177" y="101" width="28" height="48" rx="5" fill="#fffdf7"/>
+    <g fill="#0d1a12">
+      <rect x="181" y="105" width="9" height="9" rx="2"/>
+      <rect x="192" y="105" width="9" height="9" rx="2"/>
+      <rect x="181" y="116" width="9" height="9" rx="2"/>
+      <rect x="192" y="127" width="9" height="9" rx="2"/>
+      <rect x="181" y="138" width="9" height="9" rx="2"/>
+    </g>
+    <rect x="192" y="116" width="9" height="9" rx="2" fill="#f5a524"/>
+  </g>
+
+  <circle cx="116" cy="100" r="34" fill="#f6f0e2" stroke="#0d1a12" stroke-width="3.4"/>
+
+  <path d="M89 90V76c0-6 5-11 11-11h32c6 0 11 5 11 11v14Z" fill="#0d1a12"/>
+  <path d="M87 88h58" stroke="#f5a524" stroke-width="3.4" stroke-linecap="round"/>
+
+  <circle cx="83" cy="102" r="5" fill="#f6f0e2" stroke="#0d1a12" stroke-width="3"/>
+  <circle cx="149" cy="102" r="5" fill="#f6f0e2" stroke="#0d1a12" stroke-width="3"/>
+
+  <path d="M100 90c3-3 8-3 11 0M122 90c3-3 8-3 11 0" stroke="#0d1a12" stroke-width="3" stroke-linecap="round"/>
+
+  <path d="M101 101c2.6 3 7.4 3 10 0" stroke="#0d1a12" stroke-width="3.2" stroke-linecap="round"/>
+  <circle cx="128" cy="101" r="4.4" fill="#0d1a12"/>
+  <circle cx="129.6" cy="99.6" r="1.5" fill="#fffdf7"/>
+
+  <path d="M104 110c4-4 8-4 12 0 4-4 8-4 12 0" stroke="#0d1a12" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+  <path d="M108 118c5 5 12 5 17 0" stroke="#0d1a12" stroke-width="3.2" stroke-linecap="round"/>
+
+  <path d="M188 62l3 8 8 3-8 3-3 8-3-8-8-3 8-3 3-8Z" fill="#f5a524"/>
+  <circle cx="58" cy="80" r="4" fill="#3ba55d"/>
+</svg>

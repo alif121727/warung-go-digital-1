@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" role="img" aria-label="Segelas es teh manis tersenyum dengan sedotan">
+  <defs>
+    <radialGradient id="etGlow" cx="50%" cy="52%" r="60%">
+      <stop offset="0%" stop-color="#f5a524" stop-opacity=".26"/>
+      <stop offset="100%" stop-color="#f5a524" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="etTea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e06b3c"/>
+      <stop offset="100%" stop-color="#c9542a"/>
+    </linearGradient>
+      <radialGradient id="__PLATE" cx="38%" cy="28%" r="86%">
+      <stop offset="0%" stop-color="#24503a"/>
+      <stop offset="58%" stop-color="#16301f"/>
+      <stop offset="100%" stop-color="#0d1a12"/>
+    </radialGradient>
+    <linearGradient id="__RIM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5a524"/>
+      <stop offset="55%" stop-color="#e06b3c"/>
+      <stop offset="100%" stop-color="#3ba55d"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="120" cy="120" r="113" fill="url(#__PLATE)" stroke="url(#__RIM)" stroke-width="3"/>
+  <circle cx="120" cy="120" r="103" fill="none" stroke="#0d1a12" stroke-opacity=".10" stroke-width="1.6"/>
+
+  <circle cx="120" cy="120" r="96" fill="url(#etGlow)" opacity=".55"/>
+
+  <!-- sedotan -->
+  <path d="M150 44l-14 66" stroke="#0d1a12" stroke-width="7" stroke-linecap="round"/>
+  <path d="M150 44l-14 66" stroke="#f5a524" stroke-width="3.4" stroke-linecap="round"/>
+
+  <!-- gelas -->
+  <path d="M78 78h84l-9 118a12 12 0 0 1-12 11H99a12 12 0 0 1-12-11L78 78Z" fill="#fffdf7" stroke="#0d1a12" stroke-width="3.6"/>
+
+  <!-- teh -->
+  <path d="M84 116h72l-6 80a12 12 0 0 1-12 11H102a12 12 0 0 1-12-11l-6-80Z" fill="url(#etTea)"/>
+
+  <!-- es batu -->
+  <rect x="94" y="92" width="24" height="24" rx="6" fill="#fffdf7" opacity=".82"/>
+  <rect x="122" y="98" width="22" height="22" rx="6" fill="#fffdf7" opacity=".68"/>
+  <rect x="104" y="124" width="20" height="20" rx="5" fill="#fffdf7" opacity=".5"/>
+
+  <!-- mata di badan gelas -->
+  <circle cx="104" cy="150" r="4.6" fill="#fffdf7"/>
+  <circle cx="136" cy="150" r="4.6" fill="#fffdf7"/>
+  <circle cx="105.4" cy="148.6" r="1.7" fill="#0d1a12"/>
+  <circle cx="137.4" cy="148.6" r="1.7" fill="#0d1a12"/>
+
+  <!-- pipi -->
+  <ellipse cx="92" cy="158" rx="6" ry="4" fill="#f5a524" opacity=".55"/>
+  <ellipse cx="148" cy="158" rx="6" ry="4" fill="#f5a524" opacity=".55"/>
+
+  <!-- senyum -->
+  <path d="M110 160c4 5 12 5 16 0" stroke="#0d1a12" stroke-width="3.2" stroke-linecap="round"/>
+
+  <!-- tutup gelas -->
+  <path d="M72 70h96l-4 12H76l-4-12Z" fill="#f6f0e2" stroke="#0d1a12" stroke-width="3.4"/>
+  <path d="M120 70V58" stroke="#0d1a12" stroke-width="3.4" stroke-linecap="round"/>
+
+  <path d="M52 92l3 8 8 3-8 3-3 8-3-8-8-3 8-3 3-8Z" fill="#f5a524"/>
+  <circle cx="192" cy="104" r="4" fill="#3ba55d"/>
+</svg>

@@ -695,10 +695,16 @@ h1 em, h2 em, .contact__head h2 em {
   .flow { grid-template-columns: repeat(2, 1fr); }
   .foot__grid { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 860px) {
+/* Menu horizontal tidak muat di bawah ~1100px setelah tautan "Maskot"
+   ditambahkan; sebelum itu pun sudah mepet dan bocor di 900–960px.
+   Di bawah ambang ini menu berganti ke tombol burger (panel seluler). */
+@media (max-width: 1100px) {
   .menu { display: none; }
   .topbar .btn--xs { display: none; }
   .burger { display: block; margin-left: auto; }
+}
+
+@media (max-width: 860px) {
   .plans { grid-template-columns: 1fr; max-width: 460px; margin-inline: auto; }
   .target { grid-template-columns: 1fr; }
   .contact__grid { grid-template-columns: 1fr; }
@@ -737,4 +743,170 @@ h1 em, h2 em, .contact__head h2 em {
   * { animation: none !important; transition-duration: .01ms !important; }
   .reveal { opacity: 1; transform: none; }
   html { scroll-behavior: auto; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   Lapisan futuristik — ditambahkan di atas design system lama.
+   Semua kelas baru berawalan `fx-`/`maskot` agar tidak bentrok.
+   Palet merek tetap: tinta, amber, krem, leaf, clay.
+   ══════════════════════════════════════════════════════════ */
+
+:root {
+  --glass:      rgba(255, 253, 247, .07);
+  --glass-2:    rgba(255, 253, 247, .13);
+  --glass-line: rgba(255, 255, 255, .16);
+  --ring:       conic-gradient(from 0deg, #f5a524, #e06b3c 30%, #3ba55d 55%, #ffc65c 78%, #f5a524);
+  --fx-glow:    0 0 42px -10px rgba(245, 165, 36, .55);
+}
+
+/* Butir halus di atas seluruh halaman — memberi tekstur "layar" */
+.fx-grain {
+  position: fixed; inset: 0; z-index: 900; pointer-events: none;
+  opacity: .035; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Aurora: jaring cahaya bergerak di belakang hero ───── */
+.fx-aurora {
+  position: absolute; inset: -20% -10% auto; height: 150%; z-index: 0;
+  pointer-events: none; opacity: .75; filter: blur(46px);
+  background:
+    radial-gradient(38% 46% at 22% 28%, rgba(245,165,36,.42), transparent 70%),
+    radial-gradient(34% 40% at 74% 22%, rgba(59,165,93,.34),  transparent 72%),
+    radial-gradient(40% 44% at 58% 76%, rgba(224,107,60,.30), transparent 74%);
+  animation: fx-drift 26s ease-in-out infinite alternate;
+}
+@keyframes fx-drift {
+  0%   { transform: translate3d(0,0,0) scale(1); }
+  50%  { transform: translate3d(-3%,4%,0) scale(1.08); }
+  100% { transform: translate3d(4%,-3%,0) scale(1.04); }
+}
+
+/* Garis pindai tipis — nuansa instrumen, bukan lampu disko */
+.fx-scan {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
+  background: repeating-linear-gradient(
+    to bottom, rgba(255,255,255,.045) 0 1px, transparent 1px 4px);
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 42%);
+}
+
+/* ── Kartu kaca ───────────────────────────────────────── */
+.fx-glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 24px 50px -30px rgba(0,0,0,.7);
+}
+.fx-glass--light {
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(13,26,18,.10);
+  backdrop-filter: blur(16px) saturate(1.35);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 22px 46px -30px rgba(13,26,18,.5);
+}
+
+/* ── Teks bergradasi ──────────────────────────────────── */
+.fx-grad {
+  background: linear-gradient(96deg, #f5a524 0%, #e06b3c 42%, #3ba55d 100%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+
+/* ── Sudut ala HUD (kurung siku) ──────────────────────── */
+.fx-hud { position: relative; }
+.fx-hud::before, .fx-hud::after {
+  content: ""; position: absolute; width: 15px; height: 15px; pointer-events: none;
+  border-color: var(--amber); opacity: .85;
+}
+.fx-hud::before { top: 9px; left: 9px; border-top: 2px solid; border-left: 2px solid; border-top-left-radius: 5px; }
+.fx-hud::after  { bottom: 9px; right: 9px; border-bottom: 2px solid; border-right: 2px solid; border-bottom-right-radius: 5px; }
+
+/* ── Cincin berputar untuk kartu unggulan ─────────────── */
+/* Cahaya mengelilingi tepi kartu. Digambar sebagai lapisan atas bermasker
+   agar tidak tertutup latar kartu (z-index negatif akan tersembunyi). */
+@property --fx-ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+.fx-ring { position: relative; }
+.fx-ring::after {
+  content: ""; position: absolute; inset: -2px; z-index: 3;
+  border-radius: inherit; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--fx-ang, 0deg),
+    #f5a524, #e06b3c 22%, #3ba55d 44%, #ffc65c 66%, #f5a524);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  animation: fx-spin 7s linear infinite;
+}
+@keyframes fx-spin { to { --fx-ang: 360deg; } }
+
+/* ── Label kecil bergaya terminal ─────────────────────── */
+.fx-tag {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-family: var(--f-mono); font-size: .6rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--amber); background: rgba(245,165,36,.12);
+  border: 1px solid rgba(245,165,36,.3); border-radius: 999px;
+  padding: .3rem .7rem;
+}
+.fx-tag i { width: 5px; height: 5px; border-radius: 50%; background: var(--leaf); animation: fx-blink 2.4s ease-in-out infinite; }
+@keyframes fx-blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* Aurora di dalam seksi perlu dipangkas agar tidak menimbulkan
+   geser samping (seksi biasa tidak punya overflow:hidden). */
+/* Seksi ini harus "positioned" agar aurora absolut di dalamnya benar-benar
+   dipangkas oleh overflow. Bila static, aurora memakai viewport sebagai
+   acuan dan lolos dari klip — halaman jadi bisa digeser samping. */
+#maskot { position: relative; overflow: hidden; }
+
+/* ── Galeri maskot ────────────────────────────────────── */
+.maskot__grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem;
+}
+.maskot__card {
+  position: relative; overflow: hidden; text-align: center;
+  border-radius: var(--r-xl); padding: 1.5rem 1.1rem 1.35rem;
+  transition: transform .4s var(--ease), box-shadow .4s, border-color .4s;
+}
+.maskot__card:hover { transform: translateY(-8px) rotate(-.6deg); border-color: var(--amber); box-shadow: var(--fx-glow); }
+.maskot__img {
+  width: clamp(112px, 15vw, 150px); height: auto; margin: 0 auto .95rem;
+  filter: drop-shadow(0 16px 26px rgba(0,0,0,.45));
+  transition: transform .5s var(--ease);
+}
+.maskot__card:hover .maskot__img { transform: translateY(-4px) scale(1.05); }
+.maskot__card:nth-child(1) .maskot__img { animation: fx-bob 5.5s ease-in-out infinite; }
+.maskot__card:nth-child(2) .maskot__img { animation: fx-bob 5.5s ease-in-out infinite .6s; }
+.maskot__card:nth-child(3) .maskot__img { animation: fx-bob 5.5s ease-in-out infinite 1.2s; }
+.maskot__card:nth-child(4) .maskot__img { animation: fx-bob 5.5s ease-in-out infinite 1.8s; }
+@keyframes fx-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+.maskot__card h3 { font-size: 1.02rem; margin-bottom: .3rem; color: var(--cream); }
+.maskot__card p { font-size: .84rem; color: var(--t-onDark-2); line-height: 1.5; }
+.maskot__card .fx-tag { margin-bottom: .85rem; }
+
+.maskot__catatan {
+  margin-top: 1.4rem; text-align: center; font-size: .84rem; color: var(--t-onDark-2);
+}
+.maskot__catatan b { color: var(--amber); font-weight: 600; }
+
+/* Maskot kecil mengintip di kartu hero */
+.hero__maskot {
+  position: absolute; z-index: 2; width: clamp(64px, 8vw, 88px); height: auto;
+  filter: drop-shadow(0 12px 22px rgba(0,0,0,.5));
+  animation: fx-bob 6s ease-in-out infinite;
+}
+
+/* ── Penyesuaian responsif ────────────────────────────── */
+@media (max-width: 1020px) {
+  .maskot__grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 620px) {
+  .maskot__grid { grid-template-columns: 1fr; max-width: 340px; margin-inline: auto; }
+  .maskot__card:nth-child(n) .maskot__img { animation: none; }
+  .hero__maskot { display: none; }
+  .fx-scan { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-aurora, .fx-ring::after, .maskot__img, .hero__maskot, .fx-tag i { animation: none !important; }
 }

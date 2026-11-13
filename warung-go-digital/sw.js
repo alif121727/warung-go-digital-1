@@ -14,7 +14,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v8';
+const VERSI = 'wgd-v9';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -45,6 +45,7 @@ const KERANGKA = [
   './bersama/sinkron.js',
   './bersama/native.js',
   './bersama/gaya.css',
+  './bersama/gaya-unduh.css',
 
   // Aplikasi Pemilik
   './pemilik/',
@@ -59,10 +60,20 @@ const KERANGKA = [
   './admin/manifest.webmanifest',
   './manifest.webmanifest',
   './privasi.html',
+
+  // Halaman unduh aplikasi
+  './unduh.html',
+  './unduh.js',
   './ikon/ikon-192.png',
   './ikon/ikon-512.png',
   './ikon/ikon-maskable-512.png',
   './ikon/apple-touch-icon.png',
+
+  // Maskot (ilustrasi) — dipakai laman pembuka
+  './ilustrasi/pak-warung.svg',
+  './ilustrasi/si-qr.svg',
+  './ilustrasi/es-teh.svg',
+  './ilustrasi/kucing-warung.svg',
 ];
 
 self.addEventListener('install', (peristiwa) => {

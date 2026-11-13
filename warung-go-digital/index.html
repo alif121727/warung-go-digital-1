@@ -21,6 +21,9 @@
 </head>
 <body>
 
+<!-- Butir halus di atas seluruh halaman (tekstur "layar") -->
+<div class="fx-grain" aria-hidden="true"></div>
+
 <a class="skip" href="#layanan">Lewati ke daftar paket</a>
 
 <!-- ── Header ───────────────────────────────────────────── -->
@@ -39,6 +42,7 @@
       <a href="#layanan">Paket</a>
       <a href="#fitur">Fitur</a>
       <a href="#cara">Cara Kerja</a>
+      <a href="#maskot">Maskot</a>
       <a href="#target">Target</a>
       <a href="#aplikasi">Aplikasi</a>
       <a href="#unduh-apk">Unduh APK</a>
@@ -57,6 +61,7 @@
     <a href="#layanan">Paket</a>
     <a href="#fitur">Fitur</a>
     <a href="#cara">Cara Kerja</a>
+    <a href="#maskot">Maskot</a>
     <a href="#target">Target</a>
     <a href="#aplikasi">Aplikasi</a>
     <a href="#unduh-apk">Unduh APK</a>
@@ -73,7 +78,9 @@
 <!-- ══ HERO ══════════════════════════════════════════════ -->
 <section class="hero">
   <div class="hero__glow" aria-hidden="true"></div>
+  <div class="fx-aurora" aria-hidden="true"></div>
   <div class="hero__lines" aria-hidden="true"></div>
+  <div class="fx-scan" aria-hidden="true"></div>
 
   <div class="hero__inner">
     <div class="hero__copy">
@@ -84,7 +91,7 @@
 
       <h1 class="hero__title">
         Warung Anda,
-        <em>naik kelas</em>
+        <em class="fx-grad">naik kelas</em>
         digital.
       </h1>
 
@@ -110,7 +117,8 @@
     </div>
 
     <div class="hero__visual">
-      <div class="glowcard">
+      <img class="hero__maskot" src="ilustrasi/si-qr.svg" alt="" aria-hidden="true" style="left:-6px;bottom:6px" />
+      <div class="glowcard fx-hud">
         <div class="glowcard__head">
           <span class="glowcard__name">Warung Bu Sari</span>
           <span class="glowcard__live"><i></i>Buka</span>
@@ -217,7 +225,7 @@
         <a href="#kontak" class="btn btn--outline btn--full">Mulai Gratis</a>
       </article>
 
-      <article class="price price--feature">
+      <article class="price price--feature fx-ring">
         <span class="price__badge">Paling dicari</span>
         <header>
           <span class="price__tag">Untuk naik peringkat</span>
@@ -384,6 +392,54 @@
 </section>
 
 
+<!-- ══ MASKOT ════════════════════════════════════════════ -->
+<section class="sec sec--dark" id="maskot">
+  <div class="fx-aurora" aria-hidden="true" style="opacity:.28"></div>
+  <div class="wrap" style="position:relative;z-index:1">
+    <header class="head head--center head--onDark">
+      <span class="eyebrow eyebrow--amber">Kenalan dulu</span>
+      <h2>Empat sahabat <em class="fx-grad">warung digital</em></h2>
+      <p>Mereka yang menemani perjalanan warung Anda — dari catat penjualan sampai
+        menyapa pelanggan lewat WhatsApp.</p>
+    </header>
+
+    <div class="maskot__grid">
+      <article class="maskot__card fx-glass">
+        <span class="fx-tag"><i></i>Si Pemilik</span>
+        <img class="maskot__img" src="ilustrasi/pak-warung.svg" alt="Maskot pemilik warung memegang ponsel berisi QR menu" loading="lazy" />
+        <h3>Pak Warung</h3>
+        <p>Punya warung, sekarang punya alat. Catat penjualan harian, kelola menu, semua dari HP.</p>
+      </article>
+
+      <article class="maskot__card fx-glass">
+        <span class="fx-tag"><i></i>Si Pemindai</span>
+        <img class="maskot__img" src="ilustrasi/si-qr.svg" alt="Maskot kode QR tersenyum dan melambaikan tangan" loading="lazy" />
+        <h3>Si QR</h3>
+        <p>Satu pindai, menu langsung terbuka. Pelanggan lihat harga, pesan lewat WhatsApp.</p>
+      </article>
+
+      <article class="maskot__card fx-glass">
+        <span class="fx-tag"><i></i>Si Segar</span>
+        <img class="maskot__img" src="ilustrasi/es-teh.svg" alt="Maskot segelas es teh manis tersenyum" loading="lazy" />
+        <h3>Mbak Es Teh</h3>
+        <p>Contoh produk yang tampil rapi di katalog. Foto bagus bikin orang jadi ingin mampir.</p>
+      </article>
+
+      <article class="maskot__card fx-glass">
+        <span class="fx-tag"><i></i>Si Setia</span>
+        <img class="maskot__img" src="ilustrasi/kucing-warung.svg" alt="Maskot kucing warung duduk tenang memakai syal" loading="lazy" />
+        <h3>Si Meong</h3>
+        <p>Penunggu setia tiap warung. Pengingat ramah supaya pelanggan betah dan balik lagi.</p>
+      </article>
+    </div>
+
+    <p class="maskot__catatan">
+      Maskot dibuat khusus untuk <b>Warung Go Digital</b> — bukan gambar pinjaman,
+      jadi bisa dipakai bebas di poster, stand QR, dan siaran WhatsApp Anda.
+    </p>
+  </div>
+</section>
+
 <!-- ══ APLIKASI ══════════════════════════════════════════ -->
 <section class="sec sec--light" id="aplikasi">
   <div class="wrap">
@@ -451,9 +507,9 @@
         <p class="dim kecil">Pengguna iPhone: berkas IPA belum ditandatangani Apple, jadi dipasang lewat aplikasi <b>Sideloadly</b> atau <b>AltStore</b> memakai Apple ID Anda. Langkahnya ada di <code>BACA-DULU.md</code>.</p>
       </div>
       <div class="unduh__aksi">
-        <a class="btn btn--amber" href="https://github.com/alif121727/warung-go-digital-1/releases/latest/download/warung-go-digital.apk">Unduh APK Android</a>
-        <a class="btn btn--outline" href="https://github.com/alif121727/warung-go-digital-1/releases/download/ios-v1.0.0/warung-go-digital.ipa">Unduh IPA iPhone</a>
-        <a class="btn btn--outline" href="https://github.com/alif121727/warung-go-digital-1/releases" target="_blank" rel="noopener noreferrer">Semua versi</a>
+        <a class="btn btn--amber" href="unduh.html">Halaman unduh &amp; panduan</a>
+        <a class="btn btn--outline" href="https://github.com/alif121727/warung-go-digital-1/releases/download/v1.3.0/warung-go-digital.apk">APK Android (langsung)</a>
+        <a class="btn btn--outline" href="https://github.com/alif121727/warung-go-digital-1/releases/download/ios-v1.3.0/warung-go-digital.ipa">IPA iPhone (langsung)</a>
       </div>
     </div>
   </div>
@@ -588,11 +644,13 @@
         <h4>Program</h4>
         <a href="#masalah">Latar belakang</a>
         <a href="#cara">Cara kerja</a>
+        <a href="#maskot">Maskot</a>
         <a href="#target">Target &amp; pemasaran</a>
         <a href="#kontak">Daftar mitra</a>
         <a href="pemilik/">Aplikasi Pemilik</a>
         <a href="admin/">Panel Pengelola</a>
         <a href="app/">Panel Mitra (lama)</a>
+        <a href="unduh.html">Unduh aplikasi</a>
         <a href="#unduh-apk">Unduh APK Android</a>
         <a href="privasi.html">Kebijakan privasi</a>
       </nav>
