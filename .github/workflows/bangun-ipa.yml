@@ -167,10 +167,10 @@ jobs:
           # Rilis yang sudah ada (dan immutable) tidak bisa ditimpa GitHub.
           # Bila aset IPA sudah ada, lewati langkah lampirkan agar alur kerja
           # tidak merah; untuk menerbitkan IPA baru, naikkan tag_name.
-          if gh release view ios-v1.0.0 --repo "$GITHUB_REPOSITORY" --json assets \
+          if gh release view ios-v1.3.0 --repo "$GITHUB_REPOSITORY" --json assets \
                --jq '.assets[].name' 2>/dev/null | grep -qx 'warung-go-digital.ipa'; then
             echo "ada=true" >> "$GITHUB_OUTPUT"
-            echo "Rilis ios-v1.0.0 sudah punya IPA. Langkah lampirkan dilewati."
+            echo "Rilis ios-v1.3.0 sudah punya IPA. Langkah lampirkan dilewati."
           else
             echo "ada=false" >> "$GITHUB_OUTPUT"
           fi
@@ -179,8 +179,8 @@ jobs:
         if: steps.rilis.outputs.ada != 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ios-v1.0.0
-          name: Warung Go Digital 1.0.0 (iPhone)
+          tag_name: ios-v1.3.0
+          name: Warung Go Digital 1.3.0 (iPhone)
           body: |
             Aplikasi Warung Go Digital untuk Android dan iPhone.
 
@@ -189,6 +189,15 @@ jobs:
             - Panel Pengelola: rekap penjualan, pendapatan, dan lokasi seluruh mitra.
 
             Keduanya berfungsi tanpa internet dan tidak membuka peramban.
+
+            Versi 1.3.0:
+            - Memperbaiki dua tombol di halaman pembuka ("Aplikasi Warung" dan
+              "Panel Pengelola") yang sebelumnya tidak berfungsi. Tautannya
+              menunjuk ke folder, sedangkan WebView di dalam aplikasi hanya
+              melayani berkas, sehingga layar tidak berubah saat ditekan.
+            - Tombol kembali HP: menutup dialog → pindah ke tab pertama → keluar.
+            - Unduh berkas (CSV, cadangan JSON, poster) kini benar-benar
+              tersimpan di perangkat, lalu muncul menu Bagikan.
 
             Android: unduh berkas .apk, buka di HP, izinkan pemasangan dari sumber ini.
             iPhone: berkas .ipa belum ditandatangani Apple. Pasang lewat Sideloadly
