@@ -227,8 +227,82 @@ em.serif { font-family: var(--f-serif); font-style: italic; font-weight: 400; }
 .teks li { margin-bottom: .35rem; }
 .teks .catatan { margin: 1.2rem 0; }
 
+/* ── Panduan pasang iOS (pasang-ios.html) ─────────────── */
+.blok__aksi { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.3rem; }
+
+.catatan--ok { border-left-color: var(--leaf); background: rgba(59,165,93,.08); }
+.catatan__cara { display: block; margin-top: .5rem; }
+.catatan code {
+  font-family: var(--f-mono); font-size: .78rem; word-break: break-all;
+  background: rgba(13,26,18,.07); border-radius: 6px; padding: .2rem .45rem;
+}
+
+.panduan { display: flex; flex-direction: column; gap: .9rem; margin-top: 1.2rem; }
+.panduan__langkah {
+  display: flex; align-items: flex-start; gap: 1rem;
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 1.2rem 1.3rem;
+  transition: border-color .3s, box-shadow .3s, transform .3s var(--ease);
+}
+.panduan__langkah:hover {
+  border-color: var(--amber); box-shadow: 0 18px 38px -26px rgba(13,26,18,.5);
+  transform: translateY(-3px);
+}
+/* Langkah paling sering terlewat: menonjolkan supaya tidak dicari lama */
+.panduan__langkah--kunci { border-color: var(--amber); background: #fffaf0; }
+.panduan__nomor {
+  flex: 0 0 auto; width: 2.3rem; height: 2.3rem; border-radius: 50%;
+  background: var(--ink); color: var(--amber);
+  font-family: var(--f-mono); font-size: .92rem; font-weight: 700;
+  display: grid; place-items: center;
+}
+.panduan__langkah--kunci .panduan__nomor { background: var(--amber); color: var(--ink); }
+.panduan__isi { flex: 1 1 auto; min-width: 0; }
+.panduan__isi h3 { margin-bottom: .35rem; font-size: 1.06rem; }
+.panduan__isi p { font-size: .92rem; color: var(--t-body); }
+.panduan__isi code {
+  font-family: var(--f-mono); font-size: .82em;
+  background: rgba(13,26,18,.07); border-radius: 5px; padding: .1rem .35rem;
+}
+.panduan__gambar {
+  flex: 0 0 auto; width: 3.1rem; height: 3.1rem; border-radius: var(--r);
+  background: var(--cream); border: 1px solid var(--line);
+  color: var(--t-strong); display: grid; place-items: center;
+}
+.panduan__gambar svg { width: 1.7rem; height: 1.7rem; }
+.panduan__gambar--tombol { background: var(--ink); color: var(--amber); border-color: var(--ink); }
+
+.kartu--ringkas { padding: 1.3rem 1.25rem; }
+.pilihan--tiga { grid-template-columns: repeat(3, 1fr); }
+
+/* ── Pertanyaan umum ──────────────────────────────────── */
+.tanya {
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--paper);
+  margin-bottom: .7rem; overflow: hidden;
+}
+.tanya + .tanya { margin-top: 0; }
+.tanya summary {
+  cursor: pointer; list-style: none; padding: 1rem 1.2rem;
+  font-weight: 600; color: var(--t-strong); font-size: .96rem;
+  display: flex; align-items: center; gap: .6rem;
+}
+.tanya summary::-webkit-details-marker { display: none; }
+.tanya summary::before {
+  content: "+"; flex: 0 0 auto; width: 1.3rem; height: 1.3rem; border-radius: 50%;
+  background: var(--amber); color: var(--ink);
+  display: grid; place-items: center; font-size: .95rem; font-weight: 700;
+}
+.tanya[open] summary::before { content: "−"; }
+.tanya p {
+  padding: 0 1.2rem 1.1rem; font-size: .91rem; color: var(--t-body); line-height: 1.65;
+}
+
 @media (max-width: 720px) {
   .pilihan { grid-template-columns: 1fr; }
+  .pilihan--tiga { grid-template-columns: 1fr; }
   .rincian th, .rincian td { padding: .7rem .8rem; }
   .rincian th { width: 46%; }
+  .panduan__langkah { padding: 1.05rem 1.1rem; }
+  .panduan__gambar { width: 2.6rem; height: 2.6rem; }
+  .panduan__gambar svg { width: 1.4rem; height: 1.4rem; }
 }

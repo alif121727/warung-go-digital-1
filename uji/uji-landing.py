@@ -147,17 +147,23 @@ with sync_playwright() as p:
 
     tautan = pg.evaluate(
         """()=>({a:document.getElementById('tombolAndroid')?.href,
-                 i:document.getElementById('tombolIos')?.href})"""
+                 i:document.getElementById('tombolIos')?.href,
+                 ipa:document.getElementById('tombolIpa')?.href})"""
     )
     cek("tautan APK tepat", tautan["a"] == APK, str(tautan["a"]))
-    cek("tautan IPA tepat", tautan["i"] == IPA, str(tautan["i"]))
+    # Kartu iPhone sengaja mengarah ke panduan, bukan ke berkas IPA: memasang
+    # berkas IPA di iPhone tidak bisa langsung dari HP. Berkasnya tetap
+    # tersedia sebagai jalur alternatif di dalam kartu yang sama.
+    cek("tombol iPhone menuju panduan",
+        tautan["i"] == LANDING + "pasang-ios.html", str(tautan["i"]))
+    cek("berkas IPA tetap tersedia", tautan["ipa"] == IPA, str(tautan["ipa"]))
 
-    # Kedua tautan harus terunduh sebagai berkas (ada atribut download)
+    # Unduhan berkas harus ditandai agar dibuka sebagai berkas, bukan halaman.
     unduh_attr = pg.evaluate(
-        """()=>[...document.querySelectorAll('#tombolAndroid,#tombolIos')]
+        """()=>[...document.querySelectorAll('#tombolAndroid,#tombolIpa')]
              .every(e=>e.hasAttribute('download'))"""
     )
-    cek("kedua tombol bertanda unduh", unduh_attr, "atribut download hilang")
+    cek("tombol berkas bertanda unduh", unduh_attr, "atribut download hilang")
 
     # Halaman unduh harus terjangkau dari laman utama
     pg.goto(LANDING, wait_until="load")

@@ -97,24 +97,43 @@
             </svg>
           </div>
           <h3>iPhone &amp; iPad</h3>
-          <p>Berkas IPA untuk perangkat iOS. Pemasangannya lewat komputer (Mac/Windows), bukan langsung di HP.</p>
+          <p>
+            Dipasang <strong>langsung dari HP</strong> lewat Safari — tanpa komputer, tanpa akun
+            Apple, tanpa kabel. Hasilnya sama: ikon sendiri di layar utama dan tetap jalan
+            tanpa internet.
+          </p>
           <div class="kartu__meta">
-            <span class="chip chip--ok">ios-v1.3.0</span>
-            <span class="chip">IPA</span>
-            <span class="chip">665 KB</span>
+            <span class="chip chip--ok">Langsung di HP</span>
+            <span class="chip">Tanpa komputer</span>
+            <span class="chip">Gratis</span>
           </div>
-          <a class="btn btn--outline btn--full" id="tombolIos"
-             href="https://github.com/alif121727/warung-go-digital-1/releases/download/ios-v1.3.0/warung-go-digital.ipa"
-             download rel="noopener" target="_blank">
+          <a class="btn btn--amber btn--full" id="tombolIos" href="pasang-ios.html">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 4v11m0 0-4-4m4 4 4-4" /><path d="M5 19h14" />
+              <path d="M12 3v11m0 0-4-4m4 4 4-4" /><path d="M5 19h14" />
             </svg>
-            Unduh IPA (665 KB)
+            Pasang di iPhone
           </a>
           <p class="kartu__catatan">
-            Karena aplikasi ini belum ada di App Store, pemasangan IPA memerlukan alat pihak ketiga
-            seperti AltStore, Sideloadly, atau Xcode.
+            Panduannya singkat: tiga ketukan lewat tombol Bagikan di Safari.
           </p>
+          <details class="tanya tanya--kartu">
+            <summary>Butuh berkas IPA untuk dipasang dari komputer?</summary>
+            <p>
+              Tersedia juga, tetapi hanya berguna bila dipasang lewat komputer memakai
+              AltStore atau Sideloadly — berkas ini belum ditandatangani Apple sehingga
+              tidak bisa dibuka langsung di iPhone.
+            </p>
+            <p>
+              <a class="btn btn--outline btn--full" id="tombolIpa"
+                 href="https://github.com/alif121727/warung-go-digital-1/releases/download/ios-v1.3.0/warung-go-digital.ipa"
+                 download rel="noopener" target="_blank">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 4v11m0 0-4-4m4 4 4-4" /><path d="M5 19h14" />
+                </svg>
+                Unduh IPA (665 KB)
+              </a>
+            </p>
+          </details>
         </article>
 
       </div>
@@ -138,9 +157,23 @@
         </article>
 
         <article class="kartu">
-          <h3>iPhone &amp; iPad (IPA)</h3>
+          <h3>iPhone &amp; iPad (tanpa komputer)</h3>
           <ol class="langkah">
-            <li>Unduh berkas IPA di atas, lalu pindahkan ke komputer.</li>
+            <li>Buka halaman ini di <strong>Safari</strong> — bukan Chrome atau Firefox.</li>
+            <li>Ketuk tombol <strong>Bagikan</strong> (kotak dengan panah ke atas).</li>
+            <li>Geser ke bawah, pilih <strong>Tambahkan ke Layar Utama</strong>.</li>
+            <li>Ketuk <strong>Tambah</strong>. Ikon <strong>Warung Go</strong> muncul di layar utama.</li>
+          </ol>
+          <p class="kartu__catatan">
+            Tidak ada berkas yang diunduh dan tidak ada setelan yang diubah. Panduan bergambar
+            ada di <a href="pasang-ios.html">halaman pasang iPhone</a>.
+          </p>
+        </article>
+
+        <article class="kartu">
+          <h3>iPhone &amp; iPad (IPA, lewat komputer)</h3>
+          <ol class="langkah">
+            <li>Unduh berkas IPA, lalu pindahkan ke komputer.</li>
             <li>Pasang <strong>AltStore</strong> atau <strong>Sideloadly</strong> di komputer tersebut.</li>
             <li>Sambungkan iPhone/iPad lewat kabel USB dan percayai komputernya.</li>
             <li>Muat berkas IPA ke alat tersebut, lalu mulai pemasangan.</li>
@@ -221,9 +254,11 @@
     <!-- ── Catatan ──────────────────────────────────────── -->
     <section class="blok">
       <div class="catatan">
-        <b>Perlu diketahui.</b> Aplikasi ini belum dipasarkan di Play Store maupun App Store, jadi
-        Android akan menampilkan peringatan "sumber tidak dikenal" dan iPhone perlu langkah
-        tambahan. Semua unduhan diambil langsung dari rilis resmi proyek, bukan dari situs lain.
+        <b>Perlu diketahui.</b> Aplikasi ini belum dipasarkan di Play Store maupun App Store.
+        Di Android, sistem akan menampilkan peringatan "sumber tidak dikenal" — itu wajar dan
+        aman untuk dilanjutkan. Di iPhone, cara paling mudah adalah menambahkan situs ke layar
+        utama lewat Safari (lihat <a href="pasang-ios.html">panduan iPhone</a>), tanpa perlu
+        komputer. Semua berkas diambil langsung dari rilis resmi proyek, bukan dari situs lain.
       </div>
     </section>
 

@@ -15,7 +15,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v10';
+const VERSI = 'wgd-v11';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -65,6 +65,10 @@ const KERANGKA = [
   // Halaman unduh aplikasi
   './unduh.html',
   './unduh.js',
+
+  // Panduan pasang iPhone/iPad (tanpa komputer)
+  './pasang-ios.html',
+  './pasang-ios.js',
   './ikon/ikon-192.png',
   './ikon/ikon-512.png',
   './ikon/ikon-maskable-512.png',

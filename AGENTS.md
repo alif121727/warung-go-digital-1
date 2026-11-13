@@ -114,13 +114,39 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
 `warung-go-digital/unduh.html` (+ `unduh.js`, gaya di `bersama/gaya-unduh.css`)
 khusus untuk mengunduh aplikasi:
 
-- Android: APK `v1.3.0` · iOS: IPA `ios-v1.3.0`, keduanya dari rilis resmi GitHub.
+- Android: APK `v1.3.0` dari rilis resmi GitHub.
+- iOS: **tidak memakai berkas**, melainkan menambahkan situs ke layar utama
+  lewat Safari (lihat bagian berikut). Berkas IPA `ios-v1.3.0` tetap tersedia
+  sebagai jalur alternatif di dalam kartu yang sama.
 - `unduh.js` menandai kartu yang cocok dengan perangkat ("HP Anda") tanpa
   menghilangkan pilihan lain; tidak pernah memaksa.
 - Kode QR berisi alamat halaman ini, dibuat oleh `app/qr.js` (sudah terbukti
   bisa dipindai lewat `uji/decode-qr.js`).
 - Berisi rincian berkas (ukuran + SHA-256). **Perbarui angka ini setiap kali
   rilis naik versi**, jika tidak halaman akan berbohong.
+
+### Pemasangan di iPhone/iPad
+
+`warung-go-digital/pasang-ios.html` (+ `pasang-ios.js`) adalah panduan
+pemasangan tanpa komputer.
+
+**Batasan yang tidak bisa dilanggar:** berkas IPA dibangun dengan
+`CODE_SIGNING_ALLOWED=NO`, jadi **tidak ditandatangani Apple**. iOS menolak
+memasang IPA tanpa tanda tangan, dan tidak ada cara memasang berkas aplikasi
+langsung di iPhone tanpa akun pengembang berbayar (atau AltStore/Sideloadly
+lewat komputer). Karena itu "unduh langsung di iPhone" tidak mungkin lewat
+berkas. Jalan yang benar dan tetap bisa dipakai tanpa komputer adalah
+menambahkan situs ke layar utama:
+
+1. Buka di **Safari** — hanya Safari yang bisa memasang ke layar utama di iOS.
+2. Ketuk **Bagikan** → **Tambahkan ke Layar Utama** → **Tambah**.
+
+Halaman panduan menyesuaikan diri: sudah terpasang → ucapan; iPhone lewat
+Chrome/Firefox → diarahkan ke Safari + tombol salin tautan; bukan iOS →
+diarahkan ke halaman unduh. Deteksi iOS **wajib** menyertakan iPad modern
+(`navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1`), sebab
+iPadOS 13+ melaporkan dirinya sebagai macOS dan akan luput bila hanya memakai
+agen pengguna. Uji: `python3 uji/uji-ios.py`.
 
 ### Cache: perubahan harus langsung terlihat
 
@@ -217,6 +243,10 @@ pip install playwright pillow numpy
 **Landing page + halaman unduh** — jalankan `python3 uji/uji-landing.py`
 (server di `http://localhost:12000/warung-go-digital/`). Mencakup anti-geser
 samping 9 lebar, maskot termuat, tautan unduh tepat, dan QR terdekode.
+
+**Panduan pasang iPhone** — jalankan `python3 uji/uji-ios.py`. Mencakup
+penyesuaian perangkat (Safari, Chrome iOS, iPad modern, Android, sudah
+terpasang), tautan silang, dan anti-geser samping 7 lebar.
 
 **Landing page** — `http://localhost:12000/warung-go-digital/`:
 1. Tidak ada error console / pageerror.

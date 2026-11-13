@@ -59,8 +59,13 @@
     window.navigator.standalone === true;
   if (pesanSudahTerpasang) return; // sudah dibuka sebagai aplikasi
 
-  const adalahIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const adalahSafariIOS = adalahIOS && !/crios|fxios|edgios/i.test(navigator.userAgent);
+  // iPadOS 13+ melaporkan dirinya sebagai macOS ("MacIntel"), jadi deteksi
+  // lewat agen pengguna saja akan melewatkan semua iPad modern. Penanda yang
+  // dapat diandalkan adalah layar sentuh pada "MacIntel".
+  const iPadModern = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  const adalahIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || iPadModern;
+  const adalahSafariIOS = adalahIOS &&
+    !/crios|fxios|edgios|opios|duckduckgo|gsa/i.test(navigator.userAgent);
   let promptTertunda = null;
 
   // ── 2. Gaya (disuntik sekali) ──────────────────────────────
@@ -196,14 +201,10 @@
       tombol.type = 'button';
       tombol.className = 'wgd-pasang__ya';
       tombol.textContent = 'Caranya';
+      // Membuka halaman panduan bergambar, karena langkah ini paling sering
+      // gagal bila hanya dijelaskan lewat teks singkat.
       tombol.addEventListener('click', () => {
-        alert(
-          'Pasang di iPhone/iPad:\n\n' +
-            '1. Ketuk tombol Bagikan (kotak dengan panah ke atas) di Safari.\n' +
-            '2. Gulir ke bawah, pilih "Tambahkan ke Layar Utama".\n' +
-            '3. Ketuk "Tambah".\n\n' +
-            'Ikon aplikasi akan muncul di layar utama.'
-        );
+        location.href = akarSitus + 'pasang-ios.html';
       });
       tampilkanBilah('Ketuk Bagikan, lalu "Tambahkan ke Layar Utama".', tombol);
     }, 12000);
