@@ -351,6 +351,12 @@ Uji dengan Chromium di `/usr/bin/chromium` lewat Playwright. Pasang dulu:
 pip install playwright pillow numpy
 ```
 
+**Gerbang masuk** — jalankan `python3 uji/uji-masuk.py` (40 uji). Menjaga:
+aplikasi tidak terbuka sebelum masuk, kata sandi tidak pernah tersimpan apa
+adanya, sesi bertahan saat dimuat ulang & hilang setelah keluar, kata sandi
+lemah ditolak, peran Pemilik & Pengelola terpisah, dan keadaan tanpa
+`crypto.subtle` tetap memberi jalan masuk lewat Google.
+
 **Landing page + halaman unduh** — jalankan `python3 uji/uji-landing.py`
 (server di `http://localhost:12000/warung-go-digital/`). Mencakup anti-geser
 samping 9 lebar, maskot termuat, tautan unduh tepat, dan QR terdekode.
@@ -595,6 +601,46 @@ mengisi alamat + **kunci baca**; laporan ditarik tiap 30 detik.
   penuh tanpa server — sinkron murni tambahan.
 - Klien ada di `bersama/sinkron.js`; `Sinkron.aturPeran('pemilik'|'pengelola')`
   menentukan kunci mana yang dipakai.
+
+### Gerbang masuk (Pemilik & Pengelola)
+
+Sejak fitur ini ditambahkan, `pemilik/` dan `admin/` **tidak langsung terbuka**.
+`Masuk.pasang({ peran, setelahMasuk })` memasang gerbang lebih dulu; fungsi
+`mulai()` tiap aplikasi hanya memanggil gerbang, dan isi aplikasi dipindah ke
+`jalan()` yang baru dijalankan setelah masuk berhasil.
+
+- Berkas: `bersama/masuk.js`, `bersama/masuk.css`.
+- Masuk pertama lewat **Google**. Setelah itu pengguna boleh menyetel nama
+  pengguna + kata sandi sendiri, sehingga masuk berikutnya tidak perlu Google.
+- Kata sandi tidak pernah disimpan apa adanya: PBKDF2-SHA256, 150.000 putaran,
+  garam acak 16 bita per akun. Perbandingan sidik memakai waktu tetap.
+- **Kunci penyimpanan per peran** — `wgd-pemilik-akun-v1`, `wgd-pemilik-sesi-v1`,
+  `wgd-admin-akun-v1`, `wgd-admin-sesi-v1`. Awalan sengaja disamakan dengan
+  penyimpanan aplikasi, supaya aturan "aplikasi Pemilik hanya menyentuh kunci
+  `wgd-pemilik*`" tetap berlaku (dijaga `uji/uji-dua-aplikasi.py`).
+- `WGD_GOOGLE_CLIENT_ID` diisi lewat `<meta name="google-client-id">`. Bila
+  kosong, tombol Google berjalan dalam **mode contoh** dan ditandai terang-
+  terangan pada layar — jangan pernah menyamarkan keadaan ini.
+- `crypto.subtle` hanya ada di konteks aman (https, localhost, atau WebView
+  Capacitor yang memakai `https://localhost`). Bila tidak ada (mis. dibuka lewat
+  `file://`), pembuatan kata sandi **dihentikan dengan penjelasan**, bukan
+  diganti dengan cara yang lemah. Masuk lewat Google tetap bisa.
+- Seluruh pemeriksaan berjalan di peramban. Ini penjaga pintu, bukan brankas —
+  hal ini dinyatakan apa adanya di panel "Akun saya".
+
+**Penting untuk uji:** uji yang menguji isi `pemilik/` atau `admin/` harus
+melewati gerbang lebih dulu. Pakai `uji/bantu-masuk.py`:
+
+```python
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from importlib import import_module
+bantu = import_module("bantu-masuk")
+
+pg.goto(B + "pemilik/", wait_until="load"); pg.wait_for_timeout(900)
+bantu.masuk_cepat(pg, "pemilik")     # tulis sesi + reload (cepat)
+# atau bantu.lewati_gerbang(pg)      # tempuh alurnya seperti manusia
+```
 
 ## Kemasan APK & IPA (Capacitor)
 
