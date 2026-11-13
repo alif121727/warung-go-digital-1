@@ -50,53 +50,73 @@
 .ax-spot.is-on { opacity: 1; }
 
 /* ── Kemunculan saat digulir ──────────────────────────────
-   Varian arah dan gaya. Ditambah kelas `ax-in` oleh animasi.js saat
-   elemen masuk layar. Sebelum itu elemen memang harus tidak terlihat.
+   Kelas `ax-reveal` ditambahkan oleh animasi.js saat elemen masuk layar.
+   Selama belum masuk, geraknya ditahan (animation-play-state: paused) pada
+   keadaan awalnya.
 
-   PENTING: gerak di sini memakai properti `translate` dan `scale`, BUKAN
-   `transform`. Banyak kartu di situs ini sudah memakai `transform` untuk
-   animasi sorotnya sendiri; kalau keduanya menulis properti yang sama,
-   yang kalah akan menghapus efek yang lain. `translate`/`scale` berdiri
-   sendiri dan otomatis digabung dengan `transform`, jadi keduanya hidup
-   bersama tanpa saling menimpa. */
+   Dua hal yang mudah salah dan sudah pernah salah di sini:
+
+   1. Gerak ini memakai `animation`, BUKAN `transition`. Hampir setiap kartu
+      di situs ini sudah memakai `transition` untuk animasi sorotnya sendiri
+      (transform, box-shadow, border-color). Dua aturan yang menulis
+      `transition` akan saling menghapus — yang belakangan di kaskade
+      membunuh yang lain. Hasilnya: kartu muncul seketika tanpa pudar, dan
+      sorot hovemya ikut mati. `animation` dan `transition` adalah dua mesin
+      terpisah yang bisa hidup bersamaan tanpa saling mengganggu.
+
+   2. Gerak memakai properti `translate`/`scale`, BUKAN `transform`, karena
+      alasan yang sama: kartu memakai `transform` untuk hovemya.
+
+   Keadaan awal ditaruh DI DALAM keyframes, bukan sebagai `opacity: 0` di
+   luar. Jadi bila animasi tidak berjalan sama sekali, elemen kembali ke
+   keadaan aslinya (terlihat), bukan tertinggal tak terlihat. */
 .ax-reveal {
-  opacity: 0;
-  transition:
-    opacity var(--ax-dur) var(--ax-ease),
-    translate var(--ax-dur) var(--ax-ease),
-    scale var(--ax-dur) var(--ax-ease),
-    filter var(--ax-dur) var(--ax-ease);
+  --ax-y: 30px;
+  --ax-scale: 1;
+  --ax-blur: 0px;
+  animation: ax-muncul var(--ax-dur) var(--ax-ease) both;
+  animation-play-state: paused;
 }
-.ax-reveal--up    { translate: 0 30px; }
-/* `--soft` dipakai untuk blok besar. Sengaja tanpa `filter: blur()`: pada
-   elemen seluas seksi, blur mengaburkan seluruh isinya sekaligus dan
-   membuat halaman terasa lambat saat digulir. Cukup geser + skala halus. */
-.ax-reveal--soft  { translate: 0 18px; scale: .99; }
+/* Varian jarak dan gaya. Dipilih animasi.js sesuai jenis elemennya. */
+.ax-reveal--up    { --ax-y: 30px; }
+/* `--soft` untuk blok besar. Sengaja tanpa blur: pada elemen seluas seksi,
+   blur mengaburkan seluruh isinya sekaligus dan membuat gulir terasa berat. */
+.ax-reveal--soft  { --ax-y: 18px; --ax-scale: .99; }
 /* `--focus` hanya untuk elemen kecil, jadi blur aman dan terasa sinematik. */
-.ax-reveal--focus { translate: 0 22px; filter: blur(8px); }
-.ax-reveal--fade  { translate: none; }
-.ax-reveal.ax-in  { opacity: 1; translate: none; scale: none; filter: none; }
+.ax-reveal--focus { --ax-y: 22px; --ax-blur: 8px; }
+.ax-reveal.ax-in  { animation-play-state: running; }
+
+@keyframes ax-muncul {
+  from {
+    opacity: 0;
+    translate: 0 var(--ax-y);
+    scale: var(--ax-scale);
+    filter: blur(var(--ax-blur));
+  }
+  to { opacity: 1; translate: none; scale: none; filter: none; }
+}
 
 /* Anak-anak yang muncul berurutan. Induk memicu, anak menyusul. */
 .ax-stagger > * {
-  opacity: 0;
-  translate: 0 22px;
-  transition:
-    opacity .8s var(--ax-ease),
-    translate .8s var(--ax-ease);
+  animation: ax-muncul-isi .8s var(--ax-ease) both;
+  animation-play-state: paused;
 }
-.ax-stagger.ax-in > * { opacity: 1; translate: none; }
+.ax-stagger.ax-in > * { animation-play-state: running; }
+@keyframes ax-muncul-isi {
+  from { opacity: 0; translate: 0 22px; }
+  to   { opacity: 1; translate: none; }
+}
 
 /* Anak muncul bergantian, bukan serentak. Dibatasi delapan langkah supaya
    daftar panjang tidak membuat pengunjung menunggu terlalu lama. */
-.ax-stagger.ax-in > *:nth-child(1) { transition-delay: 0ms; }
-.ax-stagger.ax-in > *:nth-child(2) { transition-delay: 90ms; }
-.ax-stagger.ax-in > *:nth-child(3) { transition-delay: 180ms; }
-.ax-stagger.ax-in > *:nth-child(4) { transition-delay: 270ms; }
-.ax-stagger.ax-in > *:nth-child(5) { transition-delay: 360ms; }
-.ax-stagger.ax-in > *:nth-child(6) { transition-delay: 450ms; }
-.ax-stagger.ax-in > *:nth-child(7) { transition-delay: 540ms; }
-.ax-stagger.ax-in > *:nth-child(n+8) { transition-delay: 620ms; }
+.ax-stagger.ax-in > *:nth-child(1) { animation-delay: 0ms; }
+.ax-stagger.ax-in > *:nth-child(2) { animation-delay: 90ms; }
+.ax-stagger.ax-in > *:nth-child(3) { animation-delay: 180ms; }
+.ax-stagger.ax-in > *:nth-child(4) { animation-delay: 270ms; }
+.ax-stagger.ax-in > *:nth-child(5) { animation-delay: 360ms; }
+.ax-stagger.ax-in > *:nth-child(6) { animation-delay: 450ms; }
+.ax-stagger.ax-in > *:nth-child(7) { animation-delay: 540ms; }
+.ax-stagger.ax-in > *:nth-child(n+8) { animation-delay: 620ms; }
 
 /* ── Teks bergradasi berkilau ─────────────────────────────
    Gradasi merek yang bergeser perlahan, memberi kesan "hidup". */
@@ -202,6 +222,80 @@
   to   { transform: translateX(140%); }
 }
 
+/* ── Buka-tutup bagian (details/summary) ──────────────────
+   Tanpa ini, membuka sebuah pertanyaan membuat isinya muncul seketika —
+   terasa kasar, seperti halaman yang tersentak.
+
+   Cara kerjanya memakai fitur peramban modern `::details-content` dan
+   `interpolate-size`, sehingga tinggi kotak mengembang mulus dari nol ke
+   tinggi aslinya. Peramban yang belum mendukungnya tetap membuka seperti
+   biasa — hanya tanpa gerak. Tidak ada isi yang tersembunyi karenanya.
+
+   Ini murni CSS: bekerja walau JavaScript dimatikan. */
+@supports (interpolate-size: allow-keywords) {
+  details.tanya { interpolate-size: allow-keywords; }
+  details.tanya::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition: block-size .42s var(--ax-ease), content-visibility .42s;
+    transition-behavior: allow-discrete;
+  }
+  details.tanya[open]::details-content { block-size: auto; }
+}
+
+/* Isi yang menyusul masuk, dan ikon +/− yang berputar. Gerak ini memakai
+   `animation` pada anak langsung supaya tidak bertabrakan dengan `transition`
+   tinggi di atas.
+
+   Selector sengaja memakai `[open]`. Bila tidak, animasinya akan berjalan
+   saat halaman dimuat — di dalam kotak yang masih tertutup — dan habis
+   sebelum pengunjung sempat membukanya. Dengan `[open]`, animasi baru
+   dimulai pada saat kotaknya benar-benar dibuka. */
+details.tanya[open] > :not(summary) {
+  animation: ax-buka .5s var(--ax-ease) both;
+}
+details.tanya[open] > :nth-child(2) { animation-delay: .04s; }
+details.tanya[open] > :nth-child(3) { animation-delay: .12s; }
+details.tanya[open] > :nth-child(4) { animation-delay: .20s; }
+@keyframes ax-buka {
+  from { opacity: 0; translate: 0 -6px; }
+  to   { opacity: 1; translate: none; }
+}
+details.tanya summary::before {
+  transition: transform .35s var(--ax-ease), background .25s;
+}
+details.tanya[open] summary::before { transform: rotate(180deg); }
+
+/* ── Kotak pemindai pada kode QR ──────────────────────────
+   Satu garis cahaya menyapu dari atas ke bawah, meniru pemindai. Hanya
+   sekali saat masuk layar, bukan berulang — berulang akan mengganggu. */
+.ax-scan { position: relative; overflow: hidden; }
+.ax-scan::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%,
+              rgba(245,165,36,.34) 46%, rgba(255,255,255,.75) 50%,
+              rgba(245,165,36,.34) 54%, transparent 100%);
+  translate: 0 -100%;
+  opacity: 0;
+}
+.ax-scan.ax-in::after { animation: ax-scan 1.5s var(--ax-ease-io) .25s both; }
+@keyframes ax-scan {
+  0%   { translate: 0 -100%; opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { translate: 0 100%; opacity: 0; }
+}
+
+/* ── Langkah panduan: nomor menyala berdenyut ─────────────
+   Hanya langkah kunci (yang paling menentukan) yang diberi denyut, supaya
+   mata langsung tertuju ke sana tanpa seluruh panduan terasa ramai. */
+.ax-pulse-nomor { position: relative; }
+.ax-pulse-nomor::after {
+  content: ""; position: absolute; inset: -5px; border-radius: inherit;
+  border: 1.5px solid rgba(245,165,36,.6); pointer-events: none;
+  animation: ax-pulse 3s var(--ax-ease-io) infinite;
+}
+
 /* ── Judul seksi: garis aksen tumbuh ──────────────────────
    Garis kecil di bawah judul yang memanjang saat masuk layar. */
 .ax-underline { position: relative; }
@@ -221,20 +315,30 @@
   .ax-spot { display: none; }
   .ax-tilt.is-tilting { transform: none; box-shadow: none; }
   .ax-glide::after { display: none; }
+  /* Sapuan pemindai memakai sumber daya baterai tanpa manfaat di layar
+     sentuh, karena tidak ada yang mengarahkan pandangan ke sana. */
+  .ax-scan.ax-in::after { animation: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ax-progress, .ax-spot { display: none !important; }
+  /* Kemunculan memakai `animation`, jadi keduanya harus dimatikan:
+     `animation` untuk membunuh geraknya, dan keadaan akhir dipaksa lewat
+     `opacity`/`translate` supaya isi tidak tertinggal tak terlihat. */
   .ax-reveal, .ax-stagger > * {
+    animation: none !important;
     opacity: 1 !important; translate: none !important; scale: none !important;
     filter: none !important;
     transition: none !important; transition-delay: 0ms !important;
   }
   .ax-underline::after { width: clamp(76px, 16vw, 132px) !important; transition: none; }
   .ax-shimmer, .ax-float, .ax-pulse::after, .ax-glide:hover::after,
-  .ax-hero > * {
+  .ax-hero > *, .ax-scan.ax-in::after, .ax-pulse-nomor::after,
+  details.tanya[open] > :not(summary) {
     animation: none !important;
   }
+  /* Tinggi kotak tetap boleh berubah, hanya tanpa gerak. */
+  details.tanya::details-content { transition: none !important; }
   .ax-shimmer {
     color: var(--amber); -webkit-text-fill-color: var(--amber);
     background: none;

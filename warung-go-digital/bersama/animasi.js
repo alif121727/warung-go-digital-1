@@ -77,7 +77,26 @@
     requestAnimationFrame(ikuti);
   }
 
-  // ── 3. Kemunculan saat digulir ───────────────────────────
+  // ── 3. Tandai elemen yang punya gerak sendiri ────────────
+  // Dilakukan lebih dulu, sebelum elemennya dikumpulkan di bagian berikut,
+  // supaya kelas yang baru dipasang di sini ikut terbaca.
+  //
+  // Kepala halaman diberi sambutan masuk berurutan. Beranda sudah menandai
+  // sendiri di HTML; halaman unduh belum. Isi kepala tetap terbaca tanpa
+  // JavaScript karena `ax-hero` hanya memicu animasi, bukan menyembunyikan.
+  document.querySelectorAll('.kepala__isi:not(.ax-hero)')
+    .forEach((el) => el.classList.add('ax-hero'));
+
+  // Kotak kode QR diberi sapuan pemindai sekali jalan.
+  const qr = document.querySelector('.qrkotak__gambar');
+  if (qr && !kurangi) qr.classList.add('ax-scan');
+
+  // Nomor langkah kunci di panduan iPhone diberi denyut halus, supaya mata
+  // langsung tertuju ke langkah yang paling menentukan.
+  const nomorKunci = document.querySelector('.panduan__langkah--kunci .panduan__nomor');
+  if (nomorKunci && !kurangi) nomorKunci.classList.add('ax-pulse-nomor');
+
+  // ── 4. Kemunculan saat digulir ───────────────────────────
   // Dua tingkat, bukan satu. Blok besar muncul sebagai satu kesatuan;
   // isinya menyusul berjenjang lewat wadah `ax-stagger`. Bila keduanya
   // ditumpuk pada elemen yang sama, tampilan jadi keruh — jadi elemen di
@@ -87,11 +106,17 @@
   // Elemen itu dilewati agar tidak dua kali bekerja. Lapisan ini yang
   // mengurus halaman yang belum punya: unduh.html dan privasi.html.
 
-  const REVEAL = [
-    'section.blok', 'section.sec > .head', '.legal .card', '.legal__head',
-    '.legal > h1', '.legal > .meta', '.maskot__card', '.inno__card',
-    '.tile', '.price', '.unduh', '.contact', '.target', '.market',
-  ].join(', ');
+  // Setiap kelompok punya gaya kemunculan sendiri. Blok besar masuk pelan
+  // tanpa blur (blur pada elemen seluas seksi membuat gulir terasa berat);
+  // elemen kecil boleh lebih hidup dengan blur dan geseran lebih jauh.
+  const VARIAN = [
+    ['.ax-up',    'section.blok, section.sec > .head, .legal .card, .legal__head, ' +
+                  '.maskot__card, .inno__card, .tile, .price, .unduh, .contact, ' +
+                  '.target, .market'],
+    ['.ax-soft',  '.legal > h1'],
+    ['.ax-focus', '.legal > .meta'],
+  ];
+  const REVEAL = VARIAN.map(([, sel]) => sel).join(', ');
   const STAGGER = '.pilihan, .maskot__grid, .inno__grid, ol.panduan';
 
   const berjenjang = [...document.querySelectorAll(STAGGER)];
@@ -107,7 +132,14 @@
     !el.closest('.reveal')
   );
 
-  penanda.forEach((el) => el.classList.add('ax-reveal', 'ax-reveal--soft'));
+  penanda.forEach((el) => {
+    el.classList.add('ax-reveal');
+    // Tandai variannya sesuai kelompok. Urutan pemeriksaan dari yang paling
+    // khusus, supaya elemen yang cocok di dua kelompok tidak salah gaya.
+    for (const [penanda, sel] of VARIAN) {
+      if (el.matches(sel)) { el.classList.add('ax-reveal--' + penanda.slice(4)); break; }
+    }
+  });
   berjenjang.forEach((el) => el.classList.add('ax-stagger'));
 
   // Judul seksi diberi garis aksen yang memanjang saat masuk layar.
@@ -120,10 +152,12 @@
   );
   judul.forEach((el) => el.classList.add('ax-underline'));
 
+  // Elemen yang hanya butuh `ax-in` untuk memulai geraknya sendiri.
+  const pemicu = [...document.querySelectorAll('.ax-scan, .ax-pulse-nomor')];
+
   const tampilkanSemua = () => {
-    penanda.forEach((el) => el.classList.add('ax-in'));
-    berjenjang.forEach((el) => el.classList.add('ax-in'));
-    judul.forEach((el) => el.classList.add('ax-in'));
+    [...penanda, ...berjenjang, ...judul, ...pemicu]
+      .forEach((el) => el.classList.add('ax-in'));
   };
 
   if (kurangi || typeof IntersectionObserver !== 'function') {
@@ -144,7 +178,25 @@
         pengamat.unobserve(e.target);
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
-    [...penanda, ...berjenjang, ...judul].forEach((el) => pengamat.observe(el));
+    [...penanda, ...berjenjang, ...judul, ...pemicu]
+      .forEach((el) => pengamat.observe(el));
+
+    // Tautan dalam halaman (`unduh.html#pasang-ios`) dan posisi gulir yang
+    // dipulihkan peramban membuka halaman di tengah. Seksi yang berada di
+    // ATAS titik itu tidak akan pernah masuk layar, jadi pengamat tidak akan
+    // pernah menyala untuknya dan seksi itu tinggal tak terlihat. Karena
+    // pengunjung sudah "melewatinya", tampilkan sekalian di awal.
+    const sudahTerlewati = () => {
+      [...penanda, ...berjenjang].forEach((el) => {
+        if (!el.classList.contains('ax-in') &&
+            el.getBoundingClientRect().bottom <= 0) {
+          el.classList.add('ax-in');
+          pengamat.unobserve(el);
+        }
+      });
+    };
+    sudahTerlewati();
+    window.addEventListener('scroll', sudahTerlewati, { passive: true });
 
     // Jaring pengaman. Bila pengamat irisan mati — galat tak terduga, tata
     // letak ganjil, atau apa pun — isi halaman tetap harus terbaca,
@@ -157,7 +209,8 @@
     const periksaTerlihat = () => {
       if (pengamatHidup) return false;
       let ada = false;
-      document.querySelectorAll('.ax-reveal:not(.ax-in), .ax-stagger:not(.ax-in)')
+      document.querySelectorAll(
+        '.ax-reveal:not(.ax-in), .ax-stagger:not(.ax-in), .ax-scan:not(.ax-in)')
         .forEach((el) => {
           const r = el.getBoundingClientRect();
           if (r.top < window.innerHeight && r.bottom > 0) {
@@ -177,7 +230,7 @@
     window.addEventListener('scroll', periksaTerlihat, { passive: true });
   }
 
-  // ── 4. Kemiringan 3D + kilau kursor ──────────────────────
+  // ── 5. Kemiringan 3D + kilau kursor ──────────────────────
   if (!kurangi && presisi) {
     // Sudut sengaja kecil (maks 6°) agar teks tetap tajam dan tidak ada
     // elemen yang melampaui tepi layar.
@@ -201,7 +254,7 @@
       });
   }
 
-  // ── 5. Tombol WhatsApp mengambang diberi gerak melayang ──
+  // ── 6. Tombol WhatsApp mengambang diberi gerak melayang ──
   // Perhatikan: gerak ini memakai properti `translate`, bukan `transform`,
   // karena tombol itu menyembunyikan dirinya lewat `transform`. Lihat
   // catatan di animasi.css — menulis `transform` di sini akan membuatnya

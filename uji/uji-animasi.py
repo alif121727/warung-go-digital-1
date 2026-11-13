@@ -246,6 +246,170 @@ with sync_playwright() as p:
         r2["opacity"])
     pg.close()
 
+    # ── 7c. Kemunculan benar-benar berjalan (bukan seketika) ─
+    # Pernah salah: `.ax-tilt` menulis `transition` dan menghapus transisi
+    # kemunculan milik `.ax-reveal`, sehingga kartu muncul seketika tanpa
+    # pudar. Sekarang keduanya memakai mesin berbeda (`animation` vs
+    # `transition`), dan uji ini menjaga agar tidak kembali rusak.
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING + "unduh.html", wait_until="load")
+    pg.wait_for_timeout(1200)
+    jejak = pg.evaluate("""async ()=>{
+      const w=[...document.querySelectorAll('.ax-stagger')].find(e=>{
+        const r=e.getBoundingClientRect(); return r.top>window.innerHeight;});
+      if(!w) return null;
+      const anak=w.children[0];
+      const out=[];
+      for(let i=0;i<14;i++){
+        window.scrollBy(0,180);
+        await new Promise(r=>setTimeout(r,90));
+        out.push(Number(getComputedStyle(anak).opacity));
+      }
+      return out;
+    }""")
+    cek("kemunculan: ada elemen berjenjang di bawah layar", jejak is not None,
+        jejak is None)
+    if jejak:
+        cek("kemunculan: kartu memudar perlahan, bukan seketika",
+            any(.02 < x < .98 for x in jejak),
+            f"opacity: {[round(x,2) for x in jejak]}")
+        cek("kemunculan: akhirnya tampil penuh", jejak[-1] > .95, jejak[-1])
+    # Kartu harus tetap punya transisi sorotnya — dua mesin, bukan saling hapus.
+    tp = pg.evaluate("""()=>{
+      const k=document.querySelector('.kartu');
+      return k ? getComputedStyle(k).transitionProperty : '';
+    }""")
+    cek("kemunculan: transisi sorot kartu tidak terhapus",
+        'transform' in tp or 'all' in tp, tp)
+    pg.close()
+
+    # ── 7d. Bagian bisa dibuka dengan animasi ────────────────
+    # Permintaan langsung: saat bagian unduhan dibuka, isinya harus muncul
+    # dengan animasi — bukan tersentak seketika.
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING + "unduh.html", wait_until="load")
+    pg.wait_for_timeout(1400)
+    ada = pg.evaluate("()=>document.querySelectorAll('details.tanya').length")
+    cek("buka-tutup: halaman unduh punya bagian yang bisa dibuka",
+        ada > 0, ada)
+    d = pg.query_selector("details.tanya")
+    d.evaluate("e=>e.scrollIntoView({block:'center'})")
+    pg.wait_for_timeout(700)
+    tertutup = d.evaluate("e=>e.getBoundingClientRect().height")
+    d.evaluate("e=>e.open=true")
+    tinggi = []
+    for _ in range(7):
+        pg.wait_for_timeout(90)
+        tinggi.append(d.evaluate("e=>e.getBoundingClientRect().height"))
+    cek("buka-tutup: tinggi mengembang perlahan",
+        tertutup < tinggi[0] < tinggi[-1] and len(set(tinggi)) > 2,
+        f"{tertutup:.0f} -> {[round(x) for x in tinggi]}")
+    # Isi masuk berurutan, bukan muncul utuh seketika.
+    isi = d.query_selector("p")
+    isi_anim = isi.evaluate("e=>getComputedStyle(e).animationName")
+    cek("buka-tutup: isi punya animasi masuk", isi_anim != "none", isi_anim)
+    # Tutup harus menyusut, bukan melompat.
+    d.evaluate("e=>e.open=false")
+    pg.wait_for_timeout(70)
+    saat_tutup = d.evaluate("e=>e.getBoundingClientRect().height")
+    pg.wait_for_timeout(700)
+    akhir = d.evaluate("e=>e.getBoundingClientRect().height")
+    cek("buka-tutup: tinggi menyusut perlahan", saat_tutup > akhir,
+        f"{saat_tutup:.0f} -> {akhir:.0f}")
+    cek("buka-tutup: akhirnya tertutup rapi", akhir < 120, f"{akhir:.0f}")
+    pg.close()
+
+    # ── 7e. Bagian yang bisa dibuka tetap jalan tanpa JavaScript ─
+    # Animasi tinggi di atas murni CSS. Dengan JavaScript dimatikan,
+    # bagian harus tetap bisa dibuka dan isinya terbaca.
+    ctx = b.new_context(viewport={"width": 1280, "height": 900},
+                        java_script_enabled=False)
+    pg = ctx.new_page()
+    pg.goto(LANDING + "unduh.html", wait_until="load")
+    pg.wait_for_timeout(900)
+    d = pg.query_selector("details.tanya")
+    d.evaluate("e=>e.open=true")
+    pg.wait_for_timeout(700)
+    r = pg.evaluate("""()=>{
+      const d=document.querySelector('details.tanya');
+      const t=d.textContent.trim().length;
+      const h=d.getBoundingClientRect().height;
+      return {teks:t, tinggi:h, terbuka:d.open};
+    }""")
+    cek("tanpa JS: bagian bisa dibuka", r["terbuka"], r["terbuka"])
+    cek("tanpa JS: isi bagian terbaca", r["teks"] > 60 and r["tinggi"] > 60,
+        f"teks={r['teks']} tinggi={r['tinggi']:.0f}")
+    ctx.close()
+
+    # ── 7f. Sapuan pemindai & denyut nomor terpasang ─────────
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING + "unduh.html", wait_until="load")
+    pg.wait_for_timeout(1400)
+    # Kotak QR ada jauh di bawah halaman; harus digulir dulu supaya masuk
+    # layar. Tanpa itu, sapuannya memang belum dipicu — dan itu benar.
+    pg.evaluate("()=>document.querySelector('.qrkotak')?.scrollIntoView({block:'center'})")
+    pg.wait_for_timeout(1200)
+    r = pg.evaluate("""()=>{
+      const qr=document.querySelector('.ax-scan');
+      const no=document.querySelector('.ax-pulse-nomor');
+      return {
+        qr: !!qr, qrAktif: qr ? qr.classList.contains('ax-in') : false,
+        nomor: !!no,
+        nomorAnim: no ? getComputedStyle(no, '::after').animationName : '',
+        kepala: document.querySelectorAll('.kepala__isi.ax-hero').length,
+      };
+    }""")
+    cek("kotak QR punya sapuan pemindai", r["qr"], r["qr"])
+    cek("sapuan pemindai dipicu saat terlihat", r["qrAktif"], r["qrAktif"])
+    cek("nomor langkah kunci diberi denyut", r["nomor"], r["nomor"])
+    cek("denyut nomor benar-benar berjalan", r["nomorAnim"] not in ("", "none"),
+        r["nomorAnim"])
+    cek("kepala halaman unduh diberi sambutan", r["kepala"] == 1, r["kepala"])
+    pg.close()
+
+    # ── 7g. Seksi yang sudah terlewati tidak tinggal tersembunyi ─
+    # Tautan dalam halaman (`unduh.html#pasang-ios`) dan posisi gulir yang
+    # dipulihkan peramban membuka halaman di tengah. Seksi di atas titik itu
+    # tidak akan pernah masuk layar, jadi tanpa penanganan khusus isinya
+    # tinggal tak terlihat selamanya.
+    pg = b.new_page(viewport={"width": 1280, "height": 900})
+    pg.goto(LANDING + "unduh.html", wait_until="load")
+    pg.wait_for_timeout(1000)
+    pg.evaluate("()=>window.scrollTo(0, document.body.scrollHeight)")
+    pg.wait_for_timeout(1400)
+    r = pg.evaluate("""()=>{
+      const sisa=[...document.querySelectorAll('.ax-reveal:not(.ax-in)')];
+      return {
+        diLayar: sisa.filter(e=>{
+          const k=e.getBoundingClientRect();
+          return k.bottom>0 && k.top<window.innerHeight;}).length,
+        total: sisa.length,
+      };
+    }""")
+    cek("lompat ke dasar: tidak ada seksi tersembunyi di layar",
+        r["diLayar"] == 0, f"di layar={r['diLayar']} dari {r['total']} sisa")
+    pg.close()
+
+    # Hal yang sama untuk tautan dalam halaman.
+    pg = b.new_page(viewport={"width": 1280, "height": 900})
+    pg.goto(LANDING + "unduh.html#pasang-ios", wait_until="load")
+    pg.wait_for_timeout(1500)
+    r = pg.evaluate("""()=>{
+      const t=document.querySelector('#pasang-ios');
+      const sisa=[...document.querySelectorAll('.ax-reveal:not(.ax-in)')];
+      return {
+        terlihatSasaran: Number(getComputedStyle(t).opacity) > .9,
+        diLayar: sisa.filter(e=>{
+          const k=e.getBoundingClientRect();
+          return k.bottom>0 && k.top<window.innerHeight;}).length,
+      };
+    }""")
+    cek("tautan dalam halaman: sasaran langsung terlihat",
+        r["terlihatSasaran"], r["terlihatSasaran"])
+    cek("tautan dalam halaman: tidak ada seksi tersembunyi di layar",
+        r["diLayar"] == 0, r["diLayar"])
+    pg.close()
+
     # ── 8. Bilah gulir benar-benar bergerak ──────────────────
     pg = b.new_page(viewport={"width": 1280, "height": 900})
     pg.goto(LANDING, wait_until="load")
@@ -332,7 +496,7 @@ with sync_playwright() as p:
     # Cukup pastikan versi sudah dinaikkan minimal ke angka saat berkas
     # animasi didaftarkan, bukan nomor persisnya.
     v = re.search(r"VERSI = 'wgd-v(\d+)'", sw)
-    cek("sw.js versi cache minimal v13", bool(v) and int(v.group(1)) >= 13,
+    cek("sw.js versi cache minimal v14", bool(v) and int(v.group(1)) >= 14,
         v.group(0) if v else "tidak ditemukan")
     pg.close()
 

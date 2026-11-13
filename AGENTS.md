@@ -108,7 +108,8 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
 - **Lapisan gerak** ada di `bersama/animasi.css` + `bersama/animasi.js`, memakai
   kelas berawalan `ax-`. Dipasang di `index.html`, `unduh.html`, dan
   `privasi.html`. Berisi bilah kemajuan gulir, sorotan kursor, kemunculan
-  berjenjang, kilau gradasi, denyut, dan kemiringan 3D.
+  berjenjang, kilau gradasi, denyut, kemiringan 3D, buka-tutup bagian
+  (`<details>`), dan sapuan pemindai pada kotak QR.
 - **Maskot**: 4 ilustrasi SVG di `warung-go-digital/ilustrasi/` (Pak Warung,
   Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
   terbaca di latar gelap maupun krem. Bebas dipakai untuk poster/stand QR.
@@ -180,7 +181,7 @@ digeser samping. Uji anti-geser samping: `uji/uji-landing.py`.
 
 ### Aturan lapisan gerak (`ax-`)
 
-Empat aturan yang gampang dilanggar dan akibatnya tidak kelihatan sampai
+Enam aturan yang gampang dilanggar dan akibatnya tidak kelihatan sampai
 seseorang mengeluh. Uji semuanya ada di `uji/uji-animasi.py`.
 
 1. **Pakai `translate`/`scale`, jangan `transform`, untuk kemunculan.**
@@ -188,19 +189,34 @@ seseorang mengeluh. Uji semuanya ada di `uji/uji-animasi.py`.
    aturan yang menulis properti sama akan saling menghapus — yang menang
    membunuh yang kalah. Properti `translate`/`scale` berdiri sendiri dan
    otomatis digabung dengan `transform`.
-2. **Jangan pernah menulis kelas `ax-reveal` di HTML.** Kelas itu dipasang
+2. **Kemunculan memakai `animation`, bukan `transition`.** Kartu-kartu di
+   situs ini sudah memakai `transition` untuk animasi sorotnya. Dua aturan
+   yang menulis `transition` saling menghapus — yang belakangan di kaskade
+   membunuh yang lain. Akibatnya kartu muncul seketika tanpa pudar dan
+   sorot hovemya ikut mati. `animation` dan `transition` adalah dua mesin
+   terpisah yang bisa hidup bersamaan. Kemunculan ditahan dengan
+   `animation-play-state: paused` sampai kelas `ax-in` dipasang.
+3. **Jangan pernah menulis kelas `ax-reveal` di HTML.** Kelas itu dipasang
    oleh `animasi.js`, yang juga menambahkan `ax-in`. Kalau ditulis di HTML,
    tanpa JavaScript tidak ada yang menambahkan `ax-in`, dan seluruh isi
    halaman jadi tak terlihat. Hal yang sama berlaku untuk animasi hero:
    keadaan awal ditaruh di dalam `@keyframes`, bukan di luar.
-3. **Jangan animasikan `transform` pada `.fab`.** Tombol WhatsApp mengambang
+4. **Jangan animasikan `transform` pada `.fab`.** Tombol WhatsApp mengambang
    disembunyikan dengan `transform: translateY(120%)` dan muncul lewat kelas
    `.show`. Animasi yang menulis `transform` mengalahkan aturan itu dan
    membuat tombol muncul terus — area tak terlihat yang masih bisa diklik.
-4. **Kurangi gerak harus benar-benar mengurangi.** Saat
+5. **Kurangi gerak harus benar-benar mengurangi.** Saat
    `prefers-reduced-motion: reduce`, semua gerak mati tetapi tidak ada isi
-   yang boleh tersembunyi. Gerak yang bergantung kursor juga tidak boleh
-   dipasang di perangkat sentuh.
+   yang boleh tersembunyi. Karena kemunculan memakai `animation`, blok
+   kurangi-gerak **wajib** mematikan `animation` sekaligus memaksa
+   `opacity`/`translate` ke keadaan akhir. Gerak yang bergantung kursor juga
+   tidak boleh dipasang di perangkat sentuh.
+6. **Animasi isi `<details>` memakai selektor `[open]`.** Tanpa itu,
+   animasinya berjalan saat halaman dimuat di dalam kotak yang masih
+   tertutup, lalu habis sebelum pengunjung sempat membukanya. Tinggi kotak
+   dianimasikan murni lewat CSS (`::details-content` + `interpolate-size`),
+   jadi tetap bekerja tanpa JavaScript; peramban lama hanya kehilangan
+   geraknya, bukan isinya.
 
 Jaring pengaman berlapis: bila `IntersectionObserver` tidak ada atau sesuatu
 menghalangi, `animasi.js` menampilkan semua setelah 4 detik. Jangan dihapus.
@@ -281,10 +297,12 @@ pip install playwright pillow numpy
 (server di `http://localhost:12000/warung-go-digital/`). Mencakup anti-geser
 samping 9 lebar, maskot termuat, tautan unduh tepat, dan QR terdekode.
 
-**Lapisan gerak** — jalankan `python3 uji/uji-animasi.py`. Menjaga empat
+**Lapisan gerak** — jalankan `python3 uji/uji-animasi.py`. Menjaga enam
 aturan di atas: halaman terbaca tanpa JavaScript, kurangi-gerak tidak
 menyembunyikan isi, tidak ada animasi ganda dengan `app.js`, tidak ada geser
-samping di 8 lebar layar, dan tombol WhatsApp tetap tersembunyi di puncak.
+samping di 8 lebar layar, tombol WhatsApp tetap tersembunyi di puncak,
+kemunculan benar-benar memudar (bukan seketika), bagian bisa dibuka dengan
+animasi dan tetap jalan tanpa JavaScript.
 
 **Panduan pasang iPhone** (bagian di `unduh.html`) — jalankan
 `python3 uji/uji-ios.py`. Mencakup penyesuaian perangkat (Safari, Chrome iOS,
