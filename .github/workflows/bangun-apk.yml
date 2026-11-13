@@ -149,10 +149,10 @@ jobs:
           # Rilis yang sudah ada (dan immutable) tidak bisa ditimpa GitHub.
           # Bila aset sudah ada, lewati langkah lampirkan agar alur kerja tidak
           # merah; untuk menerbitkan APK baru, naikkan tag_name.
-          if gh release view v1.2.0 --repo "$GITHUB_REPOSITORY" --json assets \
+          if gh release view v1.3.0 --repo "$GITHUB_REPOSITORY" --json assets \
                --jq '.assets[].name' 2>/dev/null | grep -qx 'warung-go-digital.apk'; then
             echo "ada=true" >> "$GITHUB_OUTPUT"
-            echo "Rilis v1.2.0 sudah punya APK. Langkah lampirkan dilewati."
+            echo "Rilis v1.3.0 sudah punya APK. Langkah lampirkan dilewati."
           else
             echo "ada=false" >> "$GITHUB_OUTPUT"
           fi
@@ -161,8 +161,8 @@ jobs:
         if: steps.rilis.outputs.ada != 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.0
-          name: Warung Go Digital 1.2.0
+          tag_name: v1.3.0
+          name: Warung Go Digital 1.3.0
           body: |
             Aplikasi Android Warung Go Digital — dapat dipasang langsung di HP.
 
@@ -172,7 +172,11 @@ jobs:
 
             Keduanya berfungsi tanpa internet dan tidak membuka peramban.
 
-            Versi 1.2.0 memperbaiki perilaku di dalam aplikasi:
+            Versi 1.3.0:
+            - Memperbaiki dua tombol di halaman pembuka ("Aplikasi Warung" dan
+              "Panel Pengelola") yang sebelumnya tidak berfungsi. Tautannya
+              menunjuk ke folder, sedangkan WebView di dalam aplikasi hanya
+              melayani berkas, sehingga layar tidak berubah saat ditekan.
             - Tombol kembali HP: menutup dialog → pindah ke tab pertama → keluar.
             - Unduh berkas (CSV, cadangan JSON, poster) kini benar-benar
               tersimpan di perangkat, lalu muncul menu Bagikan Android.

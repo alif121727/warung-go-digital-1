@@ -48,6 +48,11 @@ for (const app of ['pemilik', 'admin']) {
 }
 
 // Halaman pembuka: memilih aplikasi mana yang dibuka.
+//
+// Tautan harus menunjuk ke `index.html` secara eksplisit, bukan ke folder
+// (`pemilik/`). Di dalam APK, WebView Capacitor tidak melayani folder: setiap
+// URL tanpa titik di segmen terakhir dikembalikan sebagai index.html akar —
+// yaitu halaman pembuka itu sendiri. Akibatnya tombolnya tampak mati.
 await writeFile(
   path.join(tujuan, 'index.html'),
   `<!DOCTYPE html>
@@ -76,8 +81,8 @@ await writeFile(
     <div class="logo">W</div>
     <h1>Warung Go Digital</h1>
     <p>Pilih aplikasi yang ingin dibuka.</p>
-    <a class="p1" href="pemilik/">Aplikasi Warung (Pemilik)</a>
-    <a class="p2" href="admin/">Panel Pengelola</a>
+    <a class="p1" href="pemilik/index.html">Aplikasi Warung (Pemilik)</a>
+    <a class="p2" href="admin/index.html">Panel Pengelola</a>
     <small>Kedua aplikasi tetap berfungsi tanpa internet.</small>
   </div>
 </body>
@@ -86,6 +91,27 @@ await writeFile(
   'utf8'
 );
 console.log('disalin: index.html (pembuka)');
+
+// Penjaga: tautan internal ke folder (mis. `pemilik/`) tidak akan pernah bekerja
+// di dalam aplikasi. Capacitor menganggap URL tanpa titik sebagai rute SPA dan
+// mengembalikan index.html akar — tombolnya tampak mati tanpa pesan galat.
+const BERKAS_HTML = ['index.html', 'pemilik/index.html', 'admin/index.html'];
+const TAUTAN_FOLDER = /(?:href|src)="(?!https?:|data:|mailto:|#|\/)([^"]*\/)"/g;
+
+for (const nama of BERKAS_HTML) {
+  const berkas = path.join(tujuan, nama);
+  if (!existsSync(berkas)) continue;
+  const isi = await readFile(berkas, 'utf8');
+  const temuan = [...isi.matchAll(TAUTAN_FOLDER)].map((m) => m[1]);
+  if (temuan.length) {
+    console.error(
+      `GALAT: ${nama} menautkan ke folder (${temuan.join(', ')}). ` +
+        'Ganti dengan tautan ke berkas, mis. "pemilik/index.html".'
+    );
+    process.exit(1);
+  }
+}
+console.log('penjaga: tidak ada tautan internal ke folder');
 
 // Berkas ini dipakai Android WebView untuk memuat aplikasi.
 await writeFile(

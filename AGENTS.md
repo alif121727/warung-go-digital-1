@@ -499,6 +499,30 @@ harus lewat skrip yang dijalankan alur kerja setelah `npx cap add`:
 - `apk/siapkan-izin-ios.py` — menambah `NSLocationWhenInUseUsageDescription` ke
   `Info.plist`. Tanpa kunci ini iOS langsung menutup aplikasi saat lokasi diminta.
 
+### Tautan ke folder tidak berfungsi di dalam aplikasi (APK/IPA)
+
+Halaman pembuka `apk/www/index.html` menampilkan dua tombol. Bila tautannya
+`href="pemilik/"` (berakhir garis miring), tombolnya **tampak mati**: layar tidak
+berubah dan tidak ada pesan galat.
+
+Sebabnya, di dalam aplikasi Capacitor tidak melayani direktori. Kedua platform
+memakai aturan yang sama:
+
+- Android `WebViewLocalServer.handleLocalRequest`: bila segmen terakhir URL tidak
+  mengandung titik, yang dikirim adalah `<akar>/index.html`.
+- iOS `CapacitorRouter.route`: bila `pathExtension` kosong, hasilnya
+  `basePath + "/index.html"`.
+
+Jadi `pemilik/` mengembalikan `index.html` akar — halaman pembuka itu sendiri.
+Perbaikannya: tautan harus menunjuk berkas, mis. `pemilik/index.html`.
+
+`apk/siapkan.mjs` kini punya penjaga yang menghentikan build (exit 1) bila ada
+`href`/`src` internal berakhir garis miring, dan `uji/uji-pembuka-apk.py`
+menjalankan server yang meniru aturan Capacitor itu lalu benar-benar mengklik
+kedua tombol. Catatan: tautan ke folder tetap **sah** di GitHub Pages, karena
+server statis biasa melayani `index.html` di dalam folder — jadi masalah ini
+hanya muncul di dalam aplikasi.
+
 ### Bahan Google Play Store
 
 `buat-aset-playstore.py` menghasilkan `playstore/` (ikon 512, feature graphic

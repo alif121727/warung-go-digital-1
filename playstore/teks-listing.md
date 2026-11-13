@@ -174,7 +174,7 @@ wajib diungkapkan sebagai pengumpulan data otomatis.
 
 ## 6. Catatan rilis
 
-### Versi 1.2.0 (versionCode 10200)
+### Versi 1.3.0 (versionCode 10300)
 
 ```
 Pembaruan pertama di Play Store.

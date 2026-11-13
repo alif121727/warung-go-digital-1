@@ -103,6 +103,7 @@ python3 uji/uji-dua-aplikasi.py # aplikasi Pemilik & Panel Pengelola berjalan be
 python3 uji/uji-sinkron.py      # server sinkron otomatis
 python3 uji/uji-native.py       # perilaku di dalam aplikasi (tombol kembali, unduh berkas)
 python3 uji/uji-playstore.py    # aset & izin untuk Google Play Store
+python3 uji/uji-pembuka-apk.py  # dua tombol di halaman pembuka APK benar-benar jalan
 ```
 
 Semua uji memakai Playwright + Chromium dan server statis sementara.

@@ -13,7 +13,7 @@ mengisi halaman Play Console.
 | --- | --- |
 | Nama aplikasi | Warung Go Digital |
 | Package name (unik, permanen) | `id.warunggodigital.app` |
-| Versi | 1.2.0 (`versionCode` 10200) |
+| Versi | 1.3.0 (`versionCode` 10300) |
 | Android minimum | 7.0 (API 24) |
 | Android target | 16 (API 36) — syarat Play sejak Agustus 2026 |
 

@@ -1,6 +1,6 @@
 {
   "name": "warung-go-apk",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "description": "Pembungkus APK/AAB/IPA (Capacitor) untuk aplikasi Pemilik & Panel Pengelola Warung Go Digital.",
   "scripts": {
