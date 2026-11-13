@@ -311,6 +311,10 @@
       // Halaman unduh & privasi
       ['.blok > h2', 10], ['.blok > .pengantar', 8],
     ];
+    // Catatan: halaman privasi sengaja TIDAK diberi parallax pada isinya.
+    // Seluruh blok di sana adalah elemen kemunculan, dan yang tersisa hanya
+    // paragraf bacaan — menggeser teks yang sedang dibaca lebih mengganggu
+    // daripada indah. Di halaman itu efeknya cukup kanvas, clay, dan sorotan.
     const parallax = [];
     LAPISAN.forEach(([sel, depth]) => {
       document.querySelectorAll(sel).forEach((el) => {
@@ -531,6 +535,10 @@
       .forEach((w) => {
         pasangPanggung(w, [['article', 22], ['figure', 16], ['li', 14]], true);
       });
+    // Kartu ringkasan di halaman privasi: hanya kartunya yang miring, tanpa
+    // lapisan di dalamnya. Isinya daftar kalimat, dan menggeser tiap baris
+    // membuat bacaan tidak nyaman.
+    pasangPanggung(document.querySelector('.legal .card'), [], true);
   }
 
   // ── 9. Claymorphism ──────────────────────────────────────
@@ -564,6 +572,9 @@
   // dan jarak dalam di sana menambah tinggi kartu, dan tata letak beranda
   // ikut bergeser — efek yang tidak sepadan.
   clay('.panduan__gambar', []);
+  // Kartu ringkasan dan ikon di halaman privasi sudah punya latar sendiri.
+  clay('.legal .card', []);
+  clay('.legal .logo__mark', []);
 
   // ── 10. Tombol WhatsApp mengambang diberi gerak melayang ──
   // Perhatikan: gerak ini memakai properti `translate`, bukan `transform`,

@@ -692,7 +692,7 @@ with sync_playwright() as p:
     # Cukup pastikan versi sudah dinaikkan minimal ke angka saat berkas
     # animasi didaftarkan, bukan nomor persisnya.
     v = re.search(r"VERSI = 'wgd-v(\d+)'", sw)
-    cek("sw.js versi cache minimal v16", bool(v) and int(v.group(1)) >= 16,
+    cek("sw.js versi cache minimal v17", bool(v) and int(v.group(1)) >= 17,
         v.group(0) if v else "tidak ditemukan")
     pg.close()
 
@@ -773,9 +773,14 @@ with sync_playwright() as p:
     r = pg.evaluate("""()=>({
       sorot:document.querySelectorAll('.ax-sorot').length,
       kanvas:document.querySelectorAll('.ax-kanvas').length,
+      clay:document.querySelectorAll('.ax-clay').length,
+      p3d:document.querySelectorAll('.ax-3d').length,
     })""")
     cek("halaman privasi: sorotan teks ikut hadir", r["sorot"] >= 1, r["sorot"])
     cek("halaman privasi: kanvas ikut hadir", r["kanvas"] == 1, r["kanvas"])
+    cek("halaman privasi: claymorphism ikut hadir", r["clay"] >= 2, r["clay"])
+    cek("halaman privasi: kartu ringkasan punya kedalaman 3D",
+        r["p3d"] >= 1, r["p3d"])
     # Sapuan baru terisi setelah kalimatnya masuk layar — itu memang
     # perilaku yang diinginkan. Jadi gulir dulu, baru periksa terisi.
     pg.evaluate("""()=>{

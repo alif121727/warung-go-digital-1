@@ -261,6 +261,10 @@ seseorang mengeluh. Uji semuanya ada di `uji/uji-animasi.py`.
     gelap, di `index.html`, `unduh.html`, dan `privasi.html`. Sebelumnya
     semuanya hanya hidup di hero yang gelap; uji bagian 7q–7s di
     `uji/uji-animasi.py` menjaga supaya tidak kembali begitu.
+    Pengecualian yang disengaja: `privasi.html` tidak diberi parallax pada
+    isinya. Halaman itu dokumen bacaan, dan menggeser paragraf yang sedang
+    dibaca lebih mengganggu daripada indah — di sana cukup kanvas, clay pada
+    kartu ringkasan, kedalaman 3D pada kartu, dan sorotan teks.
 12. **Parallax jangan dipasang pada elemen yang punya animasi kemunculan.**
     Keduanya memakai `translate`, dan animasi kemunculan menang — parallax
     diam-diam tidak bekerja. `animasi.js` karena itu melewati elemen

@@ -15,7 +15,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v16';
+const VERSI = 'wgd-v17';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
