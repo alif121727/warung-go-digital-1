@@ -122,6 +122,21 @@ khusus untuk mengunduh aplikasi:
 - Berisi rincian berkas (ukuran + SHA-256). **Perbarui angka ini setiap kali
   rilis naik versi**, jika tidak halaman akan berbohong.
 
+### Cache: perubahan harus langsung terlihat
+
+GitHub Pages mengirim `cache-control: max-age=600`. Bila `sw.js` ikut diambil
+lewat cache HTTP, menaikkan `VERSI` pun tidak langsung berlaku, dan aset
+stale-while-revalidate membuat tampilan baru baru muncul pada muat ulang
+**kedua**. Ini pernah membuat perubahan dianggap "tidak ada".
+
+Aturan yang berlaku sekarang (`sw.js` + `pasang.js`):
+- Registrasi memakai `updateViaCache: 'none'` — `sw.js` selalu dicek ke jaringan.
+- **HTML, CSS, dan JS: network-first** dengan `fetch(..., { cache: 'reload' })`.
+  Cache hanya dipakai saat offline. Jangan ubah ini menjadi stale-while-revalidate;
+  tampilan akan tertinggal satu muat ulang.
+- Gambar/ikon boleh tetap stale-while-revalidate (jarang berubah).
+- Menaikkan `VERSI` tetap wajib saat berkas berubah banyak, agar cache lama dibuang.
+
 Penting saat menambah seksi yang memakai `.fx-aurora`: seksi induk **wajib**
 `position: relative` (atau `overflow: hidden`). Bila tidak, elemen absolut
 memakai viewport sebagai acuan, lolos dari klip, dan halaman jadi bisa
