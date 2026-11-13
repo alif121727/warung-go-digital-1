@@ -896,6 +896,72 @@ h1 em, h2 em, .contact__head h2 em {
   animation: fx-bob 6s ease-in-out infinite;
 }
 
+/* ══ Penguatan (v2) ══════════════════════════════════════
+   Efek v1 terlalu halus sehingga terkesan "tidak berubah".
+   Bagian ini membuat perubahan terlihat tegas namun tetap rapi.
+   ══════════════════════════════════════════════════════════ */
+
+/* Aurora lebih pekat dan berwarna */
+.fx-aurora { opacity: .95; filter: blur(52px) saturate(1.3); }
+
+/* Judul hero: pendar pada kata bergradasi + garis aksen di bawahnya */
+.hero__title .fx-grad {
+  filter: drop-shadow(0 0 16px rgba(245,165,36,.55))
+          drop-shadow(0 0 40px rgba(224,107,60,.28));
+}
+.hero__title::after {
+  content: ""; display: block;
+  width: clamp(84px, 18vw, 148px); height: 4px; margin-top: 1.15rem;
+  border-radius: 999px; background: var(--ring);
+  box-shadow: 0 0 24px -2px rgba(245,165,36,.8);
+}
+
+/* Statistik hero menjadi chip kaca */
+.hero__stats > div {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-lg);
+  padding: .85rem 1rem;
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  transition: border-color .3s, box-shadow .3s, transform .3s var(--ease);
+}
+.hero__stats > div:hover {
+  border-color: var(--amber); box-shadow: var(--fx-glow);
+  transform: translateY(-3px);
+}
+
+/* Tombol utama: kilau menyapu berkala */
+.btn--amber {
+  position: relative; overflow: hidden;
+  box-shadow: 0 12px 32px -16px rgba(245,165,36,.9);
+}
+.btn--amber::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 32%,
+              rgba(255,255,255,.5) 50%, transparent 68%);
+  transform: translateX(-130%);
+  animation: fx-sheen 5s ease-in-out infinite;
+}
+@keyframes fx-sheen {
+  0%, 58%   { transform: translateX(-130%); }
+  86%, 100% { transform: translateX(130%); }
+}
+
+/* Kartu maskot: tepi gradasi berputar saat disorot */
+.maskot__card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  padding: 1px; opacity: 0; transition: opacity .4s;
+  background: var(--ring);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none;
+}
+.maskot__card:hover::before { opacity: 1; }
+
+/* Kartu hero: cincin gradasi lebih tebal */
+.glowcard.fx-ring::after { inset: -3px; }
+
 /* ── Penyesuaian responsif ────────────────────────────── */
 @media (max-width: 1020px) {
   .maskot__grid { grid-template-columns: repeat(2, 1fr); }
@@ -908,5 +974,6 @@ h1 em, h2 em, .contact__head h2 em {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fx-aurora, .fx-ring::after, .maskot__img, .hero__maskot, .fx-tag i { animation: none !important; }
+  .fx-aurora, .fx-ring::after, .maskot__img, .hero__maskot, .fx-tag i,
+  .btn--amber::after { animation: none !important; }
 }

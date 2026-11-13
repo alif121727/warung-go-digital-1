@@ -5,16 +5,17 @@
  *   2. Halaman tetap terbuka saat sinyal jelek / offline setelah kunjungan pertama.
  *
  * Strategi:
- *   - Navigasi (halaman HTML): network-first. Selalu coba versi terbaru dulu,
- *     supaya perubahan langsung terlihat; cache hanya dipakai saat offline.
- *   - Aset statis (CSS, JS, gambar): stale-while-revalidate. Sajikan dari cache
+ *   - Navigasi (HTML), CSS, dan JS: network-first dengan cache:'reload'.
+ *     Versi terbaru selalu dicoba lebih dulu, dan cache HTTP dilewati, supaya
+ *     perubahan situs langsung terlihat. Cache hanya dipakai saat offline.
+ *   - Aset lain (gambar, ikon): stale-while-revalidate. Sajikan dari cache
  *     agar cepat, sekaligus perbarui cache di latar belakang.
  *
  * Naikkan VERSI setiap kali berkas situs berubah besar-besaran; cache lama
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v9';
+const VERSI = 'wgd-v10';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -118,7 +119,9 @@ self.addEventListener('fetch', (peristiwa) => {
     peristiwa.respondWith(
       (async () => {
         try {
-          const segar = await fetch(permintaan);
+          // cache:'reload' -> lewati cache HTTP (GitHub Pages max-age=600),
+          // supaya halaman yang dimuat selalu versi terbaru.
+          const segar = await fetch(permintaan, { cache: 'reload' });
           const cache = await caches.open(CACHE_INTI);
           cache.put(permintaan, segar.clone());
           return segar;
@@ -144,7 +147,36 @@ self.addEventListener('fetch', (peristiwa) => {
     return;
   }
 
-  // Aset statis -> stale-while-revalidate.
+  // Tampilan (HTML, CSS, JS) -> network-first. Ini yang menentukan apakah
+  // perubahan langsung terlihat, jadi jangan pernah menyajikan versi lama
+  // lebih dulu; cache hanya dipakai saat jaringan gagal.
+  const url_berkas = url.pathname;
+  const berkas_tampilan = /\.(?:css|js)$/.test(url_berkas) ||
+    url_berkas.endsWith('/') || url_berkas.endsWith('.html');
+  if (berkas_tampilan) {
+    peristiwa.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE_ASET);
+        try {
+          const segar = await fetch(permintaan, { cache: 'reload' });
+          if (segar && segar.status === 200 && segar.type === 'basic') {
+            cache.put(permintaan, segar.clone());
+          }
+          return segar;
+        } catch (e) {
+          const tersimpan =
+            (await cache.match(permintaan)) ||
+            (await caches.match(permintaan, { ignoreSearch: true }));
+          if (tersimpan) return tersimpan;
+          throw e;
+        }
+      })()
+    );
+    return;
+  }
+
+  // Aset lain (gambar, ikon, font) -> stale-while-revalidate: cepat, dan
+  // perubahannya jarang sehingga tidak perlu selalu menunggu jaringan.
   peristiwa.respondWith(
     (async () => {
       const cache = await caches.open(CACHE_ASET);

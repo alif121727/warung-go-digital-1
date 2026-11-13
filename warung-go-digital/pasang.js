@@ -23,8 +23,30 @@
     window.addEventListener('load', () => {
       // Daftarkan relatif terhadap akar situs, jadi bekerja baik di
       // /warung-go-digital/ maupun di akar domain.
+      // updateViaCache:'none' -> berkas sw.js tidak pernah diambil dari cache
+      // HTTP. Tanpa ini, GitHub Pages (max-age=600) membuat versi baru
+      // tertahan sampai 10 menit sehingga perubahan tidak terlihat.
       navigator.serviceWorker
-        .register(akarSitus + 'sw.js', { scope: akarSitus })
+        .register(akarSitus + 'sw.js', {
+          scope: akarSitus,
+          updateViaCache: 'none',
+        })
+        .then((daftar) => {
+          // Saat ada versi baru, service worker baru mengambil alih. Muat ulang
+          // sekali supaya pengunjung langsung melihat tampilan terbaru, tanpa
+          // perlu membersihkan cache sendiri.
+          daftar.addEventListener('updatefound', () => {
+            const baru = daftar.installing;
+            if (!baru) return;
+            baru.addEventListener('statechange', () => {
+              // Hanya bila sudah ada halaman yang terkendali sebelumnya;
+              // pada kunjungan pertama tidak perlu memuat ulang.
+              if (baru.state === 'activated' && navigator.serviceWorker.controller) {
+                location.reload();
+              }
+            });
+          });
+        })
         .catch(() => {});
     });
   }
