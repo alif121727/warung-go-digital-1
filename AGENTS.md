@@ -103,6 +103,29 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   **JetBrains Mono** (label). Dimuat dari Google Fonts.
 - Palet: tinta `#0d1a12`, amber `#f5a524`, krem `#f6f0e2`, leaf `#3ba55d`, WA `#25d366`.
 - Token warna/radius/shadow ada di `:root` di `styles.css`.
+- Lapisan futuristik memakai kelas berawalan `fx-` dan `maskot*` (aurora, kaca,
+  HUD, teks bergradasi, cincin berputar, butir halus) — tetap memakai palet merek.
+- **Maskot**: 4 ilustrasi SVG di `warung-go-digital/ilustrasi/` (Pak Warung,
+  Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
+  terbaca di latar gelap maupun krem. Bebas dipakai untuk poster/stand QR.
+
+### Halaman unduh aplikasi
+
+`warung-go-digital/unduh.html` (+ `unduh.js`, gaya di `bersama/gaya-unduh.css`)
+khusus untuk mengunduh aplikasi:
+
+- Android: APK `v1.3.0` · iOS: IPA `ios-v1.3.0`, keduanya dari rilis resmi GitHub.
+- `unduh.js` menandai kartu yang cocok dengan perangkat ("HP Anda") tanpa
+  menghilangkan pilihan lain; tidak pernah memaksa.
+- Kode QR berisi alamat halaman ini, dibuat oleh `app/qr.js` (sudah terbukti
+  bisa dipindai lewat `uji/decode-qr.js`).
+- Berisi rincian berkas (ukuran + SHA-256). **Perbarui angka ini setiap kali
+  rilis naik versi**, jika tidak halaman akan berbohong.
+
+Penting saat menambah seksi yang memakai `.fx-aurora`: seksi induk **wajib**
+`position: relative` (atau `overflow: hidden`). Bila tidak, elemen absolut
+memakai viewport sebagai acuan, lolos dari klip, dan halaman jadi bisa
+digeser samping. Uji anti-geser samping: `uji/uji-landing.py`.
 
 ## Panel Mitra (aplikasi)
 
@@ -175,6 +198,10 @@ Uji dengan Chromium di `/usr/bin/chromium` lewat Playwright. Pasang dulu:
 ```bash
 pip install playwright pillow numpy
 ```
+
+**Landing page + halaman unduh** — jalankan `python3 uji/uji-landing.py`
+(server di `http://localhost:12000/warung-go-digital/`). Mencakup anti-geser
+samping 9 lebar, maskot termuat, tautan unduh tepat, dan QR terdekode.
 
 **Landing page** — `http://localhost:12000/warung-go-digital/`:
 1. Tidak ada error console / pageerror.
