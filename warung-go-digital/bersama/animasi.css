@@ -308,11 +308,140 @@ details.tanya[open] summary::before { transform: rotate(180deg); }
 }
 .ax-underline.ax-in::after { width: clamp(76px, 16vw, 132px); }
 
+/* ── Parallax saat menggulir ──────────────────────────────
+   Lapisan dekoratif bergeser dengan kecepatan berbeda, sehingga halaman
+   terasa punya kedalaman saat digulir.
+
+   PENTING: gerak di sini memakai properti `translate`, BUKAN `transform`.
+   Elemen-elemen ini sudah dianimasikan oleh styles.css memakai `transform`
+   (aurora bergerak, glowcard miring, chip melayang). Kalau parallax menulis
+   `transform` juga, salah satu akan menghapus yang lain.
+
+   Nilainya diisi animasi.js dari posisi gulir: `--ax-p` bernilai sekitar
+   -1 (di bawah layar) sampai 1 (di atas layar). */
+.ax-parallax {
+  translate: 0 calc(var(--ax-p, 0) * var(--ax-depth, 30px));
+}
+
+/* ── Rendering waktu nyata: kanvas partikel ───────────────
+   Kanvas digambar ulang setiap bingkai oleh animasi.js. Titik-titik cahaya
+   melayang pelan dan menyala redup — bukan hujan partikel yang ramai.
+
+   Kanvas ini murni hiasan: `aria-hidden` di HTML, tidak menangkap klik, dan
+   bila JavaScript mati ia hanya tinggal kosong tanpa merusak apa pun. */
+.ax-kanvas {
+  position: absolute; inset: 0; z-index: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  opacity: .85;
+  mix-blend-mode: screen;
+}
+
+/* ── Kedalaman 3D ─────────────────────────────────────────
+   Panggung ber-`perspective` dengan lapisan-lapisan pada kedalaman
+   berbeda. Saat kursor bergerak, animasi.js menggeser sudut panggung dan
+   menggeser tiap lapisan berlawanan arah sesuai `--ax-z`-nya. Hasilnya
+   tampak seperti kotak yang benar-benar punya isi, bukan gambar datar.
+
+   Dua pilihan properti yang disengaja:
+
+   1. Panggungnya adalah wadah visual hero — satu-satunya elemen di sini yang
+      belum memakai `transform` untuk apa pun. Jadi sudutnya aman ditulis di
+      sana.
+   2. Lapisannya memakai `translate: x y z`, BUKAN `transform`. Chip dan
+      kotak QR sudah memakai `transform` untuk rotasi miringnya sendiri, dan
+      glowcard memakainya untuk sorot hovemya. Kalau kedalaman 3D menulis
+      `transform`, keduanya saling menghapus — chip kehilangan kemiringannya.
+      Properti `translate` berdiri sendiri dan menerima tiga nilai (x y z),
+      jadi keduanya hidup bersama.
+
+   Sudut dan geseran sengaja kecil supaya teks tetap tajam dan tidak ada
+   elemen yang keluar dari tepi layar. */
+.ax-3d {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  transition: transform .35s var(--ax-ease);
+  transform:
+    rotateX(calc(var(--ax-ty, 0) * -1deg))
+    rotateY(calc(var(--ax-tx, 0) * 1deg));
+}
+/* Agar anak-anak glowcard juga punya kedalaman, bukan menempel datar pada
+   kartunya. `transform-style` bukan properti yang dipakai glowcard, jadi
+   aman ditambahkan. */
+.ax-3d__dalam { transform-style: preserve-3d; }
+.ax-3d__lapis {
+  translate:
+    calc(var(--ax-tx, 0) * var(--ax-z, 0) * -.35px)
+    calc(var(--ax-ty, 0) * var(--ax-z, 0) * -.35px)
+    calc(var(--ax-z, 0) * 1px);
+  transition: translate .35s var(--ax-ease);
+}
+
+/* ── Claymorphism ─────────────────────────────────────────
+   Tampilan tanah liat: sudut sangat membulat dan bayangan dalam berlapis —
+   terang dari kiri-atas, gelap ke kanan-bawah — sehingga elemen terasa
+   empuk dan bisa ditekan, bukan datar.
+
+   PENTING: kelas ini sengaja TIDAK menimpa `background` milik elemennya.
+   Percobaan pertama menggantinya dengan warna krem, dan hasilnya lencana
+   hijau jadi putih dengan teks putih di atasnya — tak terbaca sama sekali.
+   Warna latar adalah identitas elemen itu; clay hanya boleh menambah
+   dimensi di atasnya.
+
+   Karena itu bayangannya memakai putih tipis dan hitam tipis yang tembus
+   pandang, bukan warna pekat. Dengan begitu resep yang sama bekerja di
+   latar amber, hijau, maupun tinta gelap. */
+.ax-clay {
+  --ax-clay-terang: rgba(255, 255, 255, .55);
+  --ax-clay-gelap: rgba(13, 26, 18, .28);
+  box-shadow:
+    inset 2px 2px 5px var(--ax-clay-terang),
+    inset -3px -3px 7px var(--ax-clay-gelap),
+    0 10px 22px -14px rgba(13, 26, 18, .55);
+}
+/* Di latar gelap, kilau putih perlu lebih kuat dan bayangan lebih pekat,
+   kalau tidak efek empuknya hilang sama sekali. */
+.ax-clay--gelap {
+  --ax-clay-terang: rgba(255, 255, 255, .30);
+  --ax-clay-gelap: rgba(0, 0, 0, .60);
+  box-shadow:
+    inset 2px 2px 6px var(--ax-clay-terang),
+    inset -4px -4px 10px var(--ax-clay-gelap),
+    0 14px 28px -16px rgba(0, 0, 0, .85);
+}
+.ax-clay--bulat { border-radius: 999px; }
+
+/* ── Sorotan teks dinamis ─────────────────────────────────
+   Kalimat penting ditandai dengan sapuan stabilo yang tumbuh dari kiri,
+   seperti disorot dengan spidol. Hanya setelah masuk layar, supaya
+   pengunjung sempat membacanya lebih dulu.
+
+   Latar digambar sebagai gradasi berukuran tetap yang digeser, bukan
+   mengubah lebar latar — dengan begitu teks tidak pernah bergeser tata
+   letaknya, hanya sorotannya yang memanjang. */
+.ax-sorot {
+  background-image: linear-gradient(104deg,
+    rgba(245, 165, 36, .42), rgba(245, 165, 36, .42));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  background-size: 0% .42em;
+  transition: background-size .8s var(--ax-ease) .1s;
+}
+.ax-sorot.ax-in { background-size: 100% .42em; }
+.ax-sorot--hijau {
+  background-image: linear-gradient(104deg,
+    rgba(59, 165, 93, .40), rgba(59, 165, 93, .40));
+}
+
 /* ══ Penjagaan gerak ══════════════════════════════════════ */
 
 /* Kursor sentuh tidak punya "hover"; matikan gerak yang bergantung kursor. */
 @media (hover: none), (pointer: coarse) {
   .ax-spot { display: none; }
+  /* Tanpa kursor, sudut panggung tidak akan pernah bergerak. Lapisan tetap
+     diberi kedalaman (terlihat bagus), tapi sudutnya dinetralkan agar tidak
+     tertinggal dalam keadaan miring. */
+  .ax-3d { transform: none; }
   .ax-tilt.is-tilting { transform: none; box-shadow: none; }
   .ax-glide::after { display: none; }
   /* Sapuan pemindai memakai sumber daya baterai tanpa manfaat di layar
@@ -322,6 +451,16 @@ details.tanya[open] summary::before { transform: rotate(180deg); }
 
 @media (prefers-reduced-motion: reduce) {
   .ax-progress, .ax-spot { display: none !important; }
+  /* Kanvas hanya hidup bila digambar ulang terus-menerus; tanpa gerak ia
+     tidak punya alasan untuk ada. */
+  .ax-kanvas { display: none !important; }
+  /* Parallax dan kedalaman 3D dinetralkan, bukan sekadar dipercepat. */
+  .ax-parallax { translate: none !important; }
+  .ax-3d, .ax-3d__lapis {
+    transform: none !important; translate: none !important; transition: none !important;
+  }
+  /* Sorotan teks langsung penuh supaya kalimat tetap ditandai. */
+  .ax-sorot { background-size: 100% .42em !important; transition: none !important; }
   /* Kemunculan memakai `animation`, jadi keduanya harus dimatikan:
      `animation` untuk membunuh geraknya, dan keadaan akhir dipaksa lewat
      `opacity`/`translate` supaya isi tidak tertinggal tak terlihat. */

@@ -109,7 +109,14 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   kelas berawalan `ax-`. Dipasang di `index.html`, `unduh.html`, dan
   `privasi.html`. Berisi bilah kemajuan gulir, sorotan kursor, kemunculan
   berjenjang, kilau gradasi, denyut, kemiringan 3D, buka-tutup bagian
-  (`<details>`), dan sapuan pemindai pada kotak QR.
+  (`<details>`), sapuan pemindai pada kotak QR, parallax saat menggulir,
+  kanvas partikel waktu nyata, kedalaman 3D mengikuti kursor, claymorphism,
+  dan sorotan teks dinamis.
+
+  Catatan: yang diminta sebagai "3D/AR/VR" dikerjakan sebagai **kedalaman
+  3D** (perspective + lapisan translateZ). AR/VR penuh butuh kamera dan
+  kacamata, tidak layak untuk situs publik UMKM yang harus ringan dan
+  terbuka lebar — dan tidak menambah apa pun bagi pengunjung warung.
 - **Maskot**: 4 ilustrasi SVG di `warung-go-digital/ilustrasi/` (Pak Warung,
   Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
   terbaca di latar gelap maupun krem. Bebas dipakai untuk poster/stand QR.
@@ -181,7 +188,7 @@ digeser samping. Uji anti-geser samping: `uji/uji-landing.py`.
 
 ### Aturan lapisan gerak (`ax-`)
 
-Enam aturan yang gampang dilanggar dan akibatnya tidak kelihatan sampai
+Sepuluh aturan yang gampang dilanggar dan akibatnya tidak kelihatan sampai
 seseorang mengeluh. Uji semuanya ada di `uji/uji-animasi.py`.
 
 1. **Pakai `translate`/`scale`, jangan `transform`, untuk kemunculan.**
@@ -217,6 +224,23 @@ seseorang mengeluh. Uji semuanya ada di `uji/uji-animasi.py`.
    dianimasikan murni lewat CSS (`::details-content` + `interpolate-size`),
    jadi tetap bekerja tanpa JavaScript; peramban lama hanya kehilangan
    geraknya, bukan isinya.
+7. **Parallax dan kedalaman 3D juga tidak boleh menulis `transform`.**
+   Parallax memakai `translate`, kedalaman 3D memakai `translate: x y z` pada
+   lapisan dan `transform` HANYA pada wadah `.hero__visual` — satu-satunya
+   elemen di situ yang belum memakai `transform` untuk apa pun. Menulisnya di
+   chip, kotak QR, atau glowcard akan menghapus kemiringan dan sorot hovemya.
+8. **Claymorphism tidak boleh menimpa `background`.** Percobaan pertama
+   menggantinya dengan krem, dan lencana hijau jadi putih dengan teks putih di
+   atasnya — tak terbaca. Clay hanya menambah bayangan dalam, memakai putih
+   dan hitam tembus pandang, sehingga resep yang sama bekerja di latar amber,
+   hijau, maupun tinta gelap.
+9. **Kanvas waktu nyata wajib berhenti.** Saat tab tidak aktif, saat kanvas
+   di luar layar, dan saat "kurangi gerak" aktif. Tanpa itu halaman memakai
+   baterai walau tidak dilihat. Jumlah titik juga dibatasi oleh luas layar,
+   dan baru mulai digambar setelah halaman tenang — ini hiasan, bukan isi.
+10. **Sorotan teks tidak boleh menyentuh elemen bergradasi.** Keduanya
+    memakai `background`; sorotan akan menang dan menghapus gradasinya.
+    Judul hero (`em.fx-grad`) karena itu dikecualikan.
 
 Jaring pengaman berlapis: bila `IntersectionObserver` tidak ada atau sesuatu
 menghalangi, `animasi.js` menampilkan semua setelah 4 detik. Jangan dihapus.
@@ -297,12 +321,15 @@ pip install playwright pillow numpy
 (server di `http://localhost:12000/warung-go-digital/`). Mencakup anti-geser
 samping 9 lebar, maskot termuat, tautan unduh tepat, dan QR terdekode.
 
-**Lapisan gerak** — jalankan `python3 uji/uji-animasi.py`. Menjaga enam
+**Lapisan gerak** — jalankan `python3 uji/uji-animasi.py`. Menjaga sepuluh
 aturan di atas: halaman terbaca tanpa JavaScript, kurangi-gerak tidak
 menyembunyikan isi, tidak ada animasi ganda dengan `app.js`, tidak ada geser
 samping di 8 lebar layar, tombol WhatsApp tetap tersembunyi di puncak,
 kemunculan benar-benar memudar (bukan seketika), bagian bisa dibuka dengan
-animasi dan tetap jalan tanpa JavaScript.
+animasi dan tetap jalan tanpa JavaScript, parallax bergeser beda kecepatan,
+kanvas benar-benar berubah antar bingkai, kedalaman 3D tidak menghapus
+kemiringan chip, clay tidak menimpa warna latar, dan sorotan teks tidak
+menyentuh judul bergradasi.
 
 **Panduan pasang iPhone** (bagian di `unduh.html`) — jalankan
 `python3 uji/uji-ios.py`. Mencakup penyesuaian perangkat (Safari, Chrome iOS,

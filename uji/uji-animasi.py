@@ -410,6 +410,199 @@ with sync_playwright() as p:
         r["diLayar"] == 0, r["diLayar"])
     pg.close()
 
+    # ── 7h. Parallax: lapisan bergeser beda kecepatan ────────
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(1600)
+    r = pg.evaluate("""()=>{
+      const els=[...document.querySelectorAll('.ax-parallax')];
+      return {jumlah:els.length,
+              depthBaru:new Set(els.map(e=>e.style.getPropertyValue('--ax-depth'))).size};
+    }""")
+    cek("parallax: ada lapisan yang dipasang", r["jumlah"] >= 5, r["jumlah"])
+    cek("parallax: lapisan punya kecepatan berbeda-beda",
+        r["depthBaru"] >= 3, f"{r['depthBaru']} nilai berbeda")
+    # Geser halaman, pastikan nilainya benar-benar berubah.
+    p1 = pg.evaluate("()=>document.querySelector('.hero__glow').style.getPropertyValue('--ax-p')")
+    pg.evaluate("()=>window.scrollBy(0, 600)")
+    pg.wait_for_timeout(500)
+    p2 = pg.evaluate("()=>document.querySelector('.hero__glow').style.getPropertyValue('--ax-p')")
+    cek("parallax: bergeser saat halaman digulir", p1 != p2, f"{p1} -> {p2}")
+    # Parallax harus memakai `translate`, bukan `transform`, supaya animasi
+    # aurora/glowcard yang sudah ada tidak terhapus.
+    tp = pg.evaluate("""()=>{
+      const e=document.querySelector('.fx-aurora');
+      const g=getComputedStyle(e);
+      return {translate:g.translate, transform:g.transform};
+    }""")
+    cek("parallax: memakai translate, bukan transform",
+        tp["translate"] != "none", tp)
+    cek("parallax: animasi aurora bawaan masih hidup",
+        tp["transform"] != "none", tp["transform"])
+    pg.close()
+
+    # ── 7i. Rendering waktu nyata: kanvas digambar ulang ─────
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(2600)
+    r = pg.evaluate("""()=>{
+      const c=document.querySelector('.ax-kanvas');
+      if(!c) return null;
+      const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+      let terisi=0;
+      for(let i=3;i<d.length;i+=4) if(d[i]>0) terisi++;
+      return {lebar:c.width, tinggi:c.height, terisi};
+    }""")
+    cek("kanvas waktu nyata: ada di hero", r is not None, r)
+    cek("kanvas waktu nyata: benar-benar menggambar", r and r["terisi"] > 50,
+        r and r["terisi"])
+    # Harus benar-benar berubah antar bingkai, bukan gambar statis.
+    berubah = pg.evaluate("""async ()=>{
+      const c=document.querySelector('.ax-kanvas');
+      const ctx=c.getContext('2d');
+      const ambil=()=>ctx.getImageData(0,0,c.width,c.height).data.join('');
+      const a=ambil();
+      await new Promise(r=>setTimeout(r,420));
+      return ambil() !== a;
+    }""")
+    cek("kanvas waktu nyata: bergerak antar bingkai", berubah, berubah)
+    # Kanvas harus benar-benar berhenti saat tab disembunyikan — ini hiasan,
+    # tidak boleh memakai baterai saat tidak dilihat.
+    pg.close()
+
+    # ── 7j. Kedalaman 3D mengikuti kursor ────────────────────
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(1800)
+    r = pg.evaluate("""()=>{
+      const w=document.querySelector('.hero__visual');
+      return {panggung:w.classList.contains('ax-3d'),
+              lapis:document.querySelectorAll('.ax-3d__lapis').length,
+              dalam:!!document.querySelector('.ax-3d__dalam')};
+    }""")
+    cek("kedalaman 3D: panggung terpasang", r["panggung"], r["panggung"])
+    cek("kedalaman 3D: ada beberapa lapisan", r["lapis"] >= 5, r["lapis"])
+    kotak = pg.query_selector(".hero__visual").bounding_box()
+    pg.mouse.move(kotak["x"] + kotak["width"] * 0.85, kotak["y"] + kotak["height"] * 0.2)
+    pg.wait_for_timeout(800)
+    r = pg.evaluate("""()=>{
+      const w=document.querySelector('.hero__visual');
+      const g=document.querySelector('.glowcard');
+      const c=document.querySelector('.chip--a');
+      const q=document.querySelector('.qrfloat');
+      return {tx:getComputedStyle(w).getPropertyValue('--ax-tx'),
+              panggung:getComputedStyle(w).transform,
+              chipTransform:getComputedStyle(c).transform,
+              chipTranslate:getComputedStyle(c).translate,
+              qrTransform:getComputedStyle(q).transform};
+    }""")
+    cek("kedalaman 3D: panggung benar-benar miring",
+        r["panggung"].startswith("matrix3d"), r["panggung"][:26])
+    cek("kedalaman 3D: lapisan bergeser di kedalaman berbeda",
+        r["chipTranslate"] != "none", r["chipTranslate"])
+    # Yang paling mudah rusak: kedalaman 3D menghapus kemiringan bawaan chip
+    # dan kotak QR karena sama-sama menulis `transform`.
+    cek("kedalaman 3D: kemiringan chip tidak terhapus",
+        r["chipTransform"].startswith("matrix(0.99"), r["chipTransform"][:22])
+    cek("kedalaman 3D: kemiringan kotak QR tidak terhapus",
+        r["qrTransform"].startswith("matrix(0.99"), r["qrTransform"][:22])
+    pg.close()
+
+    # ── 7k. Claymorphism ─────────────────────────────────────
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(2200)
+    r = pg.evaluate("""()=>{
+      const out=[];
+      for(const sel of ['.pill','.chip--a','.chip--b']){
+        for(const e of document.querySelectorAll(sel)){
+          const g=getComputedStyle(e);
+          out.push({sel, clay:e.classList.contains('ax-clay'),
+                    bulat:g.borderRadius, inset:g.boxShadow.includes('inset'),
+                    latar:g.backgroundColor});
+        }
+      }
+      return out;
+    }""")
+    cek("claymorphism: lencana diberi gaya tanah liat",
+        r and all(x["clay"] for x in r), r)
+    cek("claymorphism: ada bayangan dalam (efek empuk)",
+        all(x["inset"] for x in r), [x["inset"] for x in r])
+    # Warna latar asli TIDAK boleh ditimpa — percobaan pertama menggantinya
+    # dengan krem, dan chip hijau jadi putih dengan teks putih di atasnya.
+    cek("claymorphism: warna latar asli tidak tertimpa",
+        all(x["latar"] != "rgb(255, 253, 247)" for x in r),
+        [x["latar"] for x in r])
+    pg.close()
+
+    # ── 7l. Sorotan teks dinamis ─────────────────────────────
+    pg = b.new_page(viewport={"width": 1440, "height": 900})
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(2400)
+    r = pg.evaluate("""()=>{
+      const e=[...document.querySelectorAll('.ax-sorot')];
+      return {jumlah:e.length,
+              kosong:e.filter(x=>getComputedStyle(x).backgroundSize.startsWith('0')).length,
+              contoh:e.length?e[0].textContent.trim().slice(0,20):''};
+    }""")
+    cek("sorotan teks: ada kalimat yang disorot", r["jumlah"] >= 1, r["jumlah"])
+    cek("sorotan teks: sapuan sudah terisi setelah masuk layar",
+        r["kosong"] == 0, r["kosong"])
+    # Judul hero bergradasi TIDAK boleh ikut disorot: keduanya memakai
+    # `background`, dan sorotan akan menghapus gradasinya.
+    grad = pg.evaluate("""()=>{
+      const e=document.querySelector('.hero__title em');
+      return {sorot:e.classList.contains('ax-sorot'),
+              grad:e.classList.contains('ax-shimmer')};
+    }""")
+    cek("sorotan teks: tidak menyentuh judul bergradasi",
+        not grad["sorot"] and grad["grad"], grad)
+    pg.close()
+
+    # ── 7m. Kurangi gerak mematikan empat efek baru ──────────
+    ctx = b.new_context(viewport={"width": 1440, "height": 900},
+                        reduced_motion="reduce")
+    pg = ctx.new_page()
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(1600)
+    r = pg.evaluate("""()=>{
+      const k=document.querySelector('.ax-kanvas');
+      const w=document.querySelector('.hero__visual');
+      return {
+        kanvas:k?getComputedStyle(k).display!=='none':false,
+        wadah3d:w?getComputedStyle(w).transform:'none',
+        parallax:[...document.querySelectorAll('.ax-parallax')]
+          .filter(e=>getComputedStyle(e).translate!=='none').length,
+        sorotKosong:[...document.querySelectorAll('.ax-sorot')]
+          .filter(e=>getComputedStyle(e).backgroundSize.startsWith('0')).length,
+      };
+    }""")
+    cek("kurangi gerak: kanvas disembunyikan", not r["kanvas"], r["kanvas"])
+    cek("kurangi gerak: kedalaman 3D dinetralkan", r["wadah3d"] == "none",
+        r["wadah3d"])
+    cek("kurangi gerak: parallax berhenti", r["parallax"] == 0, r["parallax"])
+    cek("kurangi gerak: sorotan teks tetap terisi penuh",
+        r["sorotKosong"] == 0, r["sorotKosong"])
+    ctx.close()
+
+    # ── 7n. Tanpa JavaScript, empat efek baru tidak menyembunyikan isi ─
+    ctx = b.new_context(viewport={"width": 1440, "height": 900},
+                        java_script_enabled=False)
+    pg = ctx.new_page()
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(900)
+    r = pg.evaluate("""()=>{
+      const takTerlihat=[...document.querySelectorAll('main *')].filter(e=>
+        getComputedStyle(e).opacity==='0' && e.textContent.trim().length>20).length;
+      return {teks:document.body.innerText.trim().length,
+              takTerlihat,
+              kanvas:!!document.querySelector('.ax-kanvas')};
+    }""")
+    cek("tanpa JS: isi halaman tetap terbaca", r["teks"] > 3000, r["teks"])
+    cek("tanpa JS: tidak ada elemen yang tersembunyi", r["takTerlihat"] == 0,
+        r["takTerlihat"])
+    ctx.close()
+
     # ── 8. Bilah gulir benar-benar bergerak ──────────────────
     pg = b.new_page(viewport={"width": 1280, "height": 900})
     pg.goto(LANDING, wait_until="load")
@@ -496,7 +689,7 @@ with sync_playwright() as p:
     # Cukup pastikan versi sudah dinaikkan minimal ke angka saat berkas
     # animasi didaftarkan, bukan nomor persisnya.
     v = re.search(r"VERSI = 'wgd-v(\d+)'", sw)
-    cek("sw.js versi cache minimal v14", bool(v) and int(v.group(1)) >= 14,
+    cek("sw.js versi cache minimal v15", bool(v) and int(v.group(1)) >= 15,
         v.group(0) if v else "tidak ditemukan")
     pg.close()
 
