@@ -15,7 +15,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v17';
+const VERSI = 'wgd-v18';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -49,6 +49,10 @@ const KERANGKA = [
   './bersama/gaya-unduh.css',
   './bersama/animasi.css',
   './bersama/animasi.js',
+  './bersama/masuk.js',
+  './bersama/masuk.css',
+  './bersama/cerita.css',
+  './bersama/cerita.js',
 
   // Aplikasi Pemilik
   './pemilik/',
@@ -80,6 +84,12 @@ const KERANGKA = [
   './ilustrasi/si-qr.svg',
   './ilustrasi/es-teh.svg',
   './ilustrasi/kucing-warung.svg',
+  './ilustrasi/cerita-1.svg',
+  './ilustrasi/cerita-2.svg',
+  './ilustrasi/cerita-3.svg',
+  './ilustrasi/cerita-4.svg',
+  './ilustrasi/cerita-5.svg',
+  './ilustrasi/cerita-6.svg',
 ];
 
 self.addEventListener('install', (peristiwa) => {

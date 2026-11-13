@@ -9,6 +9,10 @@ harus tetap TIDAK bisa membaca data mitra lain.
 import json, os, subprocess, sys, time, urllib.error, urllib.request
 
 from playwright.sync_api import sync_playwright
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from importlib import import_module
+bantu = import_module('bantu-masuk')
 
 B = "http://localhost:12000/warung-go-digital/"
 PORT = 8791
@@ -64,6 +68,7 @@ try:
         pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.goto(B + "pemilik/", wait_until="load")
         pg.wait_for_timeout(900)
+        bantu.masuk_cepat(pg, "pemilik")
 
         pg.fill("#nama", "Warung Bu Sari")
         pg.fill("#pemilik", "Bu Sari")
@@ -120,6 +125,7 @@ try:
         pg2.on("pageerror", lambda e: errs2.append(str(e)))
         pg2.goto(B + "admin/", wait_until="load")
         pg2.wait_for_timeout(900)
+        bantu.masuk_cepat(pg2, "pengelola")
 
         pg2.click('[data-tab="sinkron"]')
         pg2.wait_for_timeout(600)

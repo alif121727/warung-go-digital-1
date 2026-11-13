@@ -822,10 +822,14 @@
     Inti.qa('[data-tutup]', m).forEach((b) => b.addEventListener('click', Inti.tutupModal));
   };
 
-  const mulai = () => {
+  // Dipanggil hanya setelah pengguna berhasil masuk.
+  const jalan = () => {
     S.load();
     Inti.q('#btnBantuan').innerHTML = Inti.ikon('info', '', 16);
     Inti.q('#btnBantuan').addEventListener('click', bantuan);
+    const tombolAkun = Inti.q('#btnAkun');
+    tombolAkun.innerHTML = Inti.ikon('users', '', 16);
+    tombolAkun.addEventListener('click', () => Masuk.panelAkun('pemilik'));
     muatDraf(state.tgl);
     state.draf._tgl = state.tgl;
     // Kunjungan pertama: arahkan ke pengisian data warung.
@@ -834,6 +838,12 @@
 
     // Kirim otomatis ke server sinkron (bila pengelola memberi alamat).
     Sinkron.pasangAutoKirim(laporanSinkron);
+  };
+
+  // Aplikasi hanya terbuka setelah masuk. Catatan warung ini milik satu orang;
+  // tanpa gerbang, siapa pun yang memegang HP ini bisa membukanya.
+  const mulai = () => {
+    Masuk.pasang({ peran: 'pemilik', setelahMasuk: jalan });
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mulai);

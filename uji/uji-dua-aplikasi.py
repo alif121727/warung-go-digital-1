@@ -1,6 +1,10 @@
 """Uji alur dua aplikasi: Pemilik mencatat -> kirim laporan -> Pengelola mengimpor."""
 import json, os, tempfile
 from playwright.sync_api import sync_playwright
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from importlib import import_module
+bantu = import_module('bantu-masuk')
 
 B = "http://localhost:12000/warung-go-digital/"
 hasil = []
@@ -22,6 +26,7 @@ with sync_playwright() as p:
 
     pg.goto(B + "pemilik/", wait_until="load")
     pg.wait_for_timeout(1200)
+    bantu.masuk_cepat(pg, "pemilik")
     cek("pemilik: halaman terbuka", pg.eval_on_selector_all("#view .card", "e=>e.length") > 0)
     cek("pemilik: kunjungan pertama arahkan ke data warung",
         pg.inner_text("#judul").lower().startswith("data warung"), pg.inner_text("#judul"))
@@ -104,6 +109,7 @@ with sync_playwright() as p:
 
     pa.goto(B + "admin/", wait_until="load")
     pa.wait_for_timeout(1200)
+    bantu.masuk_cepat(pa, "pengelola")
     cek("pengelola: keadaan kosong ditampilkan", "Belum ada laporan" in pa.inner_text("#view"))
 
     pa.set_input_files("#fileImpor", berkas)
@@ -158,6 +164,7 @@ with sync_playwright() as p:
     p4 = ctx4.new_page()
     p4.goto(B + "pemilik/", wait_until="load")
     p4.wait_for_timeout(2500)
+    bantu.masuk_cepat(p4, "pemilik")
     sw4 = p4.evaluate("async()=>{const r=await navigator.serviceWorker.getRegistration();return !!(r&&r.active)}")
     cek("pemilik: service worker aktif", sw4)
 

@@ -11,6 +11,10 @@ Perlu server aktif di http://localhost:12000/warung-go-digital/
 import sys
 
 from playwright.sync_api import sync_playwright
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from importlib import import_module
+bantu = import_module('bantu-masuk')
 
 BASE = "http://localhost:12000/warung-go-digital/"
 hasil = []
@@ -57,6 +61,7 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(BASE + "pemilik/", wait_until="load")
     pg.wait_for_timeout(900)
+    bantu.masuk_cepat(pg, "pemilik")
     cek("peramban: tanpa error konsol", not errs, str(errs[:2]))
     cek("peramban: tanpa kelas native",
         not pg.evaluate("()=>document.documentElement.classList.contains('native')"))
@@ -72,6 +77,7 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(BASE + "pemilik/", wait_until="load")
     pg.wait_for_timeout(900)
+    bantu.masuk_cepat(pg, "pemilik")
 
     cek("aplikasi: tanpa error konsol", not errs, str(errs[:2]))
     cek("aplikasi: kelas native dipasang",
@@ -132,6 +138,7 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(BASE + "admin/", wait_until="load")
     pg.wait_for_timeout(900)
+    bantu.masuk_cepat(pg, "pengelola")
     cek("panel: tanpa error konsol", not errs, str(errs[:2]))
     cek("panel: kelas native dipasang",
         pg.evaluate("()=>document.documentElement.classList.contains('native')"))

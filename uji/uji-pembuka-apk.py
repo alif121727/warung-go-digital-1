@@ -26,6 +26,10 @@ from urllib.parse import unquote, urlparse
 
 from playwright.sync_api import sync_playwright
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from importlib import import_module
+bantu = import_module('bantu-masuk')
+
 AKAR = Path(__file__).resolve().parent.parent
 WWW = AKAR / "apk" / "www"
 PORT = 12089
@@ -93,7 +97,7 @@ def main() -> int:
     srv = jalankan_server()
     try:
         with sync_playwright() as p:
-            b = p.chromium.launch()
+            b = p.chromium.launch(executable_path="/usr/bin/chromium", args=["--no-sandbox"])
             pg = b.new_page(viewport={"width": 390, "height": 844})
 
             pg.goto(f"http://127.0.0.1:{PORT}/", wait_until="load")
@@ -110,6 +114,7 @@ def main() -> int:
             # Tombol 1 — harus membuka aplikasi Pemilik, bukan halaman pembuka lagi.
             tautan.nth(0).click()
             pg.wait_for_timeout(1200)
+            bantu.masuk_cepat(pg, "pemilik")
             cek(
                 "pilihan 1 membuka aplikasi Pemilik",
                 pg.url.endswith("/pemilik/index.html"),
@@ -130,6 +135,7 @@ def main() -> int:
             pg.goto(f"http://127.0.0.1:{PORT}/", wait_until="load")
             pg.locator("a").nth(1).click()
             pg.wait_for_timeout(1200)
+            bantu.masuk_cepat(pg, "pengelola")
             cek(
                 "pilihan 2 membuka Panel Pengelola",
                 pg.url.endswith("/admin/index.html"),

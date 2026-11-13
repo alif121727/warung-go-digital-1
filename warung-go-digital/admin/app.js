@@ -635,8 +635,13 @@
     window.scrollTo(0, 0);
   };
 
-  const mulai = () => {
+  // Dipanggil hanya setelah pengelola berhasil masuk.
+  const jalan = () => {
     S.load();
+
+    const tombolAkun = Inti.q('#btnAkun');
+    tombolAkun.innerHTML = Inti.ikon('users', '', 16);
+    tombolAkun.addEventListener('click', () => Masuk.panelAkun('pengelola'));
 
     const inp = Inti.q('#fileImpor');
     Inti.q('#btnImpor').addEventListener('click', () => inp.click());
@@ -690,6 +695,11 @@
       // Jangan gambar ulang saat pengelola sedang mengisi tab Sinkron.
       if (state.tab !== 'sinkron') render();
     });
+  };
+
+  // Panel pengelola memuat data seluruh mitra, jadi harus dijaga.
+  const mulai = () => {
+    Masuk.pasang({ peran: 'pengelola', setelahMasuk: jalan });
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mulai);
