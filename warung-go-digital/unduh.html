@@ -107,14 +107,14 @@
             <span class="chip">Tanpa komputer</span>
             <span class="chip">Gratis</span>
           </div>
-          <a class="btn btn--amber btn--full" id="tombolIos" href="pasang-ios.html">
+          <a class="btn btn--amber btn--full" id="tombolIos" href="#pasang-ios">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 3v11m0 0-4-4m4 4 4-4" /><path d="M5 19h14" />
+              <path d="M12 5v11m0 0-4-4m4 4 4-4" /><path d="M5 19h14" />
             </svg>
-            Pasang di iPhone
+            Cara pasang di iPhone
           </a>
           <p class="kartu__catatan">
-            Panduannya singkat: tiga ketukan lewat tombol Bagikan di Safari.
+            Panduannya ada di bawah halaman ini: tiga ketukan lewat tombol Bagikan di Safari.
           </p>
           <details class="tanya tanya--kartu">
             <summary>Butuh berkas IPA untuk dipasang dari komputer?</summary>
@@ -157,20 +157,6 @@
         </article>
 
         <article class="kartu">
-          <h3>iPhone &amp; iPad (tanpa komputer)</h3>
-          <ol class="langkah">
-            <li>Buka halaman ini di <strong>Safari</strong> — bukan Chrome atau Firefox.</li>
-            <li>Ketuk tombol <strong>Bagikan</strong> (kotak dengan panah ke atas).</li>
-            <li>Geser ke bawah, pilih <strong>Tambahkan ke Layar Utama</strong>.</li>
-            <li>Ketuk <strong>Tambah</strong>. Ikon <strong>Warung Go</strong> muncul di layar utama.</li>
-          </ol>
-          <p class="kartu__catatan">
-            Tidak ada berkas yang diunduh dan tidak ada setelan yang diubah. Panduan bergambar
-            ada di <a href="pasang-ios.html">halaman pasang iPhone</a>.
-          </p>
-        </article>
-
-        <article class="kartu">
           <h3>iPhone &amp; iPad (IPA, lewat komputer)</h3>
           <ol class="langkah">
             <li>Unduh berkas IPA, lalu pindahkan ke komputer.</li>
@@ -179,8 +165,171 @@
             <li>Muat berkas IPA ke alat tersebut, lalu mulai pemasangan.</li>
             <li>Di iPhone, buka <strong>Setelan → Umum → VPN &amp; Perangkat</strong> dan percayai profil pengembangnya.</li>
           </ol>
+          <p class="kartu__catatan">
+            Cara ini butuh komputer. Bila ingin memasang langsung dari HP,
+            lihat bagian <a href="#pasang-ios">Pasang di iPhone &amp; iPad</a> di bawah.
+          </p>
         </article>
       </div>
+    </section>
+
+    <!-- ── Pasang di iPhone (tanpa komputer) ────────────── -->
+    <section class="blok" id="pasang-ios" aria-labelledby="judul-pasang-ios">
+      <h2 id="judul-pasang-ios">Pasang di iPhone &amp; iPad</h2>
+      <p class="pengantar">
+        Cara ini dijalankan <strong>langsung dari HP</strong> — tanpa komputer, tanpa akun
+        Apple, tanpa kabel. Hasilnya sama: ikon sendiri di layar utama dan tetap jalan
+        tanpa internet.
+      </p>
+
+      <!-- Status: sudah terpasang -->
+      <div class="catatan catatan--ok" id="ios-sudah" hidden>
+        <b>Sudah terpasang.</b> Anda sedang membuka Warung Go Digital sebagai aplikasi.
+        Ikonnya ada di layar utama dan bisa dibuka tanpa internet.
+      </div>
+
+      <!-- Status: peramban bukan Safari -->
+      <div class="catatan" id="ios-bukan-safari" hidden>
+        <b>Buka dulu di Safari.</b> Anda sedang memakai peramban lain (Chrome/Firefox/Edge).
+        Di iPhone, hanya <strong>Safari</strong> yang bisa memasang aplikasi ke layar utama.
+        <span class="catatan__cara">Salin tautan ini, lalu tempel di Safari:
+          <code id="iosTautanSalin">https://alif121727.github.io/warung-go-digital-1/unduh.html</code></span>
+        <span class="blok__aksi">
+          <button class="btn btn--ink" id="iosTombolSalin" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" />
+            </svg>
+            <span id="iosTeksSalin">Salin tautan</span>
+          </button>
+        </span>
+      </div>
+
+      <!-- Status: bukan perangkat iOS -->
+      <div class="catatan" id="ios-bukan-ios" hidden>
+        <b>Bagian ini untuk iPhone dan iPad.</b> Sepertinya Anda memakai perangkat lain.
+        Untuk Android, ikuti <a href="#unduh">langkah pemasangan APK</a> di atas.
+      </div>
+
+      <ol class="panduan">
+        <li class="panduan__langkah">
+          <div class="panduan__nomor" aria-hidden="true">1</div>
+          <div class="panduan__isi">
+            <h3>Pastikan terbuka di Safari</h3>
+            <p>
+              Di iPhone, peramban lain tidak bisa memasang aplikasi. Bila Anda membuka
+              halaman ini di Chrome atau Firefox, buka lewat Safari dulu.
+            </p>
+          </div>
+          <div class="panduan__gambar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9" /><path d="M15.5 8.5 10 12l4 4.5 1.5-8Z" />
+            </svg>
+          </div>
+        </li>
+
+        <li class="panduan__langkah panduan__langkah--kunci">
+          <div class="panduan__nomor" aria-hidden="true">2</div>
+          <div class="panduan__isi">
+            <h3>Ketuk tombol Bagikan</h3>
+            <p>
+              Tombol ini ada di <strong>bagian bawah layar</strong> (iPhone) atau
+              <strong>kanan atas</strong> (iPad). Bentuknya kotak dengan panah ke atas.
+              Cari ikon yang sama seperti di samping.
+            </p>
+          </div>
+          <div class="panduan__gambar panduan__gambar--tombol" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 15V3" /><path d="m8 7 4-4 4 4" />
+              <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+            </svg>
+          </div>
+        </li>
+
+        <li class="panduan__langkah">
+          <div class="panduan__nomor" aria-hidden="true">3</div>
+          <div class="panduan__isi">
+            <h3>Pilih "Tambahkan ke Layar Utama"</h3>
+            <p>
+              Menu akan terbuka dari bawah. <strong>Geser ke bawah</strong> sampai menemukan
+              tulisan <em>Tambahkan ke Layar Utama</em> (atau <em>Add to Home Screen</em>),
+              lalu ketuk.
+            </p>
+          </div>
+          <div class="panduan__gambar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="4" /><path d="M12 8.5v7M8.5 12h7" />
+            </svg>
+          </div>
+        </li>
+
+        <li class="panduan__langkah">
+          <div class="panduan__nomor" aria-hidden="true">4</div>
+          <div class="panduan__isi">
+            <h3>Ketuk "Tambah"</h3>
+            <p>
+              Di kanan atas muncul tombol <em>Tambah</em> (<em>Add</em>). Ketuk itu.
+              Selesai — ikon <strong>Warung Go</strong> sekarang ada di layar utama Anda.
+            </p>
+          </div>
+          <div class="panduan__gambar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m5 13 4 4L19 7" />
+            </svg>
+          </div>
+        </li>
+      </ol>
+
+      <div class="pilihan pilihan--tiga panduan__manfaat">
+        <article class="kartu kartu--ringkas">
+          <h3>Buka tanpa internet</h3>
+          <p>Menu, katalog, dan data warung tetap terbuka meski sinyal jelek atau kuota habis.</p>
+        </article>
+        <article class="kartu kartu--ringkas">
+          <h3>Tanpa alamat web</h3>
+          <p>Tidak perlu lagi mengetik atau mencari tautan. Cukup ketuk ikon di layar utama.</p>
+        </article>
+        <article class="kartu kartu--ringkas">
+          <h3>Tanpa biaya</h3>
+          <p>Gratis, tanpa akun Apple, tanpa langganan. Tidak ada yang perlu dibayar.</p>
+        </article>
+      </div>
+
+      <h3 class="panduan__subjudul">Pertanyaan yang sering muncul</h3>
+
+      <details class="tanya">
+        <summary>Kenapa tidak ada berkas yang diunduh seperti di Android?</summary>
+        <p>
+          Apple tidak mengizinkan aplikasi dipasang dari berkas yang diunduh langsung di iPhone.
+          Karena itu cara resmi di iPhone adalah menambahkan situs ke layar utama — hasilnya
+          sama: ikon sendiri, terbuka penuh layar, dan tetap jalan tanpa internet.
+        </p>
+      </details>
+
+      <details class="tanya">
+        <summary>Apakah ini sama dengan aplikasi biasa?</summary>
+        <p>
+          Untuk pemakaian sehari-hari, ya. Ikon muncul di layar utama, terbuka tanpa peramban,
+          dan bisa dipakai offline. Yang belum ada hanya fitur yang butuh izin khusus sistem,
+          seperti kamera bawaan atau notifikasi latar.
+        </p>
+      </details>
+
+      <details class="tanya">
+        <summary>Saya sudah unduh berkas IPA. Kenapa tidak bisa dibuka?</summary>
+        <p>
+          Berkas IPA yang kami sediakan belum ditandatangani Apple, jadi iPhone menolaknya bila
+          dibuka langsung. Berkas itu hanya berguna bila dipasang lewat komputer memakai
+          AltStore atau Sideloadly. Untuk pemasangan langsung di HP, gunakan cara di atas.
+        </p>
+      </details>
+
+      <details class="tanya">
+        <summary>Bagaimana cara menghapusnya?</summary>
+        <p>
+          Tekan lama ikon <strong>Warung Go</strong> di layar utama, lalu pilih
+          <em>Hapus Aplikasi</em>. Tidak ada berkas sisa yang tertinggal.
+        </p>
+      </details>
     </section>
 
     <!-- ── QR pindai di HP ──────────────────────────────── -->
@@ -257,7 +406,7 @@
         <b>Perlu diketahui.</b> Aplikasi ini belum dipasarkan di Play Store maupun App Store.
         Di Android, sistem akan menampilkan peringatan "sumber tidak dikenal" — itu wajar dan
         aman untuk dilanjutkan. Di iPhone, cara paling mudah adalah menambahkan situs ke layar
-        utama lewat Safari (lihat <a href="pasang-ios.html">panduan iPhone</a>), tanpa perlu
+        utama lewat Safari (lihat <a href="#pasang-ios">panduan iPhone</a>), tanpa perlu
         komputer. Semua berkas diambil langsung dari rilis resmi proyek, bukan dari situs lain.
       </div>
     </section>
@@ -284,5 +433,6 @@
 <script src="app/qr.js"></script>
 <script src="unduh.js"></script>
 <script src="pasang.js"></script>
+<script src="pasang-ios.js"></script>
 </body>
 </html>

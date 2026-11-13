@@ -201,10 +201,10 @@
       tombol.type = 'button';
       tombol.className = 'wgd-pasang__ya';
       tombol.textContent = 'Caranya';
-      // Membuka halaman panduan bergambar, karena langkah ini paling sering
-      // gagal bila hanya dijelaskan lewat teks singkat.
+      // Membuka bagian panduan bergambar di halaman unduh, karena langkah ini
+      // paling sering gagal bila hanya dijelaskan lewat teks singkat.
       tombol.addEventListener('click', () => {
-        location.href = akarSitus + 'pasang-ios.html';
+        location.href = akarSitus + 'unduh.html#pasang-ios';
       });
       tampilkanBilah('Ketuk Bagikan, lalu "Tambahkan ke Layar Utama".', tombol);
     }, 12000);

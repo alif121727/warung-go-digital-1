@@ -154,8 +154,8 @@ with sync_playwright() as p:
     # Kartu iPhone sengaja mengarah ke panduan, bukan ke berkas IPA: memasang
     # berkas IPA di iPhone tidak bisa langsung dari HP. Berkasnya tetap
     # tersedia sebagai jalur alternatif di dalam kartu yang sama.
-    cek("tombol iPhone menuju panduan",
-        tautan["i"] == LANDING + "pasang-ios.html", str(tautan["i"]))
+    cek("tombol iPhone menuju panduan di halaman unduh",
+        tautan["i"] == UNDUH + "#pasang-ios", str(tautan["i"]))
     cek("berkas IPA tetap tersedia", tautan["ipa"] == IPA, str(tautan["ipa"]))
 
     # Unduhan berkas harus ditandai agar dibuka sebagai berkas, bukan halaman.

@@ -275,6 +275,10 @@ em.serif { font-family: var(--f-serif); font-style: italic; font-weight: 400; }
 .kartu--ringkas { padding: 1.3rem 1.25rem; }
 .pilihan--tiga { grid-template-columns: repeat(3, 1fr); }
 
+/* Jarak antar-blok di dalam panduan iPhone */
+.panduan__manfaat { margin-top: 1.4rem; }
+.panduan__subjudul { margin: 1.9rem 0 .8rem; font-size: 1.12rem; }
+
 /* ── Pertanyaan umum ──────────────────────────────────── */
 .tanya {
   border: 1px solid var(--line); border-radius: var(--r); background: var(--paper);

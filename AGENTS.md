@@ -127,8 +127,14 @@ khusus untuk mengunduh aplikasi:
 
 ### Pemasangan di iPhone/iPad
 
-`warung-go-digital/pasang-ios.html` (+ `pasang-ios.js`) adalah panduan
-pemasangan tanpa komputer.
+Panduannya **menyatu di `unduh.html`** sebagai bagian `<section id="pasang-ios">`,
+dengan logika di `warung-go-digital/pasang-ios.js`. Sengaja tidak dipisah ke
+halaman sendiri: dari beranda, pengguna iPhone cukup sekali ketuk untuk sampai
+ke panduan, tanpa berpindah halaman.
+
+`warung-go-digital/pasang-ios.html` kini hanya **pengalih** ke
+`unduh.html#pasang-ios` (tautan lama tetap hidup). Jangan diisi ulang;
+berkas itu tidak didaftarkan di `sw.js`.
 
 **Batasan yang tidak bisa dilanggar:** berkas IPA dibangun dengan
 `CODE_SIGNING_ALLOWED=NO`, jadi **tidak ditandatangani Apple**. iOS menolak
@@ -141,9 +147,9 @@ menambahkan situs ke layar utama:
 1. Buka di **Safari** — hanya Safari yang bisa memasang ke layar utama di iOS.
 2. Ketuk **Bagikan** → **Tambahkan ke Layar Utama** → **Tambah**.
 
-Halaman panduan menyesuaikan diri: sudah terpasang → ucapan; iPhone lewat
-Chrome/Firefox → diarahkan ke Safari + tombol salin tautan; bukan iOS →
-diarahkan ke halaman unduh. Deteksi iOS **wajib** menyertakan iPad modern
+Bagian panduan menyesuaikan diri: sudah terpasang → ucapan + langkah
+disembunyikan; iPhone lewat Chrome/Firefox → diarahkan ke Safari + tombol salin
+tautan; bukan iOS → diarahkan ke langkah pemasangan APK. Deteksi iOS **wajib** menyertakan iPad modern
 (`navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1`), sebab
 iPadOS 13+ melaporkan dirinya sebagai macOS dan akan luput bila hanya memakai
 agen pengguna. Uji: `python3 uji/uji-ios.py`.
@@ -244,9 +250,10 @@ pip install playwright pillow numpy
 (server di `http://localhost:12000/warung-go-digital/`). Mencakup anti-geser
 samping 9 lebar, maskot termuat, tautan unduh tepat, dan QR terdekode.
 
-**Panduan pasang iPhone** — jalankan `python3 uji/uji-ios.py`. Mencakup
-penyesuaian perangkat (Safari, Chrome iOS, iPad modern, Android, sudah
-terpasang), tautan silang, dan anti-geser samping 7 lebar.
+**Panduan pasang iPhone** (bagian di `unduh.html`) — jalankan
+`python3 uji/uji-ios.py`. Mencakup penyesuaian perangkat (Safari, Chrome iOS,
+iPad modern, Android, sudah terpasang), tautan silang, dan anti-geser samping
+7 lebar.
 
 **Landing page** — `http://localhost:12000/warung-go-digital/`:
 1. Tidak ada error console / pageerror.

@@ -1,14 +1,14 @@
-/* pasang-ios.js — panduan pemasangan di iPhone/iPad (pasang-ios.html)
+/* pasang-ios.js — bagian "Pasang di iPhone & iPad" (menyatu di unduh.html)
  *
- * Halaman ini menyesuaikan diri dengan situasi pengunjung:
- *   1. Sudah terpasang  -> tampilkan ucapan, sembunyikan panduan.
+ * Bagian ini menyesuaikan diri dengan situasi pengunjung:
+ *   1. Sudah terpasang  -> tampilkan ucapan, sembunyikan langkahnya.
  *   2. Bukan Safari iOS -> arahkan membuka di Safari + sediakan tombol salin.
- *   3. Bukan perangkat iOS -> arahkan ke halaman unduh Android.
+ *   3. Bukan perangkat iOS -> arahkan ke pemasangan Android.
  *   4. Safari iOS       -> tampilkan panduan langkah demi langkah.
  *
  * Semua bagian tahan gagal: bila satu elemen tidak ada, sisanya tetap jalan.
- * Panduan tetap terlihat sebagai bawaan bila JavaScript mati, karena itu
- * bagian yang paling penting justru tidak disembunyikan oleh skrip.
+ * Langkah-langkah tetap terlihat sebagai bawaan bila JavaScript mati, karena
+ * itu bagian yang paling penting justru tidak disembunyikan oleh skrip.
  */
 (() => {
   'use strict';
@@ -36,30 +36,30 @@
 
   // ── 1. Sudah terpasang ───────────────────────────────────
   if (terpasang) {
-    tampilkan('sudah');
-    // Panduan tidak lagi berguna, jadi disembunyikan agar tidak membingungkan.
-    // Bila JavaScript mati, panduan tetap terlihat — itu memang disengaja.
-    const panduan = document.getElementById('panduan');
-    if (panduan) panduan.hidden = true;
+    tampilkan('ios-sudah');
+    // Langkah-langkah tidak lagi berguna, jadi disembunyikan agar tidak
+    // membingungkan. Bila JavaScript mati, panduan tetap terlihat.
+    const langkah = document.querySelector('#pasang-ios .panduan');
+    if (langkah) langkah.hidden = true;
     return;
   }
 
   // ── 2. Bukan perangkat iOS ───────────────────────────────
   if (!iOS) {
-    tampilkan('bukan-ios');
+    tampilkan('ios-bukan-ios');
     return;
   }
 
   // ── 3. iPhone/iPad, tetapi bukan Safari ──────────────────
   if (!safariIOS) {
-    tampilkan('bukan-safari');
+    tampilkan('ios-bukan-safari');
   }
 
   // ── 4. Tombol salin tautan ───────────────────────────────
-  const tombolSalin = document.getElementById('tombolSalin');
+  const tombolSalin = document.getElementById('iosTombolSalin');
   if (tombolSalin) {
     tombolSalin.addEventListener('click', async () => {
-      const teks = document.getElementById('teksSalin');
+      const teks = document.getElementById('iosTeksSalin');
       const alamat = location.href.split('#')[0];
       const berhasil = () => {
         if (teks) {
@@ -90,19 +90,7 @@
     });
   }
 
-  // ── 5. Tombol "tampilkan panduan lagi" ───────────────────
-  // Berguna bila pengguna menutup menu Bagikan tanpa sengaja. Tombol ini
-  // hanya muncul di Safari iOS, karena di luar itu panduannya tidak berlaku.
-  const tombolPasang = document.getElementById('tombolPasang');
-  if (tombolPasang && safariIOS) {
-    tombolPasang.hidden = false;
-    tombolPasang.addEventListener('click', () => {
-      const panduan = document.getElementById('panduan');
-      if (panduan) panduan.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
-
-  // ── 6. Tahun berjalan ────────────────────────────────────
+  // ── 5. Tahun berjalan ────────────────────────────────────
   const tahun = document.getElementById('tahun');
   if (tahun) tahun.textContent = String(new Date().getFullYear());
 })();

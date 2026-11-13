@@ -1,4 +1,4 @@
-"""Uji halaman panduan pasang iPhone (pasang-ios.html).
+"""Uji bagian panduan pasang iPhone (menyatu di unduh.html).
 
 Halaman ini menyesuaikan diri dengan perangkat pengunjung, dan justru di situ
 letak risiko yang mudah luput:
@@ -19,7 +19,7 @@ Perlu server aktif di http://localhost:12000/warung-go-digital/
 from playwright.sync_api import sync_playwright
 
 LANDING = "http://localhost:12000/warung-go-digital/"
-PANDUAN = LANDING + "pasang-ios.html"
+PANDUAN = LANDING + "unduh.html"  # panduan menyatu di halaman ini
 UNDUH = LANDING + "unduh.html"
 
 UA_IPHONE_SAFARI = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) "
@@ -73,15 +73,14 @@ with sync_playwright() as p:
     pg.goto(PANDUAN, wait_until="load")
     pg.wait_for_timeout(900)
     r = pg.evaluate("""()=>({
-      panduan: !document.getElementById('panduan').hidden,
-      sudah: !document.getElementById('sudah').hidden,
-      bukanSafari: !document.getElementById('bukan-safari').hidden,
-      bukanIos: !document.getElementById('bukan-ios').hidden,
-      langkah: document.querySelectorAll('.panduan__langkah').length,
-      tombolPasang: !document.getElementById('tombolPasang').hidden,
+      panduan: !!document.getElementById('pasang-ios'),
+      sudah: !document.getElementById('ios-sudah')?.hidden,
+      bukanSafari: !document.getElementById('ios-bukan-safari')?.hidden,
+      bukanIos: !document.getElementById('ios-bukan-ios')?.hidden,
+      langkah: document.querySelectorAll('#pasang-ios .panduan__langkah').length,
       sw: document.documentElement.scrollWidth, iw: window.innerWidth
     })""")
-    cek("iPhone Safari: panduan tampil", r["panduan"])
+    cek("iPhone Safari: bagian panduan ada", r["panduan"])
     cek("iPhone Safari: pesan 'sudah terpasang' tersembunyi", not r["sudah"])
     cek("iPhone Safari: pesan 'bukan Safari' tersembunyi", not r["bukanSafari"])
     cek("iPhone Safari: pesan 'bukan iOS' tersembunyi", not r["bukanIos"])
@@ -96,14 +95,14 @@ with sync_playwright() as p:
     pg.goto(PANDUAN, wait_until="load")
     pg.wait_for_timeout(900)
     r = pg.evaluate("""()=>({
-      bukanSafari: !document.getElementById('bukan-safari').hidden,
-      tombolSalin: !!document.getElementById('tombolSalin'),
-      teksSalin: document.getElementById('tautanSalin').textContent.trim()
+      bukanSafari: !document.getElementById('ios-bukan-safari')?.hidden,
+      tombolSalin: !!document.getElementById('iosTombolSalin'),
+      teksSalin: document.getElementById('iosTautanSalin').textContent.trim()
     })""")
     cek("iPhone Chrome: diarahkan ke Safari", r["bukanSafari"])
     cek("iPhone Chrome: tombol salin tautan tersedia", r["tombolSalin"])
-    cek("iPhone Chrome: tautan salin menunjuk panduan ini",
-        r["teksSalin"].endswith("/pasang-ios.html"), r["teksSalin"])
+    cek("iPhone Chrome: tautan salin menunjuk halaman ini",
+        r["teksSalin"].endswith("/unduh.html"), r["teksSalin"])
     cek("iPhone Chrome: tanpa error console", not errs, errs[:2])
     ctx.close()
 
@@ -120,10 +119,10 @@ with sync_playwright() as p:
     pg.goto(PANDUAN, wait_until="load")
     pg.wait_for_timeout(900)
     r = pg.evaluate("""()=>({
-      panduan: !document.getElementById('panduan').hidden,
-      bukanIos: !document.getElementById('bukan-ios').hidden
+      panduan: !!document.getElementById('pasang-ios'),
+      bukanIos: !document.getElementById('ios-bukan-ios')?.hidden
     })""")
-    cek("iPad modern: panduan tampil (bukan dianggap desktop)", r["panduan"])
+    cek("iPad modern: bagian panduan ada (bukan dianggap desktop)", r["panduan"])
     cek("iPad modern: pesan 'bukan iOS' tersembunyi", not r["bukanIos"])
     cek("iPad modern: tanpa error console", not errs, errs[:2])
     ctx.close()
@@ -133,11 +132,11 @@ with sync_playwright() as p:
     pg.goto(PANDUAN, wait_until="load")
     pg.wait_for_timeout(900)
     r = pg.evaluate("""()=>({
-      bukanIos: !document.getElementById('bukan-ios').hidden,
-      tujuan: document.querySelector('#bukan-ios a')?.getAttribute('href')
+      bukanIos: !document.getElementById('ios-bukan-ios')?.hidden,
+      tujuan: document.querySelector('#ios-bukan-ios a')?.getAttribute('href')
     })""")
     cek("Android: diarahkan ke halaman unduh", r["bukanIos"])
-    cek("Android: tautan menuju unduh.html", r["tujuan"] == "unduh.html", r["tujuan"])
+    cek("Android: tautan menuju pemasangan APK", r["tujuan"] == "#unduh", r["tujuan"])
     cek("Android: tanpa error console", not errs, errs[:2])
     ctx.close()
 
@@ -146,11 +145,11 @@ with sync_playwright() as p:
     pg.goto(PANDUAN, wait_until="load")
     pg.wait_for_timeout(900)
     r = pg.evaluate("""()=>({
-      sudah: !document.getElementById('sudah').hidden,
-      panduan: !document.getElementById('panduan').hidden
+      sudah: !document.getElementById('ios-sudah')?.hidden,
+      langkah: !document.querySelector('#pasang-ios .panduan')?.hidden
     })""")
     cek("Sudah terpasang: ucapan tampil", r["sudah"])
-    cek("Sudah terpasang: panduan disembunyikan", not r["panduan"])
+    cek("Sudah terpasang: langkah panduan disembunyikan", not r["langkah"])
     ctx.close()
 
     # ── 6. Tanpa geser samping di segala ukuran ──────────────
@@ -174,7 +173,7 @@ with sync_playwright() as p:
     pg.goto(PANDUAN, wait_until="load")
     pg.wait_for_timeout(800)
     tinggi_min = pg.evaluate("""()=>Math.min(
-      ...[...document.querySelectorAll('.panduan__langkah')]
+      ...[...document.querySelectorAll('#pasang-ios .panduan__langkah')]
         .map(e=>e.getBoundingClientRect().height))""")
     cek("Langkah panduan tinggi >= 64px", tinggi_min >= 64, round(tinggi_min))
     ctx.close()
@@ -190,17 +189,19 @@ with sync_playwright() as p:
       tombolIos: document.getElementById('tombolIos')?.getAttribute('href'),
       teksTombol: document.getElementById('tombolIos')?.textContent.trim(),
       tombolIpa: document.getElementById('tombolIpa')?.getAttribute('href'),
-      adaPanduan: [...document.querySelectorAll('a[href="pasang-ios.html"]')].length,
+      anchorPanduan: !!document.getElementById('pasang-ios'),
+      tautanDalam: document.querySelectorAll('a[href="#pasang-ios"]').length,
       sw: document.documentElement.scrollWidth, iw: window.innerWidth
     })""")
-    cek("Unduh: tombol iPhone menuju panduan", r["tombolIos"] == "pasang-ios.html",
+    cek("Unduh: tombol iPhone menggulir ke panduan", r["tombolIos"] == "#pasang-ios",
         r["tombolIos"])
-    cek("Unduh: tombol iPhone bertulis 'Pasang di iPhone'",
-        "Pasang di iPhone" in r["teksTombol"], r["teksTombol"])
+    cek("Unduh: tombol iPhone menyebut 'iPhone'",
+        "iPhone" in r["teksTombol"], r["teksTombol"])
+    cek("Unduh: bagian panduan ada di halaman ini", r["anchorPanduan"])
     cek("Unduh: berkas IPA tetap tersedia", bool(r["tombolIpa"]) and
         r["tombolIpa"].endswith("warung-go-digital.ipa"), r["tombolIpa"])
-    cek("Unduh: panduan tertaut lebih dari sekali", r["adaPanduan"] >= 2,
-        r["adaPanduan"])
+    cek("Unduh: panduan tertaut dari lebih dari satu tempat",
+        r["tautanDalam"] >= 2, r["tautanDalam"])
     cek("Unduh: tanpa geser samping", r["sw"] <= r["iw"] + 1, f"{r['sw']}>{r['iw']}")
     cek("Unduh: tanpa error console", not errs, errs[:2])
     pg.close()
@@ -208,9 +209,9 @@ with sync_playwright() as p:
     # ── 9. Service worker mendaftarkan berkas panduan ────────
     pg = b.new_page()
     sw = pg.goto(LANDING + "sw.js").text()
-    cek("sw.js memuat pasang-ios.html", "'./pasang-ios.html'" in sw)
     cek("sw.js memuat pasang-ios.js", "'./pasang-ios.js'" in sw)
-    cek("sw.js versi cache dinaikkan", "wgd-v11" in sw)
+    cek("sw.js memuat unduh.html", "'./unduh.html'" in sw)
+    cek("sw.js versi cache dinaikkan", "wgd-v12" in sw)
     pg.close()
 
     b.close()
