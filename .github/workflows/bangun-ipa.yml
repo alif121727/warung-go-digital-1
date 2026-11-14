@@ -159,28 +159,39 @@ jobs:
           path: apk/ios/hasil/warung-go-digital.ipa
           if-no-files-found: error
 
+      - name: Baca versi aplikasi
+        id: versi
+        run: |
+          # Tag rilis diturunkan dari apk/package.json supaya tidak perlu
+          # disunting di dua tempat (lihat catatan yang sama di bangun-apk.yml).
+          V=$(python3 -c "import json;print(json.load(open('apk/package.json'))['version'])")
+          echo "versi=$V" >> "$GITHUB_OUTPUT"
+          echo "tag=ios-v$V" >> "$GITHUB_OUTPUT"
+          echo "Versi aplikasi: $V (tag ios-v$V)"
+
       - name: Cek rilis (rilis lama bersifat tetap/tidak bisa ditimpa)
         id: rilis
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Rilis yang sudah ada (dan immutable) tidak bisa ditimpa GitHub.
-          # Bila aset IPA sudah ada, lewati langkah lampirkan agar alur kerja
-          # tidak merah; untuk menerbitkan IPA baru, naikkan tag_name.
-          if gh release view ios-v1.3.0 --repo "$GITHUB_REPOSITORY" --json assets \
+          # Karena itu tag memuat versi: versi baru menghasilkan rilis baru.
+          TAG="${{ steps.versi.outputs.tag }}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
                --jq '.assets[].name' 2>/dev/null | grep -qx 'warung-go-digital.ipa'; then
             echo "ada=true" >> "$GITHUB_OUTPUT"
-            echo "Rilis ios-v1.3.0 sudah punya IPA. Langkah lampirkan dilewati."
+            echo "Rilis $TAG sudah punya IPA. Langkah lampirkan dilewati."
           else
             echo "ada=false" >> "$GITHUB_OUTPUT"
+            echo "Rilis $TAG belum punya IPA. IPA akan dilampirkan."
           fi
 
       - name: Lampirkan ke Release (tautan unduh tetap)
         if: steps.rilis.outputs.ada != 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ios-v1.3.0
-          name: Warung Go Digital 1.3.0 (iPhone)
+          tag_name: ${{ steps.versi.outputs.tag }}
+          name: Warung Go Digital ${{ steps.versi.outputs.versi }} (iPhone)
           body: |
             Aplikasi Warung Go Digital untuk Android dan iPhone.
 
@@ -190,14 +201,15 @@ jobs:
 
             Keduanya berfungsi tanpa internet dan tidak membuka peramban.
 
-            Versi 1.3.0:
-            - Memperbaiki dua tombol di halaman pembuka ("Aplikasi Warung" dan
-              "Panel Pengelola") yang sebelumnya tidak berfungsi. Tautannya
-              menunjuk ke folder, sedangkan WebView di dalam aplikasi hanya
-              melayani berkas, sehingga layar tidak berubah saat ditekan.
-            - Tombol kembali HP: menutup dialog → pindah ke tab pertama → keluar.
-            - Unduh berkas (CSV, cadangan JSON, poster) kini benar-benar
-              tersimpan di perangkat, lalu muncul menu Bagikan.
+            Versi 1.4.0:
+            - Gerbang masuk untuk aplikasi Warung dan Panel Pengelola. Masuk
+              pertama lewat akun Google; setelah itu bisa menyetel nama pengguna
+              dan kata sandi sendiri. Kata sandi tidak pernah disimpan apa
+              adanya (PBKDF2-SHA256, 150.000 putaran, garam acak per akun).
+            - Tampilan: warna teks kecil digelapkan agar terbaca (kontras
+              dinaikkan dari ~3:1 menjadi ~5:1), tombol diperbesar supaya
+              nyaman disentuh, dan halaman tidak lagi bisa digeser ke samping
+              di layar sempit.
 
             Android: unduh berkas .apk, buka di HP, izinkan pemasangan dari sumber ini.
             iPhone: berkas .ipa belum ditandatangani Apple. Pasang lewat Sideloadly

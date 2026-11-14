@@ -25,9 +25,9 @@ LANDING = "http://localhost:12000/warung-go-digital/"
 UNDUH = LANDING + "unduh.html"
 DIR_UJI = os.path.dirname(os.path.abspath(__file__))
 APK = ("https://github.com/alif121727/warung-go-digital-1/releases/download/"
-       "v1.3.0/warung-go-digital.apk")
+       "v1.4.0/warung-go-digital.apk")
 IPA = ("https://github.com/alif121727/warung-go-digital-1/releases/download/"
-       "ios-v1.3.0/warung-go-digital.ipa")
+       "ios-v1.4.0/warung-go-digital.ipa")
 QR_DIHARAP = "https://alif121727.github.io/warung-go-digital-1/unduh.html"
 UKURAN = [320, 360, 390, 430, 600, 768, 1024, 1440, 1920]
 MASKOT = ["ilustrasi/pak-warung.svg", "ilustrasi/si-qr.svg",
