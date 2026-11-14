@@ -1,0 +1,17 @@
+# robots.txt — Warung Go Digital
+#
+# Semua halaman publik boleh dirayapi. Hanya panel dalam (aplikasi pemilik,
+# panel pengelola, panel mitra lama) yang ditutup: isinya kosong tanpa data
+# warung, jadi tidak ada gunanya masuk mesin pencari.
+
+User-agent: *
+Allow: /
+# Menu QR publik boleh dirayapi meski berada di bawah /app/.
+Allow: /app/menu.html
+
+Disallow: /app/
+Disallow: /pemilik/
+Disallow: /admin/
+Disallow: /pasang-ios.html
+
+Sitemap: https://alif121727.github.io/warung-go-digital-1/sitemap.xml

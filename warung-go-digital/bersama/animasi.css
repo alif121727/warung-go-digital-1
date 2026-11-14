@@ -261,6 +261,20 @@
   details.tanya[open]::details-content { block-size: auto; }
 }
 
+/* Pertanyaan umum di halaman depan memakai kelas `.soal`. Gerakannya sama
+   dengan `.tanya` di halaman unduh, hanya kelasnya beda. */
+@supports (interpolate-size: allow-keywords) {
+  details.soal { interpolate-size: allow-keywords; }
+  details.soal::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition: block-size .42s var(--ax-ease), content-visibility .42s;
+    transition-behavior: allow-discrete;
+  }
+  details.soal[open]::details-content { block-size: auto; }
+}
+details.soal[open] > :not(summary) { animation: ax-buka .5s var(--ax-ease) both; }
+
 /* Isi yang menyusul masuk, dan ikon +/− yang berputar. Gerak ini memakai
    `animation` pada anak langsung supaya tidak bertabrakan dengan `transition`
    tinggi di atas.

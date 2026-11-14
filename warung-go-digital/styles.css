@@ -694,6 +694,38 @@ h1 em, h2 em, .contact__head h2 em {
 .direct__meta li { font-size: .84rem; color: var(--t-muted); }
 .direct__meta b { display: block; font-family: var(--f-mono); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--clay); margin-bottom: .15rem; font-weight: 700; }
 
+/* ── Tentang & tanya jawab ────────────────────────────── */
+.tentang {
+  display: grid; grid-template-columns: 1.05fr .95fr;
+  gap: clamp(2rem, 4vw, 3.4rem); align-items: start;
+}
+.tentang__copy > p { color: var(--t-body); margin-top: 1rem; }
+.tentang__copy h2 { margin-bottom: .2rem; }
+.tentang__aksi { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.6rem; }
+.tentang__subjudul { font-size: 1.1rem; margin-bottom: 1.1rem; }
+
+.soal {
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--paper); margin-bottom: .7rem; overflow: hidden;
+}
+.soal summary {
+  cursor: pointer; list-style: none; padding: 1rem 1.2rem;
+  font-weight: 600; color: var(--t-strong); font-size: .95rem;
+  display: flex; align-items: center; gap: .7rem;
+}
+.soal summary::-webkit-details-marker { display: none; }
+.soal summary::before {
+  content: "+"; flex: 0 0 auto; width: 1.35rem; height: 1.35rem;
+  border-radius: 50%; background: var(--amber); color: var(--ink);
+  display: grid; place-items: center; font-size: .95rem; font-weight: 700;
+}
+.soal[open] summary::before { content: "−"; }
+.soal p { padding: 0 1.2rem 1.1rem; font-size: .9rem; color: var(--t-body); line-height: 1.65; }
+
+@media (max-width: 900px) {
+  .tentang { grid-template-columns: 1fr; }
+}
+
 /* ── Footer ───────────────────────────────────────────── */
 .foot { background: var(--ink); color: var(--t-onDark-2); padding: clamp(3rem, 6vw, 4.5rem) 0 1.6rem; }
 .foot__grid { display: grid; grid-template-columns: 1.7fr 1fr 1fr 1.2fr; gap: 2.2rem; }

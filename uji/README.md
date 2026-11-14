@@ -17,6 +17,7 @@ python3 uji/uji-cerita.py         # 40 uji bagian "Cerita Bu Tini" (video + pang
 python3 uji/uji-menu-publik.py    # 16 uji halaman menu publik + terbitkan menu
 python3 uji/uji-client-id.py      # 8 uji pembaca Client ID Google
 python3 uji/uji-terbit-otomatis.py # 14 uji penerbitan menu otomatis
+python3 uji/uji-google.py         # 55 uji kesiapan mesin pencari (SEO)
 ```
 
 Uji yang memeriksa data terisi memanggil `Store.muatContoh()` lebih dulu, karena

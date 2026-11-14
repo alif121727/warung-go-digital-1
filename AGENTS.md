@@ -139,6 +139,43 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
   terbaca di latar gelap maupun krem. Bebas dipakai untuk poster/stand QR.
 
+### Terlihat di mesin pencari (SEO)
+
+Supaya "Warung Go Digital" bisa ditemukan lewat Google, situs memakai
+perangkat SEO biasa — semuanya di dalam `warung-go-digital/`:
+
+- **Judul & deskripsi** tiap halaman publik. Judul memuat nama merek;
+  deskripsi 70-165 huruf. `index.html` juga memuat `meta keywords` berisi
+  "Warung Go Digital" dan variannya.
+- **Canonical** ke `https://alif121727.github.io/warung-go-digital-1/...`.
+  Alamat ini dipakai tetap, sesuai kebiasaan yang sudah ada di `unduh.html`.
+  Bila situs pindah ke domain sendiri, **semua canonical, `og:url`, dan
+  `sitemap.xml` harus diperbarui sekaligus** — kalau tidak, Google menunjuk
+  alamat lama.
+- **Open Graph + Twitter Card** agar tautan tampil rapi saat dibagikan lewat
+  WhatsApp, Facebook, dan X.
+- **Data terstruktur JSON-LD** (`@graph`: Organization + WebSite + FAQPage)
+  di `index.html`. Organization membuat nama merek dikenali; FAQPage membuat
+  pertanyaan di bagian `#tentang` berhak tampil sebagai hasil kaya. Teks
+  jawaban di JSON-LD **harus sama** dengan yang terlihat di halaman — Google
+  membuang data terstruktur yang tidak cocok. Dijaga `uji/uji-google.py`.
+- **Bagian `#tentang`** berisi prosa "Apa itu Warung Go Digital?" dan lima
+  tanya-jawab (`details.soal`). Ini isi yang benar-benar dibaca Google, bukan
+  hanya meta. Gayanya ada di `styles.css`; gerak buka-tutupnya di
+  `bersama/animasi.css` (sejajar dengan `.tanya` di halaman unduh).
+- **`robots.txt`** mengizinkan semua halaman publik, menutup panel dalam
+  (`/app/`, `/pemilik/`, `/admin/`, `/pasang-ios.html`), tetapi membuka
+  kembali `/app/menu.html` karena menu QR memang publik.
+- **`sitemap.xml`** mendaftarkan beranda, `unduh.html`, dan `privasi.html`.
+- **Panel dalam** (`pemilik/`, `admin/`, `app/index.html`) memakai
+  `noindex, nofollow`: isinya kosong tanpa data warung, tidak ada gunanya
+  masuk mesin pencari.
+
+Yang **tidak** bisa dikerjakan dari sisi kode: mendaftarkan situs ke Google
+Search Console dan meminta pengindeksan. Itu harus dilakukan pemilik akun
+Google (lihat panduan yang menyertai perubahan ini). Tanpa langkah itu,
+Google tetap menemukan situs lewat tautan luar, tetapi lebih lambat.
+
 ### Halaman unduh aplikasi
 
 `warung-go-digital/unduh.html` (+ `unduh.js`, gaya di `bersama/gaya-unduh.css`)
