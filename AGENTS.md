@@ -170,6 +170,14 @@ perangkat SEO biasa — semuanya di dalam `warung-go-digital/`:
 - **Panel dalam** (`pemilik/`, `admin/`, `app/index.html`) memakai
   `noindex, nofollow`: isinya kosong tanpa data warung, tidak ada gunanya
   masuk mesin pencari.
+- **Verifikasi Google Search Console** memakai metode **Tag HTML**, bukan
+  berkas: `<meta name="google-site-verification" ...>` di `index.html`.
+  Berkas `googleXXXX.html` tidak dipakai karena harus diletakkan di akar
+  situs, sedangkan GitHub Pages menyajikan dari `warung-go-digital/`.
+  **Tag ini jangan dihapus** — bila hilang, Google mencabut verifikasi
+  properti dan berhenti melaporkan status pengindeksan. Dijaga
+  `uji/uji-google.py` (token ditulis tetap di uji itu; bila tokennya berubah,
+  perbarui keduanya sekaligus).
 
 Yang **tidak** bisa dikerjakan dari sisi kode: mendaftarkan situs ke Google
 Search Console dan meminta pengindeksan. Itu harus dilakukan pemilik akun

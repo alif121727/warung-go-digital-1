@@ -78,6 +78,13 @@ with sync_playwright() as p:
         "index" in (meta("name", "robots") or "") and
         "noindex" not in (meta("name", "robots") or ""), str(meta("name", "robots")))
 
+    # Tag bukti kepemilikan Google Search Console. Bila hilang, Google
+    # mencabut verifikasi properti dan berhenti melaporkan status situs.
+    verifikasi = meta("name", "google-site-verification")
+    cek("ada tag verifikasi Google Search Console", bool(verifikasi), str(verifikasi))
+    cek("tag verifikasi berisi token yang benar",
+        verifikasi == "E9eIyzcierTj09FZhgLNiSXr5jbi8cmDcpRHYjacCfQ", str(verifikasi))
+
     # ── 2. Kata kunci tampil sebagai teks ───────────────────
     teks = pg.inner_text("body").lower()
     jumlah = teks.count("warung go digital")
