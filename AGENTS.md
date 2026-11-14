@@ -118,14 +118,20 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   kacamata, tidak layak untuk situs publik UMKM yang harus ringan dan
   terbuka lebar — dan tidak menambah apa pun bagi pengunjung warung.
 - **Cerita Bu Tini** (`#cerita`): enam adegan, tiap adegan memakai **video**
-  `warung-go-digital/video/cerita-<1..6>.mp4` (16:9, 9 detik, tanpa suara, `loop`)
-  dengan poster `cerita-<n>.jpg`. Video sumber hanya 5,04 detik, jadi tiap adegan
-  dipotong menurut batas adegan (0 / 0,85 / 1,67 / 2,38 / 3,20 / 3,80 / 5,04 detik),
-  diperlambat 1,5×, lalu dijadikan **bolak-balik** (boomerang) dan diulang sampai
-  9 detik agar mulus dan cukup panjang. Ilustrasi SVG lama sudah dihapus; klipnya
-  dibuat ulang dengan `python3 buat-video-cerita.py video-sumber-cerita.mp4`.
+  `warung-go-digital/video/cerita-<1..6>.mp4` (16:9, tanpa suara, `loop`) dengan
+  poster `cerita-<n>.jpg`. Video sumber hanya 5,04 detik dan punya enam adegan
+  yang dipisahkan potongan gambar. Tiap klip memotong **di dalam** batas
+  adegannya (0 / 0,83 / 1,38 / 1,67 / 2,38 / 3,75 / 5,04 detik) — bukan jendela
+  yang melintasi batas — supaya isinya cocok dengan teks adegan dan tidak
+  menampilkan adegan tetangga. Gerak lambatnya diatur agar satu siklus
+  bolak-balik ~2,5 detik, lalu klip dibuat ±5 siklus (12-20 detik, sesuai
+  panjang adegan sumber). Adegan 6 ditutup **kartu merek** 2 detik: lambang
+  warung + nama "Warung Go Digital" (`.cerita__penutup`). **Watermark "Kling AI"**
+  di sudut kanan bawah dibuang dengan penapis `delogo` pada langkah pertama.
+  Ilustrasi SVG lama sudah dihapus; klip dibuat ulang dengan
+  `python3 buat-video-cerita.py` (tanpa argumen pun jalan).
   Video **tidak** masuk cache inti service worker
-  (±3,7 MB) — hanya poster yang di-cache; mp4 tertangkap cache aset saat diputar.
+  (±4,1 MB) — hanya poster yang di-cache; mp4 tertangkap cache aset saat diputar.
   Di panggung lengket hanya video adegan aktif yang berjalan; pada tampilan daftar
   (layar sempit / kurangi gerak) `IntersectionObserver` memutar video yang terlihat.
   Dijaga `uji/uji-cerita.py`.
