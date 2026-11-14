@@ -333,8 +333,23 @@ warung baru belum punya pelanggan. Dasbor menampilkan ajakan **Daftarkan Warung*
 ### Halaman publik
 
 `app/menu.html?w=<id-warung>` — halaman menu yang dibuka pelanggan setelah memindai QR
-menu. Setiap item punya tombol pesan WhatsApp dengan teks terisi otomatis. Membaca data
-dari `localStorage` yang sama, jadi foto produk yang diterbitkan otomatis muncul.
+menu. Setiap item punya tombol pesan WhatsApp dengan teks terisi otomatis.
+
+Sumber datanya dicoba berurutan: (1) **berkas terbit** `menu/<id>.json`, (2) **server
+sinkron** `/api/menu?id=<id>`, (3) **`localStorage`** perangkat. Berkas terbit inilah
+yang membuat QR bisa dibuka HP pelanggan mana pun — lihat `PANDUAN-MENU-PUBLIK.md`.
+
+**Penting — alamat QR.** `app.js` menyusun tautan QR dari `situsPublik()`, yaitu
+`<meta name="wgd-situs-publik">` di `app/index.html`. Jangan kembali memakai
+`location.origin`: di dalam APK halaman dimuat dari `https://localhost`, sehingga QR
+yang dicetak menunjuk alamat yang tidak bisa dibuka pelanggan. Dijaga `uji/uji-menu-publik.py`.
+
+**Terbitkan menu.** Tombol **Terbitkan menu** di jendela QR mengunduh `menu-<id>.json`
+(hanya data etalase: nama, WA, alamat, daftar menu — tanpa transaksi/catatan). Pemilik
+mengunggahnya ke folder `menu/`. Dijaga `uji/uji-menu-publik.py`.
+
+**Cache.** `sw.js` memakai jaringan-dulu untuk `.css/.js/.json` agar harga di berkas
+menu tidak basi. Jangan hapus `.json` dari pola itu.
 
 ### Data kosong & data contoh
 
@@ -791,11 +806,10 @@ Data safety, dan catatan rilis ada di `playstore/teks-listing.md`.
 
 ## Yang belum dikerjakan (butuh keputusan pemilik)
 
-- **Menu publik belum bisa dibuka pelanggan dari HP lain.** `app/menu.html` membaca
-  `localStorage` perangkat pemilik, sehingga QR hanya menampilkan menu di perangkat
-  yang sudah punya datanya. Perbaikan sebenarnya: terbitkan berkas JSON menu per warung
-  saat pemilik menekan "Terbitkan" (mis. `menu/<id>.json`), lalu `menu.html` mengambil
-  dari sana. Ini butuh backend/penyimpanan berkas dan keputusan produk.
+- **Menu publik sudah bisa dibuka pelanggan**, dengan satu langkah manual: pemilik
+  menekan **Terbitkan menu** lalu mengunggah `menu-<id>.json` ke folder `menu/`
+  (lihat `PANDUAN-MENU-PUBLIK.md`). Otomatis sepenuhnya butuh hosting/token tulis
+  ke repositori — belum dipasang karena agen tidak memegang rahasia itu.
 
 - **Cara 1 (sinkron) sudah ada tetapi belum dipakai.** `sinkron/server.mjs` dan tab
   Sinkron siap; pengelola masih perlu menjalankan servernya dan membagi kunci.
@@ -813,5 +827,3 @@ Data safety, dan catatan rilis ada di `playstore/teks-listing.md`.
   Ini hanya bisa dilakukan pemilik akun — agen tidak punya akses ke pembayaran atau
   akun Google.
 
-- **Menu publik Panel Mitra lama masih membaca `localStorage`.** Belum diperbaiki;
-  lihat butir di atas.

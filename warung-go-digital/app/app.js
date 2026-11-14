@@ -608,12 +608,51 @@ const App = (() => {
     });
   };
 
+  /* ── Situs publik & berkas menu terbit ─────────────────────
+     Di dalam APK, halaman dimuat dari https://localhost. Bila QR dibangun
+     dari location.origin, kode yang dicetak menunjuk ke alamat itu dan
+     TIDAK BISA dibuka HP pelanggan. Jadi alamat situs publik dipisahkan
+     dan bisa ditimpa lewat <meta name="wgd-situs-publik">. */
+  const SITUS_BAWAAN = 'https://alif121727.github.io/warung-go-digital-1/';
+  const situsPublik = () => {
+    const meta = document.querySelector('meta[name="wgd-situs-publik"]');
+    const nilai = (meta && meta.content.trim()) || SITUS_BAWAAN;
+    return nilai.endsWith('/') ? nilai : nilai + '/';
+  };
+
+  const urlMenu = (w) => situsPublik() + 'app/menu.html?w=' + encodeURIComponent(w.id);
+
+  /* Isi berkas menu terbit. Memuat nama, WA, dan menu — tanpa data pribadi
+     lain (tanpa transaksi, tanpa catatan harian). */
+  const berkasMenu = (w) => {
+    const foto = {};
+    for (const f of Store.where('foto', (x) => x.warungId === w.id && x.dataUrl)) {
+      const kunci = f.nama.toLowerCase().replace(/\s*—\s*foto\s*\d+$/, '').trim();
+      if (!foto[kunci]) foto[kunci] = f.dataUrl;
+    }
+    return {
+      wgd: 2,
+      jenis: 'menu-publik',
+      dibuat: new Date().toISOString(),
+      warung: {
+        id: w.id, nama: w.nama, pemilik: w.pemilik, wa: w.wa, alamat: w.alamat,
+        kategori: w.kategori, placeId: w.placeId,
+        rating: w.ratingMaps, ulasan: w.jumlahUlasan,
+      },
+      menu: w.menu.map((m) => ({
+        nama: m.nama, harga: m.harga, kategori: m.kategori, ket: m.ket || '',
+        foto: foto[m.nama.toLowerCase().trim()] || null,
+      })),
+    };
+  };
+
+  const namaBerkasMenu = (w) => 'menu-' + w.id + '.json';
+
   /* ── QR menu digital ───────────────────────────────────── */
   const qrMenu = (id) => {
     const w = Store.find('warung', id);
     if (!w) return;
-    const url = location.origin + location.pathname.replace(/[^/]*$/, '') +
-      'menu.html?w=' + encodeURIComponent(w.id) + '&n=' + encodeURIComponent(w.nama);
+    const url = urlMenu(w);
 
     UI.modal({
       judul: 'QR Menu Digital — ' + w.nama,
@@ -634,10 +673,16 @@ const App = (() => {
             <div class="note note--ok" style="margin-bottom:12px">${UI.icon('check')}
               <span>QR ini bisa dipindai sungguhan. Cetak dan tempel di meja atau depan warung.</span>
             </div>
+            <div class="note note--info" style="margin-bottom:12px">${UI.icon('info')}
+              <span>Supaya menu terbuka di HP <b>pelanggan</b> (bukan hanya HP ini), tekan
+              <b>Terbitkan menu</b> lalu unggah berkasnya ke folder <span class="mono">menu/</span> situs.
+              Petunjuk lengkap ada di <span class="mono">PANDUAN-MENU-PUBLIK.md</span>.</span>
+            </div>
             <div style="display:grid;gap:8px">
               <button class="btn" id="unduhQR">${UI.icon('download')} Unduh QR (PNG)</button>
               <button class="btn" id="salinURL">${UI.icon('link')} Salin tautan menu</button>
               <button class="btn" id="cetakKartu">${UI.icon('printer')} Cetak kartu meja</button>
+              <button class="btn btn--pri" id="terbitMenu">${UI.icon('upload')} Terbitkan menu (agar bisa dibuka pelanggan)</button>
             </div>
             <p class="dim" style="font-size:11.5px;margin-top:12px">Halaman menu: <span class="mono">menu.html</span> — bisa dibuka tanpa aplikasi.</p>
           </div>
@@ -661,6 +706,43 @@ const App = (() => {
         });
         UI.q('#salinURL', box).addEventListener('click', () => UI.salin(url, 'Tautan menu disalin'));
         UI.q('#cetakKartu', box).addEventListener('click', () => cetakKartuQR(w, canvas.toDataURL()));
+        UI.q('#terbitMenu', box).addEventListener('click', () => terbitkanMenu(w));
+      },
+    });
+  };
+
+  /* Unduh berkas menu terbit + salin jalur unggah. Pemilik mengunggah berkas
+     ini ke folder `menu/` situs; setelah itu QR bisa dibuka HP mana pun. */
+  const terbitkanMenu = (w) => {
+    const isi = JSON.stringify(berkasMenu(w), null, 2);
+    UI.unduh(namaBerkasMenu(w), isi, 'application/json');
+
+    const tujuan = situsPublik() + 'menu/' + namaBerkasMenu(w);
+    UI.modal({
+      judul: 'Terbitkan menu — ' + w.nama,
+      isi: `
+        <div class="note note--ok" style="margin-bottom:12px">${UI.icon('check')}
+          <span>Berkas <span class="mono">${UI.esc(namaBerkasMenu(w))}</span> sudah diunduh.</span>
+        </div>
+        <p style="margin:0 0 10px;font-size:13px">Agar menu terbuka di HP pelanggan, unggah berkas itu
+        ke folder <span class="mono">menu/</span> di situs, dengan nama <b>${UI.esc(namaBerkasMenu(w))}</b>.</p>
+        <div class="field" style="margin-bottom:12px">
+          <label>Alamat berkas setelah diunggah</label>
+          <input class="inp mono" readonly value="${UI.esc(tujuan)}" style="font-size:11.5px">
+        </div>
+        <div class="note note--info">${UI.icon('info')}
+          <span>Bila situs memakai GitHub, cukup unggah berkas ini ke folder
+          <span class="mono">warung-go-digital/menu/</span> di repositori. Langkah lengkap ada di
+          <span class="mono">PANDUAN-MENU-PUBLIK.md</span>.</span>
+        </div>`,
+      onBuka: (box) => {
+        const inp = UI.q('input', box);
+        const b = document.createElement('button');
+        b.className = 'btn';
+        b.style.marginTop = '12px';
+        b.innerHTML = UI.icon('link') + ' Salin alamat berkas';
+        b.addEventListener('click', () => UI.salin(tujuan, 'Alamat berkas disalin'));
+        box.querySelector('.note--info').after(b);
       },
     });
   };

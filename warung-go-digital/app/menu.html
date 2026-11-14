@@ -95,6 +95,14 @@
     transition: all .16s var(--e);
   }
   .item:hover { box-shadow: 0 6px 18px rgba(13,26,18,.07); transform: translateY(-1px); }
+  /* Kemunculan berjenjang: elegan, dan langsung berhenti bila pengguna
+     meminta lebih sedikit gerak. */
+  @keyframes itemNaik { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .item { animation: itemNaik .5s cubic-bezier(.22,1,.36,1) both; }
+  @media (prefers-reduced-motion: reduce) {
+    .item { animation: none; }
+    .item:hover { transform: none; }
+  }
   .item__gambar {
     width: 62px; height: 62px; border-radius: 11px; flex: none;
     background: linear-gradient(140deg, #e9e4d8, #d8d1c1);
@@ -188,87 +196,149 @@
 </a>
 
 <script src="store.js"></script>
-<script src="../pasang.js"></script>
 <script>
 (() => {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
   const q = new URLSearchParams(location.search);
   const id = q.get('w');
 
-  Store.load();
-  const w = id ? Store.find('warung', id) : null;
+  const elNama = document.getElementById('nama');
+  const elMeta = document.getElementById('meta');
+  const elBadges = document.getElementById('badges');
+  const elIsi = document.getElementById('isiMenu');
+  const btnPesan = document.getElementById('waPesan');
+  const btnMaps = document.getElementById('waMaps');
+  const btnFloat = document.getElementById('waFloat');
 
-  if (!w) {
-    document.getElementById('nama').textContent = 'Warung tidak ditemukan';
-    document.getElementById('meta').textContent = 'Kode warung pada tautan tidak dikenali.';
-    document.getElementById('isiMenu').innerHTML = `
+  const sembunyikanTombol = () => {
+    btnPesan.style.display = 'none';
+    btnMaps.style.display = 'none';
+    btnFloat.style.display = 'none';
+  };
+
+  const pesanKosong = (judul, teks) => {
+    elNama.textContent = judul;
+    elMeta.textContent = teks;
+    elIsi.innerHTML = `
       <div class="kosong">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11a1 1 0 001 1h14a1 1 0 001-1V9"/></svg>
         <h3>Menu tidak tersedia</h3>
-        <p>Minta petugas warung untuk memindai ulang kode QR.</p>
+        <p>${esc(teks)}</p>
       </div>`;
-    document.getElementById('waPesan').style.display = 'none';
-    document.getElementById('waMaps').style.display = 'none';
-    document.getElementById('waFloat').style.display = 'none';
-    return;
-  }
+    sembunyikanTombol();
+  };
 
-  document.title = 'Menu ' + w.nama + ' — Warung Go Digital';
-  document.getElementById('nama').textContent = w.nama;
-  document.getElementById('meta').textContent = w.kategori + ' · ' + w.alamat;
+  // Data menu publik. Urutan sumber:
+  //   1. berkas terbit menu/<id>.json  — bisa dibuka HP mana pun (lewat QR)
+  //   2. server sinkron /api/menu      — bila pengelola menjalankannya
+  //   3. localStorage perangkat ini    — hanya untuk pengembangan di satu HP
+  const muatBerkasTerbit = async () => {
+    const url = new URL('../menu/' + encodeURIComponent(id) + '.json', location.href);
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  };
 
-  const bintang = '★'.repeat(Math.round(w.ratingMaps)) + '☆'.repeat(5 - Math.round(w.ratingMaps));
-  document.getElementById('badges').innerHTML = `
-    <span class="pill pill--amber">${bintang} ${w.ratingMaps.toFixed(1)}</span>
-    <span class="pill">${w.jumlahUlasan} ulasan Google</span>
-    <span class="pill">${w.menu.length} menu tersedia</span>`;
+  const muatServerSinkron = async () => {
+    const alamat = (localStorage.getItem('wgd-menu-server') || '').replace(/\/+$/, '');
+    if (!alamat) throw new Error('server belum diatur');
+    const r = await fetch(alamat + '/api/menu?id=' + encodeURIComponent(id), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  };
 
-  const waBase = 'https://wa.me/' + w.wa;
-  const pesanUmum = encodeURIComponent('Halo ' + w.pemilik + ', saya mau pesan dari menu ' + w.nama + '.');
-  document.getElementById('waPesan').href = waBase + '?text=' + pesanUmum;
-  document.getElementById('waFloat').href = waBase + '?text=' + pesanUmum;
-  document.getElementById('waMaps').href = w.placeId
-    ? 'https://www.google.com/maps/place/?q=place_id:' + encodeURIComponent(w.placeId)
-    : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(w.nama + ' ' + w.alamat);
+  const muatLokal = () => {
+    if (typeof Store === 'undefined') throw new Error('tidak ada data lokal');
+    Store.load();
+    const w = Store.find('warung', id);
+    if (!w) throw new Error('warung tidak ada di perangkat ini');
+    return {
+      wgd: 2, jenis: 'menu-publik',
+      warung: {
+        id: w.id, nama: w.nama, pemilik: w.pemilik, wa: w.wa, alamat: w.alamat,
+        kategori: w.kategori, placeId: w.placeId, rating: w.ratingMaps, ulasan: w.jumlahUlasan,
+      },
+      menu: w.menu.map((m) => ({ nama: m.nama, harga: m.harga, kategori: m.kategori, ket: m.ket || '' })),
+    };
+  };
 
-  /* Foto produk dari modul Foto */
-  const fotoProduk = {};
-  for (const f of Store.where('foto', (x) => x.warungId === w.id && x.dataUrl)) {
-    const kunci = f.nama.toLowerCase().replace(/\s*—\s*foto\s*\d+$/, '').trim();
-    if (!fotoProduk[kunci]) fotoProduk[kunci] = f.dataUrl;
-  }
+  const gambar = (d) => {
+    const w = d.warung || {};
+    const daftarMenu = Array.isArray(d.menu) ? d.menu : [];
 
-  const kelompok = {};
-  for (const m of w.menu) (kelompok[m.kategori] = kelompok[m.kategori] || []).push(m);
+    document.title = 'Menu ' + w.nama + ' — Warung Go Digital';
+    elNama.textContent = w.nama || 'Warung';
+    elMeta.textContent = [w.kategori, w.alamat].filter(Boolean).join(' · ');
 
-  const ikonGambar = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>`;
+    const rating = Number(w.rating || 0);
+    const bintang = rating ? '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating)) : '';
+    elBadges.innerHTML = [
+      rating ? `<span class="pill pill--amber">${bintang} ${rating.toFixed(1)}</span>` : '',
+      w.ulasan ? `<span class="pill">${w.ulasan} ulasan Google</span>` : '',
+      `<span class="pill">${daftarMenu.length} menu tersedia</span>`,
+    ].filter(Boolean).join('');
 
-  document.getElementById('isiMenu').innerHTML = w.menu.length
-    ? Object.entries(kelompok).map(([kategori, items]) => `
+    if (!daftarMenu.length) {
+      pesanKosong('Menu belum diisi', 'Pemilik warung belum menambahkan daftar menu.');
+      elNama.textContent = w.nama || 'Warung';
+      return;
+    }
+
+    const waBase = w.wa ? 'https://wa.me/' + w.wa : '';
+    const pesanUmum = encodeURIComponent('Halo ' + (w.pemilik || w.nama) + ', saya mau pesan dari menu ' + w.nama + '.');
+    if (waBase) {
+      btnPesan.href = waBase + '?text=' + pesanUmum;
+      btnFloat.href = waBase + '?text=' + pesanUmum;
+    } else {
+      btnPesan.style.display = 'none';
+      btnFloat.style.display = 'none';
+    }
+    btnMaps.href = w.placeId
+      ? 'https://www.google.com/maps/place/?q=place_id:' + encodeURIComponent(w.placeId)
+      : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([w.nama, w.alamat].filter(Boolean).join(' '));
+
+    const kelompok = {};
+    for (const m of daftarMenu) (kelompok[m.kategori || 'Menu'] = kelompok[m.kategori || 'Menu'] || []).push(m);
+
+    const ikonGambar = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>`;
+
+    let n = 0;
+    elIsi.innerHTML = Object.entries(kelompok).map(([kategori, items]) => `
         <div class="judul"><h2>${esc(kategori)}</h2><span>${items.length} item</span></div>
         ${items.map((m) => {
-          const foto = fotoProduk[m.nama.toLowerCase().trim()];
-          const pesan = encodeURIComponent(`Halo ${w.pemilik}, saya mau pesan *${m.nama}* (${Store.rupiah(m.harga)}) dari ${w.nama}.`);
+          const pesan = waBase
+            ? encodeURIComponent(`Halo ${w.pemilik || w.nama}, saya mau pesan *${m.nama}* (${rupiah(m.harga)}) dari ${w.nama}.`)
+            : '';
+          const geser = (n++ * 40);
           return `
-            <div class="item">
-              <div class="item__gambar">${foto ? `<img src="${foto}" alt="${esc(m.nama)}" loading="lazy">` : ikonGambar}</div>
+            <div class="item" style="animation-delay:${geser}ms">
+              <div class="item__gambar">${ikonGambar}</div>
               <div class="item__isi">
                 <div class="item__nama">${esc(m.nama)}</div>
-                <div class="item__ket">Dibuat segar saat dipesan</div>
+                <div class="item__ket">${esc(m.ket || 'Dibuat segar saat dipesan')}</div>
               </div>
               <div class="item__kanan">
-                <div class="item__harga">${Store.rupiah(m.harga)}</div>
-                <a class="item__pesan" href="${waBase}?text=${pesan}" target="_blank" rel="noopener">Pesan</a>
+                <div class="item__harga">${rupiah(m.harga)}</div>
+                ${waBase ? `<a class="item__pesan" href="${waBase}?text=${pesan}" target="_blank" rel="noopener">Pesan</a>` : ''}
               </div>
             </div>`;
         }).join('')}
-      `).join('')
-    : `<div class="kosong">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4a2 2 0 012-2h13v18H6a2 2 0 01-2-2z"/><path d="M8 7h7M8 11h7"/></svg>
-        <h3>Menu belum diisi</h3>
-        <p>Pemilik warung belum menambahkan daftar menu.</p>
-      </div>`;
+      `).join('');
+  };
+
+  (async () => {
+    if (!id) return pesanKosong('Menu tidak ditemukan', 'Kode warung tidak ada pada tautan ini.');
+    try { return gambar(await muatBerkasTerbit()); } catch (e1) {
+      try { return gambar(await muatServerSinkron()); } catch (e2) {
+        try { return gambar(muatLokal()); } catch (e3) {
+          return pesanKosong('Warung tidak ditemukan', 'Kode warung pada tautan tidak dikenali.');
+        }
+      }
+    }
+  })();
 })();
 </script>
+<script src="../pasang.js"></script>
 </body>
 </html>

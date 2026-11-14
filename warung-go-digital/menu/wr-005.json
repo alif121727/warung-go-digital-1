@@ -1,0 +1,102 @@
+{
+  "wgd": 2,
+  "jenis": "menu-publik",
+  "dibuat": "2026-11-10T00:00:00.000Z",
+  "warung": {
+    "id": "wr-005",
+    "nama": "Kerajinan Bu Tuti",
+    "pemilik": "Tuti",
+    "wa": "6281234567894",
+    "alamat": "Jl. Pahlawan No. 21, Purwokerto",
+    "kategori": "Kerajinan",
+    "placeId": "ChIJcontoh005",
+    "rating": 4.7,
+    "ulasan": 97
+  },
+  "menu": [
+    {
+      "nama": "Nasi Goreng Spesial",
+      "harga": 15000,
+      "kategori": "Makanan",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Mie Goreng Jawa",
+      "harga": 13000,
+      "kategori": "Makanan",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Ayam Bakar Madu",
+      "harga": 22000,
+      "kategori": "Makanan",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Sate Ayam (10 tusuk)",
+      "harga": 20000,
+      "kategori": "Makanan",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Es Teh Manis",
+      "harga": 5000,
+      "kategori": "Minuman",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Es Jeruk Peras",
+      "harga": 7000,
+      "kategori": "Minuman",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Kopi Hitam",
+      "harga": 6000,
+      "kategori": "Minuman",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Es Dawet",
+      "harga": 8000,
+      "kategori": "Minuman",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Air Mineral",
+      "harga": 4000,
+      "kategori": "Minuman",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Nasi Putih",
+      "harga": 5000,
+      "kategori": "Tambahan",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Kerupuk",
+      "harga": 2000,
+      "kategori": "Tambahan",
+      "ket": "",
+      "foto": null
+    },
+    {
+      "nama": "Tempe Goreng",
+      "harga": 3000,
+      "kategori": "Tambahan",
+      "ket": "",
+      "foto": null
+    }
+  ]
+}

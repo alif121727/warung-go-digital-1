@@ -96,11 +96,19 @@ def main():
             pg.wait_for_timeout(800)
             cek("navigasi lewat menu geser", pg.evaluate("()=>location.hash") == "#/laporan")
 
-            # ── URL QR harus menunjuk ke akar, bukan subfolder ──
-            url = pg.evaluate(
-                """()=>location.origin+location.pathname.replace(/[^/]*$/,'')+'menu.html?w=wr-001'"""
-            )
-            cek("URL QR menunjuk akar", url == dasar + "app/menu.html?w=wr-001", url)
+            # ── URL QR harus menunjuk SITUS PUBLIK, bukan alamat lokal ──
+            # Bila QR dibangun dari location.origin, di dalam APK ia menunjuk
+            # https://localhost dan tidak bisa dibuka HP pelanggan.
+            pg.evaluate("location.hash='#/warung'")
+            pg.wait_for_timeout(800)
+            pg.click("[data-qr]")
+            pg.wait_for_timeout(900)
+            url_qr = pg.input_value("#urlMenu")
+            pg.keyboard.press("Escape")
+            pg.wait_for_timeout(300)
+            cek("URL QR menunjuk situs publik",
+                url_qr.startswith("https://") and "localhost" not in url_qr
+                and "/app/menu.html?w=wr-001" in url_qr, url_qr)
 
             # ── Halaman menu publik ──
             pg.goto(dasar + "app/menu.html?w=wr-001", wait_until="load")

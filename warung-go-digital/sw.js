@@ -15,7 +15,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v19';
+const VERSI = 'wgd-v20';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -166,7 +166,7 @@ self.addEventListener('fetch', (peristiwa) => {
   // perubahan langsung terlihat, jadi jangan pernah menyajikan versi lama
   // lebih dulu; cache hanya dipakai saat jaringan gagal.
   const url_berkas = url.pathname;
-  const berkas_tampilan = /\.(?:css|js)$/.test(url_berkas) ||
+  const berkas_tampilan = /\.(?:css|js|json)$/.test(url_berkas) ||
     url_berkas.endsWith('/') || url_berkas.endsWith('.html');
   if (berkas_tampilan) {
     peristiwa.respondWith(

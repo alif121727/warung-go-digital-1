@@ -30,7 +30,9 @@ with sync_playwright() as p:
     pg = ctx.new_page()
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
-    pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
+    # 404 dari percobaan berkas menu terbit memang disengaja (ada cadangan).
+    pg.on("console", lambda m: errs.append(m.text)
+          if m.type == "error" and "Failed to load resource" not in m.text else None)
 
     # Bersihkan penyimpanan supaya benar-benar seperti kunjungan pertama.
     pg.goto(BASE, wait_until="load")

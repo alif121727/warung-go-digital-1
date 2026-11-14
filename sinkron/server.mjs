@@ -113,6 +113,8 @@ const server = createServer(async (req, res) => {
     if (!isi || isi.wgd !== 1 || !isi.warung || !isi.warung.id || !Array.isArray(isi.catatan)) {
       return kirim(res, 400, { ok: false, pesan: 'Ini bukan laporan Warung Go Digital.' });
     }
+    // Bila pemilik mengirim catatan kosong tetapi menyertakan menu, ini
+    // berarti pembaruan menu saja — tetap sah. Lihat berkas menu publik.
 
     const warung = {
       id: String(isi.warung.id),
@@ -123,6 +125,18 @@ const server = createServer(async (req, res) => {
       jenis: String(isi.warung.jenis || '').slice(0, 40),
       lat: isi.warung.lat ?? null,
       lng: isi.warung.lng ?? null,
+      placeId: isi.warung.placeId ? String(isi.warung.placeId).slice(0, 80) : null,
+      rating: Number.isFinite(+isi.warung.rating) ? +isi.warung.rating : null,
+      ulasan: Number.isFinite(+isi.warung.ulasan) ? +isi.warung.ulasan : null,
+      // Daftar menu untuk halaman publik. Dibatasi agar berkas tidak membengkak.
+      menu: Array.isArray(isi.warung.menu)
+        ? isi.warung.menu.slice(0, 200).map((m) => ({
+            nama: String(m && m.nama || '').slice(0, 80),
+            harga: Number(m && m.harga) || 0,
+            kategori: String(m && m.kategori || 'Menu').slice(0, 40),
+            ket: String(m && m.ket || '').slice(0, 120),
+          })).filter((m) => m.nama)
+        : [],
     };
 
     // Simpan per warung, bukan per kiriman: kiriman baru menimpa catatan
@@ -140,6 +154,26 @@ const server = createServer(async (req, res) => {
     if (data.length > BATAS) data = data.slice(-BATAS);
     await simpan();
     return kirim(res, 200, { ok: true, jumlahHari: catatan.length, jumlahMitra: data.length });
+  }
+
+  // Menu publik sebuah warung, supaya halaman menu.html bisa dibuka dari HP
+  // mana pun saat server sinkron dipakai. Sengaja TIDAK butuh kunci: isinya
+  // memang untuk pelanggan. Yang keluar hanya data etalase (nama, WA, alamat,
+  // daftar menu) — bukan catatan harian atau transaksi.
+  if (req.method === 'GET' && jalur === '/api/menu') {
+    const id = String(url.searchParams.get('id') || '');
+    const d = data.find((x) => x.warung.id === id);
+    if (!d) return kirim(res, 404, { ok: false, pesan: 'Menu warung tidak ditemukan.' });
+    return kirim(res, 200, {
+      wgd: 2, jenis: 'menu-publik', dibuat: d.diterima || new Date().toISOString(),
+      warung: {
+        id: d.warung.id, nama: d.warung.nama, pemilik: d.warung.pemilik,
+        wa: d.warung.wa, alamat: d.warung.alamat, kategori: d.warung.jenis,
+        placeId: d.warung.placeId || null, rating: d.warung.rating ?? null,
+        ulasan: d.warung.ulasan ?? null,
+      },
+      menu: Array.isArray(d.warung.menu) ? d.warung.menu : [],
+    });
   }
 
   // Pengelola menarik semua laporan yang tersimpan (butuh kunci baca).
