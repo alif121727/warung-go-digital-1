@@ -67,7 +67,9 @@
     gudang.appendChild(panggung);
 
     adegan.forEach(function (art, i) {
-      var img = art.querySelector("img");
+      // Video lebih diutamakan; <img> tetap didukung bila suatu saat
+      // ilustrasi statis dipakai lagi.
+      var img = art.querySelector("video, img");
       var isi = art.querySelector(":scope > .cerita__isi");
       if (img) {
         kotakGambar.appendChild(img);
@@ -160,6 +162,12 @@
     aktif = i;
     gambar.forEach(function (el, n) {
       el.classList.toggle("aktif", n === i);
+      // Hanya video adegan aktif yang berjalan; sisanya dijeda supaya
+      // tidak ada enam video berputar sekaligus di belakang layar.
+      if (el.tagName === "VIDEO") {
+        if (n === i) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
+        else el.pause();
+      }
     });
     teks.forEach(function (el, n) {
       el.classList.toggle("aktif", n === i);
@@ -195,9 +203,52 @@
     });
   }
 
+  var pengamat = null;
+
+  function pasangPengamat() {
+    if (pengamat) return;
+    if (!("IntersectionObserver" in window)) return;
+    var video = adegan
+      .map(function (art) { return art.querySelector("video"); })
+      .filter(Boolean);
+    if (!video.length) return;
+    pengamat = new IntersectionObserver(
+      function (entri) {
+        entri.forEach(function (e) {
+          var v = e.target;
+          if (e.isIntersecting) {
+            var pr = v.play();
+            if (pr && pr.catch) pr.catch(function () {});
+          } else {
+            v.pause();
+          }
+        });
+      },
+      { rootMargin: "10% 0px", threshold: 0.25 }
+    );
+    video.forEach(function (v) { pengamat.observe(v); });
+  }
+
+  function lepasPengamat() {
+    if (!pengamat) return;
+    pengamat.disconnect();
+    pengamat = null;
+    adegan.forEach(function (art) {
+      var v = art.querySelector("video");
+      if (v) v.pause();
+    });
+  }
+
   function sesuaikan() {
-    if (!kurangGerak.matches && !layarSempit.matches) bangun();
-    else bongkar();
+    if (!kurangGerak.matches && !layarSempit.matches) {
+      // Panggung menangani putar/jeda sendiri; pengamat dilepas agar keduanya
+      // tidak saling menimpa.
+      lepasPengamat();
+      bangun();
+    } else {
+      bongkar();
+      pasangPengamat();
+    }
   }
 
   // Penyajian diubah hanya saat melintasi ambang, bukan tiap piksel.

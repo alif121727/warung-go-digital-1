@@ -117,6 +117,18 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   3D** (perspective + lapisan translateZ). AR/VR penuh butuh kamera dan
   kacamata, tidak layak untuk situs publik UMKM yang harus ringan dan
   terbuka lebar — dan tidak menambah apa pun bagi pengunjung warung.
+- **Cerita Bu Tini** (`#cerita`): enam adegan, tiap adegan memakai **video**
+  `warung-go-digital/video/cerita-<1..6>.mp4` (16:9, 9 detik, tanpa suara, `loop`)
+  dengan poster `cerita-<n>.jpg`. Video sumber hanya 5,04 detik, jadi tiap adegan
+  dipotong menurut batas adegan (0 / 0,85 / 1,67 / 2,38 / 3,20 / 3,80 / 5,04 detik),
+  diperlambat 1,5×, lalu dijadikan **bolak-balik** (boomerang) dan diulang sampai
+  9 detik agar mulus dan cukup panjang. Ilustrasi SVG lama sudah dihapus; klipnya
+  dibuat ulang dengan `python3 buat-video-cerita.py video-sumber-cerita.mp4`.
+  Video **tidak** masuk cache inti service worker
+  (±3,7 MB) — hanya poster yang di-cache; mp4 tertangkap cache aset saat diputar.
+  Di panggung lengket hanya video adegan aktif yang berjalan; pada tampilan daftar
+  (layar sempit / kurangi gerak) `IntersectionObserver` memutar video yang terlihat.
+  Dijaga `uji/uji-cerita.py`.
 - **Maskot**: 4 ilustrasi SVG di `warung-go-digital/ilustrasi/` (Pak Warung,
   Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
   terbaca di latar gelap maupun krem. Bebas dipakai untuk poster/stand QR.
@@ -347,6 +359,24 @@ yang dicetak menunjuk alamat yang tidak bisa dibuka pelanggan. Dijaga `uji/uji-m
 **Terbitkan menu.** Tombol **Terbitkan menu** di jendela QR mengunduh `menu-<id>.json`
 (hanya data etalase: nama, WA, alamat, daftar menu — tanpa transaksi/catatan). Pemilik
 mengunggahnya ke folder `menu/`. Dijaga `uji/uji-menu-publik.py`.
+
+**Penerbitan menu otomatis.** `app/terbit.js` mengunggah `menu-<id>.json` **sendiri**
+setiap kali data warung atau menunya berubah, sehingga pengelola tidak perlu mengunduh
+lalu mengunggah dengan tangan. Dua cara, dipilih di **Penerbitan otomatis** (tombol di
+jendela QR):
+
+1. **GitHub Contents API** (disarankan) — butuh token halus dengan izin
+   `Contents: Read and write` pada repositori situs. Token disimpan di
+   `localStorage` perangkat pengelola saja (`wgd-terbit-v1`), tidak pernah dikirim ke
+   mana pun selain `api.github.com`.
+2. **Server sinkron** — dikirim ke `POST /api/menu-publik` pada `sinkron/server.mjs`
+   (menerima kunci tulis **atau** kunci baca), lalu dibaca halaman menu lewat
+   `/api/menu?id=<id>`.
+
+Pemicunya **langganan perubahan di `Store`** (`Store.padaUbah`), bukan penangan tombol.
+Jangan kembali menaruh pemicu di penangan klik: perubahan dari impor atau modul lain
+akan lolos. Beberapa perubahan cepat digabung jadi satu kiriman (`Terbit.antre`, jeda
+2,5 detik). Bila belum diatur, modul ini diam saja. Dijaga `uji/uji-terbit-otomatis.py`.
 
 **Cache.** `sw.js` memakai jaringan-dulu untuk `.css/.js/.json` agar harga di berkas
 menu tidak basi. Jangan hapus `.json` dari pola itu.
@@ -650,9 +680,16 @@ Sejak fitur ini ditambahkan, `pemilik/` dan `admin/` **tidak langsung terbuka**.
   `wgd-admin-akun-v1`, `wgd-admin-sesi-v1`. Awalan sengaja disamakan dengan
   penyimpanan aplikasi, supaya aturan "aplikasi Pemilik hanya menyentuh kunci
   `wgd-pemilik*`" tetap berlaku (dijaga `uji/uji-dua-aplikasi.py`).
-- `WGD_GOOGLE_CLIENT_ID` diisi lewat `<meta name="google-client-id">`. Bila
-  kosong, tombol Google berjalan dalam **mode contoh** dan ditandai terang-
-  terangan pada layar — jangan pernah menyamarkan keadaan ini.
+- `WGD_GOOGLE_CLIENT_ID` diisi lewat `<meta name="google-client-id">` di
+  `pemilik/index.html` dan `admin/index.html`. Pembacanya ada di awal
+  `bersama/masuk.js` (menyalin meta itu ke `window.WGD_GOOGLE_CLIENT_ID`;
+  nilai yang sudah diisi lebih dulu di `window` tidak ditimpa). Dijaga
+  `uji/uji-client-id.py`. Nilai Client ID-nya **hanya bisa dibuat oleh pemilik
+  akun Google** (Google Cloud Console → APIs & Services → Credentials →
+  OAuth client ID → Web application), jadi berkas repo sengaja dibiarkan
+  kosong: tempel satu baris di `content=""`. Bila kosong, tombol Google
+  berjalan dalam **mode contoh** dan ditandai terang-terangan pada layar —
+  jangan pernah menyamarkan keadaan ini.
 - `crypto.subtle` hanya ada di konteks aman (https, localhost, atau WebView
   Capacitor yang memakai `https://localhost`). Bila tidak ada (mis. dibuka lewat
   `file://`), pembuatan kata sandi **dihentikan dengan penjelasan**, bukan

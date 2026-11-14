@@ -327,11 +327,23 @@ const Store = (() => {
   const find = (c, id) => (load()[c] || []).find((x) => x.id === id) || null;
   const where = (c, fn) => (load()[c] || []).filter(fn);
 
+  /* ── Langganan perubahan ──────────────────────────────────
+     Dipakai pemicu penerbitan menu otomatis. Setiap add/update/remove
+     memberi tahu pendengar, sehingga perubahan dari mana pun tertangkap. */
+  const pendengar = [];
+  const padaUbah = (cb) => { pendengar.push(cb); return cb; };
+  const beritahu = (koleksi, aksi, rec) => {
+    for (const cb of pendengar) {
+      try { cb(koleksi, aksi, rec); } catch (e) { console.warn('pendengar gagal', e); }
+    }
+  };
+
   const add = (c, obj) => {
     const rec = { id: obj.id || uid(c.slice(0, 2)), ...obj };
     load()[c].unshift(rec);
     log('Tambah ' + c, rec.nama || rec.item || rec.id);
     save();
+    beritahu(c, 'tambah', rec);
     return rec;
   };
 
@@ -341,6 +353,7 @@ const Store = (() => {
     Object.assign(rec, patch);
     log('Ubah ' + c, rec.nama || rec.item || id);
     save();
+    beritahu(c, 'ubah', rec);
     return rec;
   };
 
@@ -351,6 +364,7 @@ const Store = (() => {
     const [rec] = list.splice(i, 1);
     log('Hapus ' + c, rec.nama || rec.item || id);
     save();
+    beritahu(c, 'hapus', rec);
     return true;
   };
 
@@ -534,6 +548,7 @@ const Store = (() => {
     periodeDari, labelPeriode, hariLalu,
     load, save, saveNow, kosongkan, muatContoh,
     all, find, where, add, update, remove, log,
+    padaUbah,
     ringkas, trenPendapatan, perMetode, perPaket, topWarung,
     laporanBulanan, daftarPeriode, ekspor, impor,
   };

@@ -17,3 +17,6 @@ __pycache__/
 
 # Berkas hasil bangun APK/IPA dari CI
 hasil/
+
+# Berkas sementara pembuat klip video cerita
+.video-tmp/

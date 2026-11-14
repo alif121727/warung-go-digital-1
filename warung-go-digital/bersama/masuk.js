@@ -26,6 +26,16 @@
 const Masuk = (() => {
   'use strict';
 
+  // Client ID Google boleh diisi lewat <meta name="google-client-id"> pada
+  // halaman. Cara ini dipilih supaya ID bisa diganti tanpa menyentuh kode.
+  // window.WGD_GOOGLE_CLIENT_ID (bila diisi lebih dulu) tetap diutamakan.
+  (() => {
+    if (String(window.WGD_GOOGLE_CLIENT_ID || '').trim()) return;
+    const meta = document.querySelector('meta[name="google-client-id"]');
+    const nilai = meta && String(meta.content || '').trim();
+    if (nilai) window.WGD_GOOGLE_CLIENT_ID = nilai;
+  })();
+
   // Akun Pemilik dan Pengelola disimpan di kunci yang BERBEDA, dan sesinya pun
   // terpisah. Alasannya: ada uji yang memastikan aplikasi Pemilik tidak pernah
   // menyentuh data Pengelola (dan sebaliknya). Kalau keduanya menulis di satu

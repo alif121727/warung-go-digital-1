@@ -104,6 +104,14 @@ const App = (() => {
     Store.load();
     bangunNav();
 
+    /* Penerbitan otomatis disambungkan di sini, bukan di penangan tombol.
+       Dengan begitu perubahan dari jalur mana pun (impor, modul lain, uji)
+       tetap memicu penerbitan — bukan hanya tombol yang kebetulan ditulis. */
+    Store.padaUbah((koleksi, aksi, rec) => {
+      if (koleksi === 'warung') terbitOtomatis(rec.id);
+      else if (koleksi === 'foto') terbitOtomatis(rec.warungId);
+    });
+
     UI.q('#btnKosongkan').addEventListener('click', async () => {
       const ya = await UI.konfirmasi({
         judul: 'Hapus semua data?',
@@ -648,6 +656,21 @@ const App = (() => {
 
   const namaBerkasMenu = (w) => 'menu-' + w.id + '.json';
 
+  /* Pemicu penerbitan otomatis. Dipanggil setiap kali data warung atau
+     menunya berubah; Terbit.antre() menunda sebentar lalu mengunggah
+     berkas terakhir, jadi lima perubahan cepat tetap jadi satu kiriman.
+     Diam saja bila pengelola belum mengatur cara penerbitan. */
+  const terbitOtomatis = (idWarung) => {
+    if (typeof Terbit === 'undefined' || !Terbit.aktif()) return;
+    Terbit.antre(() => Store.find('warung', idWarung), {
+      fotoDari: () => Store.where('foto', (f) => f.warungId === idWarung),
+      saatSelesai: (h) => {
+        if (h.ok) UI.toast('Menu ' + idWarung + ' diterbitkan otomatis', 'ok');
+        else UI.toast('Penerbitan otomatis gagal: ' + h.pesan, 'err');
+      },
+    });
+  };
+
   /* ── QR menu digital ───────────────────────────────────── */
   const qrMenu = (id) => {
     const w = Store.find('warung', id);
@@ -683,6 +706,7 @@ const App = (() => {
               <button class="btn" id="salinURL">${UI.icon('link')} Salin tautan menu</button>
               <button class="btn" id="cetakKartu">${UI.icon('printer')} Cetak kartu meja</button>
               <button class="btn btn--pri" id="terbitMenu">${UI.icon('upload')} Terbitkan menu (agar bisa dibuka pelanggan)</button>
+              <button class="btn" id="aturTerbit">${UI.icon('refresh')} Penerbitan otomatis</button>
             </div>
             <p class="dim" style="font-size:11.5px;margin-top:12px">Halaman menu: <span class="mono">menu.html</span> — bisa dibuka tanpa aplikasi.</p>
           </div>
@@ -707,6 +731,7 @@ const App = (() => {
         UI.q('#salinURL', box).addEventListener('click', () => UI.salin(url, 'Tautan menu disalin'));
         UI.q('#cetakKartu', box).addEventListener('click', () => cetakKartuQR(w, canvas.toDataURL()));
         UI.q('#terbitMenu', box).addEventListener('click', () => terbitkanMenu(w));
+        UI.q('#aturTerbit', box).addEventListener('click', aturTerbit);
       },
     });
   };
@@ -743,6 +768,117 @@ const App = (() => {
         b.innerHTML = UI.icon('link') + ' Salin alamat berkas';
         b.addEventListener('click', () => UI.salin(tujuan, 'Alamat berkas disalin'));
         box.querySelector('.note--info').after(b);
+      },
+    });
+  };
+
+  /* ── Pengaturan penerbitan otomatis ───────────────────────
+     Pengelola mengisi sekali; setelah itu setiap perubahan data
+     warung atau menunya langsung naik ke situs tanpa mengunduh dan
+     mengunggah berkas dengan tangan. */
+  const aturTerbit = () => {
+    const s = Terbit.baca();
+    const st = Terbit.status();
+    UI.modal({
+      judul: 'Penerbitan Menu Otomatis',
+      lebar: true,
+      isi: `
+        <div class="note ${st.aktif ? 'note--ok' : 'note--info'}" style="margin-bottom:14px">${UI.icon(st.aktif ? 'check' : 'info')}
+          <span>${st.aktif
+            ? 'Aktif. Setiap perubahan data warung atau menu langsung diterbitkan ke situs, sehingga QR pelanggan selalu menampilkan menu terbaru.'
+            : 'Belum diatur. Selama belum diatur, menu tetap bisa diterbitkan dengan tombol <b>Terbitkan menu</b> (unduh lalu unggah sendiri).'}</span>
+        </div>
+
+        <div class="field" style="margin-bottom:12px">
+          <label>Cara penerbitan</label>
+          <select class="sel" id="t-metode">
+            <option value="github" ${s.metode === 'github' ? 'selected' : ''}>GitHub — tulis berkas ke repositori situs</option>
+            <option value="server" ${s.metode === 'server' ? 'selected' : ''}>Server sinkron — kirim ke sinkron/server.mjs</option>
+            <option value="mati" ${s.metode === 'mati' ? 'selected' : ''}>Matikan penerbitan otomatis</option>
+          </select>
+        </div>
+
+        <div id="t-bagian-github">
+          <div class="note note--info" style="margin-bottom:12px">${UI.icon('info')}
+            <span>Buat <b>token halus</b> (fine-grained) di GitHub &rarr; Settings &rarr; Developer settings,
+            dengan izin <span class="mono">Contents: Read and write</span> pada repositori situs saja.
+            Token disimpan di perangkat ini saja dan tidak pernah dikirim ke mana pun selain api.github.com.</span>
+          </div>
+          <div class="form-grid">
+            <div class="field"><label>Repositori</label><input class="inp mono" id="t-repo" value="${UI.esc(s.repo)}" placeholder="pemilik/repositori"></div>
+            <div class="field"><label>Cabang</label><input class="inp mono" id="t-cabang" value="${UI.esc(s.cabang)}" placeholder="main"></div>
+            <div class="field full"><label>Folder menu di repositori</label><input class="inp mono" id="t-folder" value="${UI.esc(s.folder)}" placeholder="warung-go-digital/menu"></div>
+            <div class="field full"><label>Token GitHub ${st.adaToken ? '<span class="dim">(sudah tersimpan — kosongkan bila tidak ingin mengganti)</span>' : ''}</label><input class="inp mono" id="t-token" type="password" placeholder="${st.adaToken ? '••••••••' : 'github_pat_...'}"></div>
+          </div>
+        </div>
+
+        <div id="t-bagian-server">
+          <div class="form-grid">
+            <div class="field full"><label>Alamat server sinkron</label><input class="inp mono" id="t-server" value="${UI.esc(s.server)}" placeholder="https://contoh.id"></div>
+            <div class="field full"><label>Kunci tulis server</label><input class="inp mono" id="t-kunci" type="password" placeholder="KUNCI_TULIS"></div>
+          </div>
+          <div class="note note--info" style="margin-top:10px">${UI.icon('info')}
+            <span>Isi juga <span class="mono">&lt;meta name="wgd-menu-server"&gt;</span> di
+            <span class="mono">app/menu.html</span> agar halaman menu membacanya dari server ini.</span>
+          </div>
+        </div>
+
+        <div id="t-uji" style="margin-top:14px"></div>`,
+      kaki: `
+        <button class="btn" data-tutup>Tutup</button>
+        <div class="spacer"></div>
+        <button class="btn" id="t-cek">${UI.icon('refresh')} Uji sambungan</button>
+        <button class="btn btn--pri" id="t-simpan">${UI.icon('save')} Simpan</button>`,
+      onBuka: (box) => {
+        const tampil = () => {
+          const m = UI.q('#t-metode', box).value;
+          UI.q('#t-bagian-github', box).style.display = m === 'github' ? '' : 'none';
+          UI.q('#t-bagian-server', box).style.display = m === 'server' ? '' : 'none';
+        };
+        tampil();
+        UI.q('#t-metode', box).addEventListener('change', tampil);
+
+        UI.q('#t-simpan', box).addEventListener('click', () => {
+          const token = UI.q('#t-token', box).value.trim();
+          const lamaS = Terbit.baca();
+          Terbit.simpan({
+            metode: UI.q('#t-metode', box).value,
+            repo: UI.q('#t-repo', box).value.trim(),
+            cabang: UI.q('#t-cabang', box).value.trim() || 'main',
+            folder: UI.q('#t-folder', box).value.trim(),
+            server: UI.q('#t-server', box).value.trim(),
+            kunciServer: UI.q('#t-kunci', box).value.trim() || lamaS.kunciServer,
+            token: token || lamaS.token,
+          });
+          UI.tutupModal();
+          UI.toast('Pengaturan penerbitan disimpan', 'ok');
+          gambar();
+        });
+
+        UI.q('#t-cek', box).addEventListener('click', async () => {
+          const token = UI.q('#t-token', box).value.trim();
+          const lamaS = Terbit.baca();
+          Terbit.simpan({
+            metode: UI.q('#t-metode', box).value,
+            repo: UI.q('#t-repo', box).value.trim(),
+            cabang: UI.q('#t-cabang', box).value.trim() || 'main',
+            folder: UI.q('#t-folder', box).value.trim(),
+            server: UI.q('#t-server', box).value.trim(),
+            kunciServer: UI.q('#t-kunci', box).value.trim() || lamaS.kunciServer,
+            token: token || lamaS.token,
+          });
+          const area = UI.q('#t-uji', box);
+          area.innerHTML = `<div class="note note--info">${UI.icon('clock')} <span>Menguji…</span></div>`;
+          const w = Store.all('warung')[0];
+          if (!w) {
+            area.innerHTML = `<div class="note note--kuning">${UI.icon('alert')} <span>Belum ada warung untuk diuji.</span></div>`;
+            return;
+          }
+          const h = await Terbit.terbitkan(w, { fotoDari: Store.where('foto', (f) => f.warungId === w.id) });
+          area.innerHTML = h.ok
+            ? `<div class="note note--ok">${UI.icon('check')} <span>Berhasil. Berkas <span class="mono">${UI.esc(h.pesan)}</span> terkirim.</span></div>`
+            : `<div class="note note--merah">${UI.icon('alert')} <span>${UI.esc(h.pesan)}</span></div>`;
+        });
       },
     });
   };

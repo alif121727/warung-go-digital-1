@@ -15,7 +15,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v20';
+const VERSI = 'wgd-v22';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -31,6 +31,7 @@ const KERANGKA = [
   './app/store.js',
   './app/ui.js',
   './app/qr.js',
+  './app/terbit.js',
   './app/styles.css',
   './app/menu.html',
   './app/modul-transaksi.js',
@@ -84,12 +85,13 @@ const KERANGKA = [
   './ilustrasi/si-qr.svg',
   './ilustrasi/es-teh.svg',
   './ilustrasi/kucing-warung.svg',
-  './ilustrasi/cerita-1.svg',
-  './ilustrasi/cerita-2.svg',
-  './ilustrasi/cerita-3.svg',
-  './ilustrasi/cerita-4.svg',
-  './ilustrasi/cerita-5.svg',
-  './ilustrasi/cerita-6.svg',
+  // Poster video cerita (kecil) — dipakai sebelum video diputar.
+  './video/cerita-1.jpg',
+  './video/cerita-2.jpg',
+  './video/cerita-3.jpg',
+  './video/cerita-4.jpg',
+  './video/cerita-5.jpg',
+  './video/cerita-6.jpg',
 ];
 
 self.addEventListener('install', (peristiwa) => {

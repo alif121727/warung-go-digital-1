@@ -41,15 +41,22 @@ UKUR = """()=>{
     isi:isi.length,
     isiDalamArtikel:artikel.filter(a=>a.querySelector('.cerita__isi')).length,
     isiDiPanggung:s.querySelectorAll('.cerita__teks .cerita__isi').length,
-    gambarDalamArtikel:s.querySelectorAll('.cerita__adegan img').length,
-    gambarDiPanggung:s.querySelectorAll('.cerita__gambar img').length,
+    gambarDalamArtikel:s.querySelectorAll('.cerita__adegan img, .cerita__adegan video').length,
+    gambarDiPanggung:s.querySelectorAll('.cerita__gambar img, .cerita__gambar video').length,
+    video:s.querySelectorAll('video').length,
+    videoDiPanggung:s.querySelectorAll('.cerita__gambar video').length,
+    videoMain:[...s.querySelectorAll('video')].filter(v=>!v.paused).length,
     nampak:isi.filter(e=>Number(getComputedStyle(e).opacity)>.5).length,
     judul:artikel.map(a=>{const h=a.querySelector('h3');return h?h.textContent.trim():'';}),
     titik:s.querySelectorAll('.cerita__titik').length,
     langkah:s.querySelectorAll('.cerita__langkah button').length,
     gambarRusak:[...s.querySelectorAll('img')].filter(i=>i.complete&&i.naturalWidth===0)
                  .map(i=>i.getAttribute('src')),
-    gambarBelum:[...s.querySelectorAll('img')].filter(i=>!i.complete).length};}"""
+    videoRusak:[...s.querySelectorAll('video')]
+                 .filter(v=>v.networkState===3||(v.readyState>0&&v.videoWidth===0))
+                 .map(v=>v.querySelector('source')?v.querySelector('source').getAttribute('src'):''),
+    posterRusak:[...s.querySelectorAll('video[poster]')]
+                 .filter(v=>v.poster&&v.poster.includes('cerita')&&v.readyState===0).length};}"""
 
 
 def utama():
@@ -66,7 +73,7 @@ def utama():
         r = pg.evaluate(UKUR)
         cek("tanpa JS: bagian cerita ada", r.get("ada"), r)
         cek(f"tanpa JS: {JUMLAH} adegan ada", r.get("artikel") == JUMLAH, r.get("artikel"))
-        cek(f"tanpa JS: {JUMLAH} gambar ada", r.get("gambarDalamArtikel") == JUMLAH,
+        cek(f"tanpa JS: {JUMLAH} gambar/video ada", r.get("gambarDalamArtikel") == JUMLAH,
             r.get("gambarDalamArtikel"))
         cek("tanpa JS: semua adegan terlihat", r.get("nampak") == JUMLAH, r.get("nampak"))
         cek("tanpa JS: tanpa panggung", not r.get("panggung"), r.get("panggung"))
@@ -87,7 +94,7 @@ def utama():
         cek("kurangi gerak: semua adegan terlihat", r.get("nampak") == JUMLAH, r.get("nampak"))
         cek("kurangi gerak: tanpa penanda gulir", r.get("titik") == 0, r.get("titik"))
         cek("kurangi gerak: tanpa penunjuk langkah", r.get("langkah") == 0, r.get("langkah"))
-        cek("kurangi gerak: gambar tetap ada",
+        cek("kurangi gerak: gambar/video tetap ada",
             r.get("gambarDalamArtikel") == JUMLAH, r.get("gambarDalamArtikel"))
         pg.close()
 
@@ -101,13 +108,15 @@ def utama():
         r = pg.evaluate(UKUR)
         cek("desktop: panggung dipasang", r.get("panggung"), r.get("panggung"))
         cek("desktop: satu adegan tampil", r.get("nampak") == 1, r.get("nampak"))
-        cek("desktop: gambar dipindah ke panggung",
+        cek("desktop: gambar/video dipindah ke panggung",
             r.get("gambarDiPanggung") == JUMLAH and r.get("gambarDalamArtikel") == 0, r)
         cek("desktop: teks dipindah ke panggung",
             r.get("isiDiPanggung") == JUMLAH and r.get("isiDalamArtikel") == 0, r)
         cek("desktop: penanda gulir sejumlah adegan", r.get("titik") == JUMLAH, r.get("titik"))
         cek("desktop: penunjuk langkah sejumlah adegan", r.get("langkah") == JUMLAH, r.get("langkah"))
-        cek("desktop: gambar ilustrasi termuat", not r.get("gambarRusak"), r.get("gambarRusak"))
+        cek("desktop: gambar/video termuat", not r.get("gambarRusak") and not r.get("videoRusak"),
+            {"g":r.get("gambarRusak"),"v":r.get("videoRusak")})
+        cek("desktop: enam video cerita ada", r.get("video") == JUMLAH, r.get("video"))
         cek("desktop: tidak ada error konsol", not errs, errs[:2])
 
         # Gulir instan supaya pengukuran tidak tertipu `scroll-behavior: smooth`.
@@ -124,7 +133,7 @@ def utama():
                         .findIndex(e=>e.classList.contains('aktif')),
                       nampak:[...s.querySelectorAll('.cerita__isi')]
                         .filter(e=>Number(getComputedStyle(e).opacity)>.5).length,
-                      gambarAktif:[...s.querySelectorAll('.cerita__gambar img')]
+                      gambarAktif:[...s.querySelectorAll('.cerita__gambar img, .cerita__gambar video')]
                         .filter(e=>e.classList.contains('aktif')).length,
                       aria:s.querySelectorAll('.cerita__langkah button[aria-current="true"]').length};}""")
             if not (r["aktif"] == i and r["nampak"] == 1

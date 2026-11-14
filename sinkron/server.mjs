@@ -156,6 +156,53 @@ const server = createServer(async (req, res) => {
     return kirim(res, 200, { ok: true, jumlahHari: catatan.length, jumlahMitra: data.length });
   }
 
+  // Terima berkas menu publik dari Panel Mitra (penerbitan otomatis).
+  // Berbeda dari /api/laporan: yang dikirim di sini HANYA data etalase, dan
+  // pengirimnya pengelola (memegang kunci baca). Karena itu kunci yang
+  // diterima adalah kunci baca ATAU kunci tulis.
+  if (req.method === 'POST' && jalur === '/api/menu-publik') {
+    if ((KUNCI_BACA || KUNCI_TULIS) && kunciKirim !== KUNCI_BACA && kunciKirim !== KUNCI_TULIS) {
+      return kirim(res, 401, { ok: false, pesan: 'Kunci salah atau kosong.' });
+    }
+    let isi;
+    try { isi = await bacaBadan(req); }
+    catch (e) { return kirim(res, 400, { ok: false, pesan: e.message }); }
+
+    if (!isi || isi.jenis !== 'menu-publik' || !isi.warung || !isi.warung.id) {
+      return kirim(res, 400, { ok: false, pesan: 'Ini bukan berkas menu publik.' });
+    }
+
+    const warung = {
+      id: String(isi.warung.id).slice(0, 40),
+      nama: String(isi.warung.nama || 'Warung tanpa nama').slice(0, 60),
+      pemilik: String(isi.warung.pemilik || '').slice(0, 60),
+      wa: String(isi.warung.wa || '').replace(/[^0-9]/g, '').slice(0, 18),
+      alamat: String(isi.warung.alamat || '').slice(0, 120),
+      jenis: String(isi.warung.kategori || isi.warung.jenis || '').slice(0, 40),
+      placeId: isi.warung.placeId ? String(isi.warung.placeId).slice(0, 80) : null,
+      rating: Number.isFinite(+isi.warung.rating) ? +isi.warung.rating : null,
+      ulasan: Number.isFinite(+isi.warung.ulasan) ? +isi.warung.ulasan : null,
+      menu: Array.isArray(isi.menu)
+        ? isi.menu.slice(0, 200).map((m) => ({
+            nama: String(m && m.nama || '').slice(0, 80),
+            harga: Number(m && m.harga) || 0,
+            kategori: String(m && m.kategori || 'Menu').slice(0, 40),
+            ket: String(m && m.ket || '').slice(0, 120),
+            foto: m && typeof m.foto === 'string' && m.foto.startsWith('data:image/')
+              ? m.foto.slice(0, 400_000) : null,
+          })).filter((m) => m.nama)
+        : [],
+    };
+
+    // Menu saja yang diperbarui; catatan harian yang sudah ada dibiarkan.
+    const lama = data.find((d) => d.warung.id === warung.id);
+    if (lama) { lama.warung = { ...lama.warung, ...warung }; lama.diterima = new Date().toISOString(); }
+    else data.push({ warung, catatan: [], diterima: new Date().toISOString() });
+
+    await simpan();
+    return kirim(res, 200, { ok: true, id: warung.id, jumlahMenu: warung.menu.length });
+  }
+
   // Menu publik sebuah warung, supaya halaman menu.html bisa dibuka dari HP
   // mana pun saat server sinkron dipakai. Sengaja TIDAK butuh kunci: isinya
   // memang untuk pelanggan. Yang keluar hanya data etalase (nama, WA, alamat,
@@ -172,7 +219,12 @@ const server = createServer(async (req, res) => {
         placeId: d.warung.placeId || null, rating: d.warung.rating ?? null,
         ulasan: d.warung.ulasan ?? null,
       },
-      menu: Array.isArray(d.warung.menu) ? d.warung.menu : [],
+      menu: Array.isArray(d.warung.menu)
+        ? d.warung.menu.map((m) => ({
+            nama: m.nama, harga: m.harga, kategori: m.kategori, ket: m.ket || '',
+            foto: m.foto || null,
+          }))
+        : [],
     });
   }
 

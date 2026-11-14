@@ -265,7 +265,7 @@
         id: w.id, nama: w.nama, pemilik: w.pemilik, wa: w.wa, alamat: w.alamat,
         kategori: w.kategori, placeId: w.placeId, rating: w.ratingMaps, ulasan: w.jumlahUlasan,
       },
-      menu: w.menu.map((m) => ({ nama: m.nama, harga: m.harga, kategori: m.kategori, ket: m.ket || '' })),
+      menu: w.menu.map((m) => ({ nama: m.nama, harga: m.harga, kategori: m.kategori, ket: m.ket || '', foto: m.foto || null })),
     };
   };
 
@@ -319,7 +319,7 @@
           const geser = (n++ * 40);
           return `
             <div class="item" style="animation-delay:${geser}ms">
-              <div class="item__gambar">${ikonGambar}</div>
+              <div class="item__gambar">${m.foto ? `<img src="${esc(m.foto)}" alt="${esc(m.nama)}" loading="lazy">` : ikonGambar}</div>
               <div class="item__isi">
                 <div class="item__nama">${esc(m.nama)}</div>
                 <div class="item__ket">${esc(m.ket || 'Dibuat segar saat dipesan')}</div>

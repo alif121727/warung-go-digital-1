@@ -95,19 +95,39 @@ untuk dibaca publik, jadi jangan menambahkan data yang tidak ingin dibaca orang.
 Folder `menu/` sudah memuat contoh `wr-001.json` … `wr-005.json` agar QR contoh
 langsung bisa dicoba. Ganti dengan berkas asli milik mitra Anda.
 
-## Yang belum otomatis
+## Penerbitan otomatis (disarankan)
 
-Mengunggah berkas masih dilakukan dengan tangan (satu kali per warung, lalu
-diulang bila menu berubah). Membuatnya otomatis butuh token yang boleh menulis
-ke repositori — rahasia yang tidak dipegang agen. Bila nanti ingin otomatis,
-dua pilihan yang paling ringan:
+Mengunggah berkas dengan tangan hanya perlu dilakukan sekali per warung. Setelah
+itu, biarkan Panel Mitra yang mengunggah sendiri: buka jendela **QR Menu Digital**
+lalu tekan **Penerbitan otomatis**. Setiap kali data warung atau menunya berubah,
+`menu-<id>.json` langsung naik ke situs — tanpa unduh dan unggah manual.
 
-- **Alur GitHub Actions**: pemilik menaruh berkas di repositori pribadi, lalu
-  alur kerja menyalinnya ke folder `menu/` situs.
-- **Server sinkron**: jalankan `sinkron/server.mjs`. Halaman menu sudah bisa
-  membacanya lewat `/api/menu?id=<id>` bila alamat server diatur di
-  `localStorage` kunci `wgd-menu-server`. Ini paling cocok bila pengelola sudah
-  memakai tab Sinkron.
+Dua cara, pilih salah satu:
+
+### 1. GitHub (disarankan)
+
+Buat **token halus** (fine-grained personal access token) di GitHub →
+Settings → Developer settings → Personal access tokens → Fine-grained tokens.
+Beri izin **Contents: Read and write** hanya pada repositori situs Anda. Tempel
+token itu di panel **Penerbitan otomatis**.
+
+- Token disimpan di perangkat pengelola saja (`localStorage`), tidak pernah
+  dikirim ke mana pun selain `api.github.com`.
+- Jangan bagikan token ini. Bila bocor, hapus dan buat yang baru.
+- Isian bawaan: repositori `alif121727/warung-go-digital-1`, cabang `main`,
+  folder `warung-go-digital/menu`.
+
+### 2. Server sinkron
+
+Jalankan `sinkron/server.mjs`, lalu isi alamat server dan kunci di panel
+**Penerbitan otomatis**. Berkas menu dikirim ke `POST /api/menu-publik`.
+Agar halaman menu membacanya, isi juga `<meta name="wgd-menu-server">` di
+`app/menu.html` dengan alamat server itu — dengan begitu seluruh pelanggan
+membaca dari server, bukan hanya perangkat yang menyimpan di `localStorage`.
+
+Tekan **Uji sambungan** untuk memastikan pengaturan bekerja sebelum dipakai
+sehari-hari. Bila belum diatur, tombol **Terbitkan menu** tetap bisa dipakai
+seperti biasa (unduh lalu unggah sendiri).
 
 ## Bila menu tampak tidak berubah
 

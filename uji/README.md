@@ -9,10 +9,14 @@ python3 uji/uji-fungsional.py     # 33 uji fungsional semua modul + navigasi men
 python3 uji/uji-kosong.py         # 25 uji kondisi awal tanpa data + ikon pencarian
 python3 uji/uji-tata-letak.py     # 88 kombinasi lebar layar x modul
 python3 uji/uji-hp.py             # 190 uji dukungan HP (320-768 px, sentuh)
-python3 uji/uji-akar.py           # 10 uji situs saat disajikan dari akar domain
+python3 uji/uji-akar.py           # 13 uji situs saat disajikan dari akar domain
 python3 uji/uji-pwa.py            # 22 uji PWA (manifest, service worker, ikon, offline)
 python3 uji/uji-dua-aplikasi.py   # 38 uji alur Pemilik -> laporan -> Pengelola
 python3 uji/uji-sinkron.py        # 23 uji sinkron otomatis (menjalankan server asli)
+python3 uji/uji-cerita.py         # 40 uji bagian "Cerita Bu Tini" (video + panggung)
+python3 uji/uji-menu-publik.py    # 16 uji halaman menu publik + terbitkan menu
+python3 uji/uji-client-id.py      # 8 uji pembaca Client ID Google
+python3 uji/uji-terbit-otomatis.py # 14 uji penerbitan menu otomatis
 ```
 
 Uji yang memeriksa data terisi memanggil `Store.muatContoh()` lebih dulu, karena
