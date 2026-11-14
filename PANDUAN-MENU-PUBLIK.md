@@ -15,7 +15,13 @@ siapa pun yang punya tautan bisa membukanya. Tanpa perlu server dan tanpa biaya.
 
 ## Langkah singkat
 
-1. Buka **Panel Mitra** → menu **Warung** → tekan tombol **QR** pada warung.
+1. Buka **Panel Mitra** di
+   <https://alif121727.github.io/warung-go-digital-1/app/>
+   (atau alamat situs Anda) → menu **Warung** → tekan tombol **QR** pada warung.
+
+   Catatan: Panel Mitra hanya ada di situs, **tidak** di dalam APK. Aplikasi
+   APK berisi dua hal: aplikasi Pemilik (catat penjualan) dan panel Pengelola
+   (pantau mitra). Jadi penerbitan menu dikerjakan dari peramban.
 2. Pada jendela QR, tekan **Terbitkan menu**.
    Berkas `menu-<id>.json` (misal `menu-wr-001.json`) akan terunduh.
 3. Unggah berkas itu ke folder `warung-go-digital/menu/` di repositori situs.
@@ -47,6 +53,9 @@ Halaman `app/menu.html?w=<id>` mencoba tiga sumber secara berurutan:
 1. **Berkas terbit** `menu/<id>.json` — cara utama, bisa dibuka HP mana pun.
 2. **Server sinkron** `/api/menu?id=<id>` — dipakai bila Anda menjalankan
    `sinkron/server.mjs`. Tidak perlu kunci karena isinya memang untuk pelanggan.
+   Isi alamatnya di `app/menu.html` pada
+   `<meta name="wgd-menu-server" content="https://...">` agar berlaku untuk
+   semua pelanggan (bukan hanya perangkat yang menyetelnya).
 3. **Data lokal** perangkat — hanya untuk mengembangkan di satu HP.
 
 Jadi tidak ada yang rusak bila sebuah warung belum diterbitkan; ia hanya belum
@@ -85,6 +94,20 @@ untuk dibaca publik, jadi jangan menambahkan data yang tidak ingin dibaca orang.
 
 Folder `menu/` sudah memuat contoh `wr-001.json` … `wr-005.json` agar QR contoh
 langsung bisa dicoba. Ganti dengan berkas asli milik mitra Anda.
+
+## Yang belum otomatis
+
+Mengunggah berkas masih dilakukan dengan tangan (satu kali per warung, lalu
+diulang bila menu berubah). Membuatnya otomatis butuh token yang boleh menulis
+ke repositori — rahasia yang tidak dipegang agen. Bila nanti ingin otomatis,
+dua pilihan yang paling ringan:
+
+- **Alur GitHub Actions**: pemilik menaruh berkas di repositori pribadi, lalu
+  alur kerja menyalinnya ke folder `menu/` situs.
+- **Server sinkron**: jalankan `sinkron/server.mjs`. Halaman menu sudah bisa
+  membacanya lewat `/api/menu?id=<id>` bila alamat server diatur di
+  `localStorage` kunci `wgd-menu-server`. Ini paling cocok bila pengelola sudah
+  memakai tab Sinkron.
 
 ## Bila menu tampak tidak berubah
 
