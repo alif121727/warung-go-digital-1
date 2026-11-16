@@ -9,14 +9,24 @@ kb/s). Berkas ini menaikkannya ke 1280x720 (HD) dengan penapis Lanczos, lalu
 mengodekannya H.264 High dengan `faststart` agar bisa mulai diputar sambil
 masih diunduh.
 
+Kenapa ada batas puncak bitrate (`-maxrate`): naik ke 1280x720 membuat bitrate
+melompat ke 941 kb/s. Terukur, pada sambungan 500-700 kb/s video itu tersendat
+berulang (5 kali berhenti dalam 18 detik) — inilah "ngelag" yang dikeluhkan.
+Batas 480 kb/s menurunkan berkas ke 3,3 MB (dari 7,1 MB) dan menghilangkan
+tersendatnya, dengan SSIM frame terburuk masih 0,983 terhadap hasil tanpa batas
+(nyaris tak terbedakan). `-bufsize` dua kali `-maxrate` memberi perayap ruang
+cukup untuk adegan ramai tanpa melampaui batas rata-rata.
+
 Kenapa tanpa penajam (unsharp): percobaan menunjukkan penajam justru menambah
 halo di tepi tulisan dan memperkuat derau rekaman, sehingga hasilnya terlihat
 lebih buruk daripada tanpa penajam. Lanczos sudah cukup tajam.
 
-Kenapa CRF 23 dan audio 64 kb/s: CRF 23 sudah nyaris tak terbedakan dari
-CRF 18 (SSIM 0.995), tetapi berkasnya jauh lebih ringan. Berkas harus cukup
-ringan agar diputar lancar di HP kelas bawah. Audio sumber hanya mono 31 kb/s,
-jadi 64 kb/s sudah cukup.
+Kenapa CRF 28: CRF 23 nyaris tak terbedakan dari CRF 18, tetapi berkasnya jauh
+lebih ringan. CRF 28 masih ber-SSIM 0,995 terhadap CRF 23 — dan yang lebih
+penting, berkasnya cukup ringan untuk diputar lancar di HP kelas bawah.
+
+Kenapa audio 48 kb/s mono: sumbernya hanya mono 31 kb/s, jadi 48 kb/s sudah
+cukup; menaikkannya hanya menambah berat tanpa menambah mutu.
 
 Butuh ffmpeg. Bila belum ada:  pip install imageio-ffmpeg
 """
@@ -32,9 +42,11 @@ SUMBER_BAWAAN = os.path.join(AKAR, "video-sumber-pembuka.mp4")
 
 LEBAR, TINGGI = 1280, 720
 FPS = 30
-CRF = "23"
+CRF = "28"
 PRESET = "slow"
-AUDIO_KBPS = "64k"
+MAKS_KBPS = "480k"  # puncak bitrate video
+BUF_KBPS = "960k"   # ukuran perayap (2x maks)
+AUDIO_KBPS = "48k"
 DETIK_POSTER = 12.0  # kerangka dengan bagian hero yang sudah terbaca
 
 
@@ -79,10 +91,11 @@ def main():
          "-vf", tapis,
          "-c:v", "libx264", "-preset", PRESET, "-crf", CRF,
          "-profile:v", "high", "-level", "4.0",
+         "-maxrate", MAKS_KBPS, "-bufsize", BUF_KBPS,
          "-pix_fmt", "yuv420p",
          "-movflags", "+faststart",
          "-map", "0:v:0", "-map", "0:a?",
-         "-c:a", "aac", "-b:a", AUDIO_KBPS,
+         "-c:a", "aac", "-b:a", AUDIO_KBPS, "-ac", "1",
          mp4]
     )
     jalankan(
