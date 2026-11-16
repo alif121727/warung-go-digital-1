@@ -500,6 +500,71 @@ akan lolos. Beberapa perubahan cepat digabung jadi satu kiriman (`Terbit.antre`,
 **Cache.** `sw.js` memakai jaringan-dulu untuk `.css/.js/.json` agar harga di berkas
 menu tidak basi. Jangan hapus `.json` dari pola itu.
 
+### QR 3-in-1: menu + penilaian + pesanan/pembayaran
+
+Satu pindai QR membuka **tiga tab** di `app/menu.html` (`app/menu.js`):
+
+1. **Menu** — semua item, **paling laris di atas**. Tombol `+` memasukkan ke keranjang.
+2. **Nilai** — bintang 1–5 per hidangan (disimpan di HP pelanggan, `wgd-nilai-v1`) plus
+   peta warung (`placeId` → Google Maps).
+3. **Bayar** — keranjang, total, tujuan pembayaran warung, lalu kirim pesanan.
+
+**Urutan "paling laris".** Dihitung dari catatan harian pemilik (`catatan[].item[]`),
+dijumlahkan per nama item. Dua jalur menyediakannya:
+- **Server** — `/api/menu?id=<id>` menghitung `laris` dari laporan yang tersimpan.
+- **Berkas terbit** — `menu/<id>.json` hanya memuat `laris` bila pengelola menambahkannya.
+
+Pencocokan nama item memakai huruf kecil + `trim` agar "Nasi Goreng" dan "nasi goreng "
+dianggap sama. Jangan memakai pencocokan persis.
+
+**Pesanan lintas perangkat.** Pembeli dan pemilik memakai HP berbeda, jadi pesanan harus
+lewat server (`sinkron/server.mjs`). Endpoint:
+
+| Endpoint | Kunci | Guna |
+|---|---|---|
+| `POST /api/pesanan` | **tidak perlu** | Pelanggan membuat pesanan. Bentuknya divalidasi dan itemnya dibatasi 60. |
+| `GET /api/pesanan?w=<id>` | kunci baca/tulis | Pemilik menarik pesanan warungnya. |
+| `POST /api/pesanan-ubah` | kunci baca/tulis | Pemilik menandai `lunas`/`batal`. Warung lain ditolak 403. |
+
+`POST /api/pesanan` sengaja **terbuka**: pelanggan tidak memegang kunci apa pun. Yang
+menjaganya adalah validasi bentuk, batas jumlah item, dan batas 400 pesanan tersimpan.
+Status: `menunggu` → `dibayar-klaim` (pelanggan menekan "saya sudah bayar") → `lunas`
+(pemilik memastikan uang masuk). **Tanpa unggah bukti** — sengaja, agar tidak menyulitkan
+pelanggan (keputusan pemilik produk).
+
+**Batas 30 menit.** Server menulis `batas = dibuat + 30 menit`. Pemilik melihat
+"Belum bayar · lewat N menit" dan penghitung **Lewat 30 menit** di tab Pesanan
+(`Pesanan.lewatBatas`). Hitungan ini dari waktu, bukan dari pesan tambahan.
+
+**Alamat server untuk pelanggan.** Pelanggan tidak boleh disuruh mengisi apa pun.
+`app/terbit.js` dan `berkasMenu()` menulis `server` ke dalam berkas menu, lalu
+`app/menu.js` menyimpannya di `localStorage` (`wgd-menu-server`). `bersama/pesanan.js`
+mencari alamat berurutan: `<meta name="wgd-menu-server">` → `wgd-menu-server` →
+setelan `Sinkron`. Bila server mati, pesanan **tidak hilang**: ia masuk antrean
+(`wgd-antrean-pesanan-v1`) dan dikirim ulang saat halaman dibuka lagi
+(`Pesanan.kirimAntrean`).
+
+### Bunyi notifikasi khas
+
+`bersama/bunyi.js` membuat **kicauan burung** dengan Web Audio (4 nada, osilator sine) —
+tanpa berkas suara, jadi tidak ada urusan hak cipta — lalu mengucapkan
+**"Pembayaran diterima sejumlah N rupiah"** lewat `speechSynthesis` (suara bawaan HP).
+
+Dua syarat yang harus diingat:
+1. Peramban baru mengizinkan bunyi **setelah pengguna menyentuh halaman**. Karena itu
+   `Bunyi.bukaKunci()` dipasang pada `pointerdown`/`keydown` pertama. Jangan menghapusnya.
+2. Bila aplikasi **benar-benar tertutup**, tidak ada web yang bisa membunyikan suara.
+   Aplikasi pemilik harus terbuka (atau berjalan sebagai APK/PWA). Ini batas teknologi,
+   bukan bug. Tombol **Uji bunyi notifikasi** di tab Pesanan memudahkan pemeriksaan.
+
+### Tab Pesanan di aplikasi pemilik
+
+`pemilik/pesanan-pemilik.js` menarik pesanan tiap 20 detik (`PesananPemilik.mulai`),
+membunyikan notifikasi untuk pesanan yang **baru** (bukan hasil muat awal — dibatasi
+5 menit, dan id yang sudah dibunyikan dicatat), lalu menampilkan lencana di tabbar.
+Pemilik menandai **Uang sudah masuk** atau **Batalkan**. Tanpa server, tab ini menjelaskan
+apa yang kurang — bukan layar kosong.
+
 ### Data kosong & data contoh
 
 Kondisi awal **kosong** (`Store.kosongkan()` / `kosong()` di `store.js`): semua koleksi
@@ -511,11 +576,10 @@ Setiap modul punya **empty state** (`UI.kosong`) yang ramah, dan harus tahan dat
 tanpa `NaN`/`undefined`. Tombol **Cadangan** mengunduh JSON; **Pulihkan** memuatnya kembali.
 
 ⚠️ **Batas penting:** halaman publik `app/menu.html` membaca data dari `localStorage`
-perangkat **pemilik**. Jadi QR hanya menampilkan menu di perangkat yang sudah punya data
-tersebut (mis. saat demo). Pelanggan yang memindai dari HP-nya sendiri akan melihat
-"Warung tidak ditemukan", karena perangkat mereka tidak punya data itu. Agar menu bisa
-dibuka pelanggan mana pun, data menu harus disajikan dari server (mis. berkas JSON per
-warung di hosting), bukan dari `localStorage`. Lihat bagian "Yang belum dikerjakan".
+perangkat **pemilik** hanya sebagai pilihan terakhir (untuk demo di satu HP). Dua jalur
+yang benar sudah tersedia: **berkas terbit** `menu/<id>.json` dan **server sinkron**
+`/api/menu?id=<id>`. Untuk pesanan dan notifikasi pembayaran, server sinkron **wajib
+menyala** — lihat bagian "QR 3-in-1" di atas.
 
 ### Ikon SVG wajib punya ukuran
 

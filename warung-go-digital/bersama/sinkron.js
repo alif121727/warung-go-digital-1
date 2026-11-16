@@ -97,7 +97,13 @@ const Sinkron = (() => {
       if (!aktif() || sibuk) return;
       const laporan = ambilLaporan();
       if (!laporan) return;
-      const cap = JSON.stringify(laporan.catatan || []);
+      // Menu dan cara bayar ikut dihitung: mengubah daftar menu harus
+      // memicu kiriman walau catatan harian tidak berubah.
+      const cap = JSON.stringify([
+        laporan.catatan || [],
+        (laporan.warung && laporan.warung.menu) || [],
+        (laporan.warung && laporan.warung.bayar) || null,
+      ]);
       if (cap === terakhir) return; // tidak ada perubahan
       sibuk = true;
       try {

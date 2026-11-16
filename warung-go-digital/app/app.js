@@ -632,7 +632,7 @@ const App = (() => {
 
   /* Isi berkas menu terbit. Memuat nama, WA, dan menu — tanpa data pribadi
      lain (tanpa transaksi, tanpa catatan harian). */
-  const berkasMenu = (w) => {
+  const berkasMenu = (w, server = '') => {
     const foto = {};
     for (const f of Store.where('foto', (x) => x.warungId === w.id && x.dataUrl)) {
       const kunci = f.nama.toLowerCase().replace(/\s*—\s*foto\s*\d+$/, '').trim();
@@ -642,10 +642,12 @@ const App = (() => {
       wgd: 2,
       jenis: 'menu-publik',
       dibuat: new Date().toISOString(),
+      server: String(server || '').replace(/\/+$/, ''),
       warung: {
         id: w.id, nama: w.nama, pemilik: w.pemilik, wa: w.wa, alamat: w.alamat,
         kategori: w.kategori, placeId: w.placeId,
         rating: w.ratingMaps, ulasan: w.jumlahUlasan,
+        bayar: w.bayar || null,
       },
       menu: w.menu.map((m) => ({
         nama: m.nama, harga: m.harga, kategori: m.kategori, ket: m.ket || '',
@@ -739,7 +741,9 @@ const App = (() => {
   /* Unduh berkas menu terbit + salin jalur unggah. Pemilik mengunggah berkas
      ini ke folder `menu/` situs; setelah itu QR bisa dibuka HP mana pun. */
   const terbitkanMenu = (w) => {
-    const isi = JSON.stringify(berkasMenu(w), null, 2);
+    const setelanTerbit = typeof Terbit !== 'undefined' ? Terbit.baca() : null;
+    const serverTerbit = setelanTerbit && setelanTerbit.metode === 'server' ? setelanTerbit.server : '';
+    const isi = JSON.stringify(berkasMenu(w, serverTerbit), null, 2);
     UI.unduh(namaBerkasMenu(w), isi, 'application/json');
 
     const tujuan = situsPublik() + 'menu/' + namaBerkasMenu(w);

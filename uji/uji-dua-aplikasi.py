@@ -30,7 +30,8 @@ with sync_playwright() as p:
     cek("pemilik: halaman terbuka", pg.eval_on_selector_all("#view .card", "e=>e.length") > 0)
     cek("pemilik: kunjungan pertama arahkan ke data warung",
         pg.inner_text("#judul").lower().startswith("data warung"), pg.inner_text("#judul"))
-    cek("pemilik: tab bawah lengkap 5 (termasuk Sinkron)", pg.eval_on_selector_all(".tabbar__item", "e=>e.length") == 5)
+    cek("pemilik: tab bawah lengkap 7 (termasuk Pesanan, Menu, Sinkron)",
+        pg.eval_on_selector_all(".tabbar__item", "e=>e.length") == 7)
 
     # isi data warung
     pg.fill("#nama", "Warung Bu Sari")

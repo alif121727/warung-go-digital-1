@@ -15,7 +15,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v26';
+const VERSI = 'wgd-v27';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -34,6 +34,7 @@ const KERANGKA = [
   './app/terbit.js',
   './app/styles.css',
   './app/menu.html',
+  './app/menu.js',
   './app/modul-transaksi.js',
   './app/modul-rating.js',
   './app/modul-katalog.js',
@@ -51,6 +52,8 @@ const KERANGKA = [
   './bersama/animasi.css',
   './bersama/animasi.js',
   './bersama/masuk.js',
+  './bersama/bunyi.js',
+  './bersama/pesanan.js',
   './bersama/masuk.css',
   './bersama/cerita.css',
   './bersama/cerita.js',
@@ -59,6 +62,7 @@ const KERANGKA = [
   './pemilik/',
   './pemilik/index.html',
   './pemilik/app.js',
+  './pemilik/pesanan-pemilik.js',
   './pemilik/manifest.webmanifest',
 
   // Panel Pengelola
