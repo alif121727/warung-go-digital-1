@@ -141,7 +141,13 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   `bersama/pembuka.css` + `bersama/pembuka.js`, gaya sejajar `ax-`/`fx-`.
   Sumbernya rekaman layar situs ini sendiri (640x360) yang dinaikkan ke HD dengan
   `python3 buat-video-pembuka.py` (butuh `video-sumber-pembuka.mp4`; penapis
-  `scale=1280:720:flags=lanczos,unsharp` lalu H.264 High + `faststart`).
+  `scale=1280:720:flags=lanczos` lalu H.264 High + `faststart`). CRF 23, preset
+  `slow`, audio 64k. **Jangan pasang `unsharp`:** dulu dipakai dan justru
+  merusak — ia menebalkan tepi huruf pada rekaman layar sehingga menambah halo
+  dan memperkuat derau rekaman. **Jangan pasang `-g`:** memaksa kerangka kunci
+  tiap 2 detik hanya berguna untuk melompat waktu, sedangkan pembuka diputar
+  lurus sampai habis. Terukur, `-g 60` menambah 876 KB (13%) tanpa satu pun
+  perubahan mutu (SSIM sama persis).
   Aturan yang **harus dijaga** (dijaga `uji/uji-pembuka.py`):
   - Kelas `pembuka-aktif` dipasang oleh skrip kecil di `<head>` **sebelum**
     halaman digambar, supaya beranda tidak berkelip lebih dulu. Lapisan hanya
@@ -150,13 +156,22 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
     gagal dimuat, kelasnya dilepas agar beranda tidak tertutup selamanya.
   - Latarnya `pointer-events: none` — hanya kedua tombolnya yang menangkap
     ketukan, sehingga halaman di belakang tetap bisa digulir/diklik.
+  - Selama pembuka tampil, animasi beranda **dihentikan** lewat
+    `.pembuka-aktif body > *:not(.pembuka) * { animation: none !important }`.
+    Ini bukan hiasan: animasi beranda berebut waktu prosesor dengan
+    pengawasandi video, dan terukur di Chromium lebih dari separuh bingkai
+    video terlepas (129 dari 233) bila dibiarkan. `animation-play-state: paused`
+    **tidak** menolong (masih 118 bingkai terlepas); harus `animation: none`.
+    Yang dimatikan hanya animasinya — isi beranda tetap terlihat dan tetap bisa
+    diklik (lihat aturan `pointer-events` di atas), dan animasi pembuka sendiri
+    tidak ikut termatikan karena `:not(.pembuka)`.
   - Mulai **tanpa suara** (peramban menolak autoplay bersuara); tombol pengeras
     di sebelah "Lewati" menyalakan suara bila dikehendaki.
   - Dilewati lewat tombol, tombol **Esc**, atau saat video habis; pilihan
     disimpan di `sessionStorage` (`wgd-pembuka`) sehingga tidak muncul lagi pada
     sesi yang sama. Video gagal dimuat → lapisan otomatis dilewati.
   - Tidak tampil saat `prefers-reduced-motion: reduce`.
-  - Video mp4 **tidak** di-precache service worker (6,5 MB); hanya poster
+  - Video mp4 **tidak** di-precache service worker; hanya poster
     `pembuka.jpg` yang masuk cache inti.
 - **Maskot**: 4 ilustrasi SVG di `warung-go-digital/ilustrasi/` (Pak Warung,
   Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
@@ -746,14 +761,35 @@ Sejak fitur ini ditambahkan, `pemilik/` dan `admin/` **tidak langsung terbuka**.
 `jalan()` yang baru dijalankan setelah masuk berhasil.
 
 - Berkas: `bersama/masuk.js`, `bersama/masuk.css`.
-- Masuk pertama lewat **Google**. Setelah itu pengguna boleh menyetel nama
-  pengguna + kata sandi sendiri, sehingga masuk berikutnya tidak perlu Google.
-- Kata sandi tidak pernah disimpan apa adanya: PBKDF2-SHA256, 150.000 putaran,
-  garam acak 16 bita per akun. Perbandingan sidik memakai waktu tetap.
-- **Kunci penyimpanan per peran** — `wgd-pemilik-akun-v1`, `wgd-pemilik-sesi-v1`,
-  `wgd-admin-akun-v1`, `wgd-admin-sesi-v1`. Awalan sengaja disamakan dengan
-  penyimpanan aplikasi, supaya aturan "aplikasi Pemilik hanya menyentuh kunci
-  `wgd-pemilik*`" tetap berlaku (dijaga `uji/uji-dua-aplikasi.py`).
+- Cara masuk **utama** adalah **nama pengguna + kata sandi**, dan cara itu
+  selalu tersedia. Google hanyalah **bonus** yang muncul bila
+  `WGD_GOOGLE_CLIENT_ID` diisi. Urutan ini disengaja: di dalam APK (WebView
+  Android) Google menolak menampilkan layar masuknya (`disallowed_useragent`),
+  sehingga gerbang yang **bergantung** pada Google membuat aplikasi tidak bisa
+  dibuka sama sekali. Jangan pernah mengembalikan Google ke posisi pertama.
+- Pemilik yang belum punya akun bisa membuatnya sendiri di gerbang
+  ("Buat akun"). Kata sandi tidak pernah disimpan apa adanya: PBKDF2-SHA256,
+  150.000 putaran, garam acak 16 bita per akun. Perbandingan sidik memakai
+  waktu tetap.
+- **Daftar akun dibagi dua aplikasi** lewat satu kunci `wgd-akun-v1`. Ini
+  disengaja: pengelola harus bisa **membuat dan menghapus akun pemilik**, dan
+  itu mustahil bila keduanya memakai daftar terpisah. Yang dibagi hanya nama
+  pengguna dan sidik kata sandi. **Data usaha tetap terpisah** —
+  `wgd-pemilik-v1` vs `wgd-admin-v1`, sesi `wgd-pemilik-sesi-v1` vs
+  `wgd-admin-sesi-v1`. Karena itu aturan "aplikasi Pemilik hanya menyentuh
+  kunci `wgd-pemilik*`" kini punya **satu pengecualian**: `wgd-akun-v1`
+  (dijaga `uji/uji-dua-aplikasi.py`).
+- Akun bawaan pengelola: saat aplikasi pengelola dibuka dan belum ada akun
+  pengelola, dibuatkan **`admin` / `admin123`** yang ditandai `harusGanti`.
+  Gerbang mengumumkannya terang-terangan dan panel "Akun saya" memperingatkan
+  sampai kata sandinya benar-benar diganti. Ini perlu karena tidak ada cara
+  lain menyediakan akun pengelola pertama (tidak ada pendaftaran surel).
+- **Kelola akun** ada di panel "Akun saya" milik pengelola: membuat akun
+  (pemilik atau pengelola) dan menghapusnya. **Akun pengelola terakhir tidak
+  boleh dihapus** supaya tidak ada yang mengunci dirinya sendiri dari panel.
+  Akun yang dihapus langsung kehilangan sesinya (diperiksa saat `Masuk.pasang`
+  dijalankan). Setiap pengguna bisa mengganti kata sandinya sendiri (wajib
+  membuktikan kata sandi lama).
 - `WGD_GOOGLE_CLIENT_ID` diisi lewat `<meta name="google-client-id">` di
   `pemilik/index.html` dan `admin/index.html`. Pembacanya ada di awal
   `bersama/masuk.js` (menyalin meta itu ke `window.WGD_GOOGLE_CLIENT_ID`;
@@ -762,12 +798,12 @@ Sejak fitur ini ditambahkan, `pemilik/` dan `admin/` **tidak langsung terbuka**.
   akun Google** (Google Cloud Console → APIs & Services → Credentials →
   OAuth client ID → Web application), jadi berkas repo sengaja dibiarkan
   kosong: tempel satu baris di `content=""`. Bila kosong, tombol Google
-  berjalan dalam **mode contoh** dan ditandai terang-terangan pada layar —
-  jangan pernah menyamarkan keadaan ini.
+  **tidak ditampilkan sama sekali** (dulu ada "mode contoh"; kini tidak ada,
+  karena nama pengguna + kata sandi sudah cukup).
 - `crypto.subtle` hanya ada di konteks aman (https, localhost, atau WebView
   Capacitor yang memakai `https://localhost`). Bila tidak ada (mis. dibuka lewat
-  `file://`), pembuatan kata sandi **dihentikan dengan penjelasan**, bukan
-  diganti dengan cara yang lemah. Masuk lewat Google tetap bisa.
+  `file://`), gerbang **mengatakannya terang-terangan dan menonaktifkan tombol
+  Masuk**, bukan diam-diam gagal atau memakai cara yang lemah.
 - Seluruh pemeriksaan berjalan di peramban. Ini penjaga pintu, bukan brankas —
   hal ini dinyatakan apa adanya di panel "Akun saya".
 
@@ -781,9 +817,14 @@ from importlib import import_module
 bantu = import_module("bantu-masuk")
 
 pg.goto(B + "pemilik/", wait_until="load"); pg.wait_for_timeout(900)
-bantu.masuk_cepat(pg, "pemilik")     # tulis sesi + reload (cepat)
-# atau bantu.lewati_gerbang(pg)      # tempuh alurnya seperti manusia
+bantu.masuk_cepat(pg, "pemilik")     # tulis akun + sesi, lalu reload (cepat)
+# atau bantu.masuk(pg, "pemilik")    # tempuh alurnya seperti manusia
 ```
+
+**Akun bawaan pengelola** (`admin` / `admin123`) dibuat otomatis saat aplikasi
+pengelola dibuka, jadi uji pengelola bisa langsung memakainya:
+`bantu.masuk(pg, "pengelola", sandi="admin123")` — atau `masuk_cepat` yang
+menulis akunnya sendiri.
 
 ## Kemasan APK & IPA (Capacitor)
 

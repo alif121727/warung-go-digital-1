@@ -414,6 +414,12 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 1440, "height": 900})
     pg.goto(LANDING, wait_until="load")
     pg.wait_for_timeout(1600)
+    # Lewati pembuka lebih dulu: selama pembuka tampil, animasi beranda
+    # sengaja dihentikan agar video tidak tersendat. Parallax & aurora yang
+    # diperiksa di sini adalah sifat setelah pembuka ditutup.
+    if pg.eval_on_selector_all("#pembukaLewati", "e=>e.length"):
+        pg.click("#pembukaLewati")
+        pg.wait_for_timeout(900)
     r = pg.evaluate("""()=>{
       const els=[...document.querySelectorAll('.ax-parallax')];
       return {jumlah:els.length,

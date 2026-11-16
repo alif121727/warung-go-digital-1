@@ -85,9 +85,13 @@ with sync_playwright() as p:
     cek("pemilik: tanpa error konsol", not errs, str(errs[:2]))
 
     # kunci penyimpanan terpisah
+    # Catatan: `wgd-akun-v1` (daftar akun) MEMANG dibagi kedua aplikasi —
+    # pengelola harus bisa membuat & menghapus akun pemilik. Yang wajib
+    # terpisah adalah DATA USAHA (laporan, mitra, catatan).
     kunci_pemilik = pg.evaluate("()=>Object.keys(localStorage)")
-    cek("pemilik: hanya memakai kunci pemilik",
-        all(k.startswith("wgd-pemilik") for k in kunci_pemilik), str(kunci_pemilik))
+    cek("pemilik: data usaha hanya di kunci pemilik",
+        all(k == "wgd-akun-v1" or k.startswith("wgd-pemilik") for k in kunci_pemilik),
+        str(kunci_pemilik))
     # Mode "lewat pesan" (andal di dalam APK)
     pg.click('[data-cara="pesan"]'); pg.wait_for_timeout(600)
     teks_pesan = pg.inner_text("#caraIsi")
@@ -144,8 +148,8 @@ with sync_playwright() as p:
     n_cat = pa.evaluate("()=>Object.values(JSON.parse(localStorage.getItem('wgd-admin-v1')).mitra)[0].catatan.length")
     cek("pengelola: impor ulang tidak menggandakan catatan", n_cat == 1, f"{n_cat} catatan")
 
-    cek("pengelola: kunci terpisah dari pemilik",
-        pa.evaluate("()=>Object.keys(localStorage).every(k=>k.startsWith('wgd-admin'))"),
+    cek("pengelola: data usaha terpisah dari pemilik",
+        pa.evaluate("()=>Object.keys(localStorage).every(k=>k==='wgd-akun-v1'||k.startsWith('wgd-admin'))"),
         str(pa.evaluate("()=>Object.keys(localStorage)")))
     cek("pengelola: tanpa error konsol", not errs2, str(errs2[:2]))
 

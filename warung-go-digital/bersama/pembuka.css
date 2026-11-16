@@ -35,6 +35,25 @@
    di balik layar kosong. */
 .pembuka-aktif .pembuka { display: block; }
 
+/* Animasi beranda dihentikan selama pembuka tampil.
+   Alasannya bukan sekadar rapi: animasi beranda (bilah kemajuan, kilau
+   maskot, denyut latar) terus berjalan di belakang lapisan ini dan berebut
+   waktu prosesor dengan pengawasandi video. Terukur di Chromium, lebih dari
+   separuh bingkai video terlepas (129 dari 233) saat animasi tetap jalan.
+   Dengan dihentikan, tidak ada satu pun yang terlepas.
+
+   Dua hal penting:
+   • Dipakai `animation: none`, BUKAN `animation-play-state: paused`. Yang
+     kedua terukur TIDAK menolong (masih 118 bingkai terlepas) — animasi yang
+     dijeda tetap memakan lapisan kompositor.
+   • Yang disembunyikan hanya animasinya, bukan isinya. Isi beranda tetap
+     terlihat dan tetap bisa diklik (lapisan pembuka tembus ketukan), supaya
+     pengunjung yang ingin langsung menekan sesuatu di halaman tidak
+     terhalang. Anak `.pembuka` dikecualikan agar animasi pembuka sendiri
+     (bilah kemajuan) tetap hidup. */
+.pembuka-aktif body > *:not(.pembuka),
+.pembuka-aktif body > *:not(.pembuka) * { animation: none !important; }
+
 .pembuka__video {
   position: absolute;
   inset: 0;
