@@ -135,6 +135,29 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   Di panggung lengket hanya video adegan aktif yang berjalan; pada tampilan daftar
   (layar sempit / kurangi gerak) `IntersectionObserver` memutar video yang terlihat.
   Dijaga `uji/uji-cerita.py`.
+- **Pembuka video (intro)** di beranda: `warung-go-digital/video/pembuka.mp4`
+  (1280x720, 60 detik, bersuara) ditampilkan sebagai lapisan penuh layar sebelum
+  beranda, dengan tombol **"Lewati" di kanan bawah**. Berkasnya:
+  `bersama/pembuka.css` + `bersama/pembuka.js`, gaya sejajar `ax-`/`fx-`.
+  Sumbernya rekaman layar situs ini sendiri (640x360) yang dinaikkan ke HD dengan
+  `python3 buat-video-pembuka.py` (butuh `video-sumber-pembuka.mp4`; penapis
+  `scale=1280:720:flags=lanczos,unsharp` lalu H.264 High + `faststart`).
+  Aturan yang **harus dijaga** (dijaga `uji/uji-pembuka.py`):
+  - Kelas `pembuka-aktif` dipasang oleh skrip kecil di `<head>` **sebelum**
+    halaman digambar, supaya beranda tidak berkelip lebih dulu. Lapisan hanya
+    tampil bila kelas itu ada — jadi tanpa JavaScript ia **tidak pernah** muncul.
+    Skrip `<head>` itu juga memasang jaring pengaman 3 detik: bila `pembuka.js`
+    gagal dimuat, kelasnya dilepas agar beranda tidak tertutup selamanya.
+  - Latarnya `pointer-events: none` — hanya kedua tombolnya yang menangkap
+    ketukan, sehingga halaman di belakang tetap bisa digulir/diklik.
+  - Mulai **tanpa suara** (peramban menolak autoplay bersuara); tombol pengeras
+    di sebelah "Lewati" menyalakan suara bila dikehendaki.
+  - Dilewati lewat tombol, tombol **Esc**, atau saat video habis; pilihan
+    disimpan di `sessionStorage` (`wgd-pembuka`) sehingga tidak muncul lagi pada
+    sesi yang sama. Video gagal dimuat → lapisan otomatis dilewati.
+  - Tidak tampil saat `prefers-reduced-motion: reduce`.
+  - Video mp4 **tidak** di-precache service worker (6,5 MB); hanya poster
+    `pembuka.jpg` yang masuk cache inti.
 - **Maskot**: 4 ilustrasi SVG di `warung-go-digital/ilustrasi/` (Pak Warung,
   Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
   terbaca di latar gelap maupun krem. Bebas dipakai untuk poster/stand QR.

@@ -18,6 +18,7 @@ python3 uji/uji-menu-publik.py    # 16 uji halaman menu publik + terbitkan menu
 python3 uji/uji-client-id.py      # 8 uji pembaca Client ID Google
 python3 uji/uji-terbit-otomatis.py # 14 uji penerbitan menu otomatis
 python3 uji/uji-google.py         # 57 uji kesiapan mesin pencari (SEO)
+python3 uji/uji-pembuka.py        # 29 uji video pembuka (intro) beranda
 ```
 
 Uji yang memeriksa data terisi memanggil `Store.muatContoh()` lebih dulu, karena
@@ -56,3 +57,10 @@ mitra — serta uji bahwa tanggal yang sama ditimpa, bukan digandakan.
 `uji-akar.py` menyalin isi `warung-go-digital/` ke folder sementara, menyajikannya
 sebagai akar domain (seperti GitHub Pages / Vercel), lalu memeriksa bahwa landing,
 Panel Mitra, navigasi, URL QR, dan menu publik tetap benar.
+
+`uji-pembuka.py` menguji video pembuka (intro) beranda: lapisan muncul di kunjungan
+pertama, memutar video 1280x720, tombol "Lewati" berada di kanan bawah dan cukup besar
+untuk jari, "Lewati"/Esc menutup lapisan dan menandainya di `sessionStorage` (tidak
+muncul lagi pada sesi yang sama), serta lapisan TIDAK tampil tanpa JavaScript, saat
+"kurangi gerak", atau ketika video/skripnya gagal dimuat. Uji ini memblokir service
+worker agar permintaan berkas bisa dicegat dengan pasti.
