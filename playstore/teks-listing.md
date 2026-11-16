@@ -174,6 +174,21 @@ wajib diungkapkan sebagai pengumpulan data otomatis.
 
 ## 6. Catatan rilis
 
+### Versi 1.4.1 (versionCode 10401)
+
+```
+Perbaikan masuk di aplikasi Android.
+
+• Masuk sekarang memakai nama pengguna + kata sandi sebagai cara utama,
+  sehingga aplikasi bisa dibuka di dalam WebView Android. Sebelumnya urutannya
+  Google dulu, dan Google menolak tampil di WebView sehingga pengguna mentok.
+  Google kini hanya pintasan tambahan bila Client ID diisi.
+• Pengelola bisa membuat dan menghapus akun mitra lewat panel Akun saya.
+  Akun bawaan pengelola: admin / admin123 (segera ganti kata sandinya).
+• Pembuka video di beranda lebih ringan (7,9 MB -> 6,9 MB) dan tidak lagi
+  tersendat saat diputar.
+```
+
 ### Versi 1.4.0 (versionCode 10400)
 
 ```

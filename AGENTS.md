@@ -227,14 +227,14 @@ Google tetap menemukan situs lewat tautan luar, tetapi lebih lambat.
 `warung-go-digital/unduh.html` (+ `unduh.js`, gaya di `bersama/gaya-unduh.css`)
 khusus untuk mengunduh aplikasi:
 
-- Android: APK `v1.4.0` dari rilis resmi GitHub.
+- Android: APK `v1.4.1` dari rilis resmi GitHub.
 **Menaikkan versi aplikasi.** Tag rilis **tidak** ditulis tetap di alur kerja;
 keduanya membacanya dari `apk/package.json`:
 
 | Alur | Tag yang dibuat |
 |---|---|
-| `bangun-apk.yml` | `v<versi>` (mis. `v1.4.0`) |
-| `bangun-ipa.yml` | `ios-v<versi>` (mis. `ios-v1.4.0`) |
+| `bangun-apk.yml` | `v<versi>` (mis. `v1.4.1`) |
+| `bangun-ipa.yml` | `ios-v<versi>` (mis. `ios-v1.4.1`) |
 
 Sebelumnya tag dipatok tetap `v1.3.0`. Akibatnya, begitu rilis pertama dibuat,
 langkah lampirkan selalu terlewati ("rilis sudah punya APK"), sehingga APK yang
@@ -246,7 +246,7 @@ juga menyelaraskan tautan unduh di `index.html`, `unduh.html`, dan
 Catatan: `uji-landing.py` memeriksa tautan unduh secara **teks**, jadi berkas
 itu akan gagal sampai nomor versinya ikut diperbarui.
 - iOS: **tidak memakai berkas**, melainkan menambahkan situs ke layar utama
-  lewat Safari (lihat bagian berikut). Berkas IPA `ios-v1.4.0` tetap tersedia
+  lewat Safari (lihat bagian berikut). Berkas IPA `ios-v1.4.1` tetap tersedia
   sebagai jalur alternatif di dalam kartu yang sama.
 - `unduh.js` menandai kartu yang cocok dengan perangkat ("HP Anda") tanpa
   menghilangkan pilihan lain; tidak pernah memaksa.

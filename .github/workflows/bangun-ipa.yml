@@ -201,15 +201,16 @@ jobs:
 
             Keduanya berfungsi tanpa internet dan tidak membuka peramban.
 
-            Versi 1.4.0:
-            - Gerbang masuk untuk aplikasi Warung dan Panel Pengelola. Masuk
-              pertama lewat akun Google; setelah itu bisa menyetel nama pengguna
-              dan kata sandi sendiri. Kata sandi tidak pernah disimpan apa
-              adanya (PBKDF2-SHA256, 150.000 putaran, garam acak per akun).
-            - Tampilan: warna teks kecil digelapkan agar terbaca (kontras
-              dinaikkan dari ~3:1 menjadi ~5:1), tombol diperbesar supaya
-              nyaman disentuh, dan halaman tidak lagi bisa digeser ke samping
-              di layar sempit.
+            Versi 1.4.1:
+            - Masuk kini memakai nama pengguna + kata sandi sebagai cara utama,
+              sehingga APK bisa dibuka di dalam WebView Android. Sebelumnya
+              urutannya Google dulu; Google menolak tampil di WebView
+              (disallowed_useragent) sehingga pengguna mentok di gerbang.
+              Google sekarang hanya pintasan tambahan bila Client ID diisi.
+            - Pengelola bisa membuat dan menghapus akun lewat panel Akun saya.
+              Akun bawaan: admin / admin123 (segera ganti kata sandinya).
+            - Pembuka video: berkas 7,9 MB -> 6,9 MB dan tidak lagi tersendat
+              (animasi beranda dihentikan selama pembuka tampil).
 
             Android: unduh berkas .apk, buka di HP, izinkan pemasangan dari sumber ini.
             iPhone: berkas .ipa belum ditandatangani Apple. Pasang lewat Sideloadly
