@@ -44,6 +44,32 @@
 <link rel="stylesheet" href="styles.css" />
 <link rel="stylesheet" href="bersama/animasi.css" />
 <link rel="stylesheet" href="bersama/cerita.css" />
+<link rel="stylesheet" href="bersama/pembuka.css" />
+
+<!-- Pembuka video: kelasnya dipasang SEBELUM halaman digambar, supaya beranda
+     tidak berkelip lebih dulu. Lapisan ini hanya muncul bila JavaScript hidup
+     dan pengunjung tidak memilih "kurangi gerak"; tanpa JavaScript ia tidak
+     pernah tampil, jadi isi beranda tidak mungkin tertutup.
+
+     Jaring pengaman: bila `bersama/pembuka.js` gagal dimuat, lapisan dibuang
+     setelah 3 detik sehingga beranda tidak pernah tertutup selamanya. -->
+<script>
+  (function () {
+    try {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      if (sessionStorage.getItem("wgd-pembuka") === "1") return;
+      document.documentElement.classList.add("pembuka-aktif");
+      window.__wgdPembukaSiap = false;
+      setTimeout(function () {
+        if (!window.__wgdPembukaSiap) {
+          document.documentElement.classList.remove("pembuka-aktif");
+        }
+      }, 3000);
+    } catch (e) {
+      /* penyimpanan tidak tersedia: cukup lewati pembuka */
+    }
+  })();
+</script>
 
 <!-- Data terstruktur: memberi tahu Google apa itu "Warung Go Digital".
      Organization + WebSite membuat nama merek dikenali; FAQPage membuat
@@ -148,6 +174,39 @@
 </script>
 </head>
 <body>
+
+<!-- ── Pembuka video (intro) ─────────────────────────────────
+     Video promosi HD sebelum beranda. Bisa dilewati kapan saja lewat tombol
+     "Lewati" di kanan bawah. Tidak memblokir halaman: latarnya tembus
+     ketukan, hanya tombolnya yang menangkap ketukan. -->
+<section class="pembuka" id="pembuka" role="region" aria-label="Video pembuka Warung Go Digital">
+  <video class="pembuka__video" id="pembukaVideo"
+         poster="video/pembuka.jpg" muted playsinline preload="none"
+         aria-label="Video promosi Warung Go Digital: etalase digital untuk warung dan UMKM">
+    <source src="video/pembuka.mp4" type="video/mp4" />
+  </video>
+  <div class="pembuka__lapis" aria-hidden="true"></div>
+
+  <div class="pembuka__merek">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/>
+    </svg>
+    <span>Warung<b>Go</b>Digital</span>
+  </div>
+
+  <div class="pembuka__kendali">
+    <button class="pembuka__suara" id="pembukaSuara" type="button" aria-pressed="false" aria-label="Nyalakan suara video">
+      <svg class="ikon-bunyi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+      <svg class="ikon-bisu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>
+    </button>
+    <button class="pembuka__lewati" id="pembukaLewati" type="button">
+      Lewati
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+
+  <div class="pembuka__bilah" aria-hidden="true"><i id="pembukaBilah"></i></div>
+</section>
 
 <!-- Butir halus di atas seluruh halaman (tekstur "layar") -->
 <div class="fx-grain" aria-hidden="true"></div>
@@ -1001,6 +1060,7 @@
 <script src="app.js"></script>
 <script src="bersama/animasi.js"></script>
 <script src="bersama/cerita.js"></script>
+<script src="bersama/pembuka.js"></script>
 <script src="pasang.js"></script>
 </body>
 </html>

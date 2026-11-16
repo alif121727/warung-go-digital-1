@@ -15,7 +15,7 @@
  * otomatis dibuang saat aktivasi.
  */
 
-const VERSI = 'wgd-v25';
+const VERSI = 'wgd-v26';
 const CACHE_INTI = `${VERSI}-inti`;
 const CACHE_ASET = `${VERSI}-aset`;
 
@@ -92,6 +92,13 @@ const KERANGKA = [
   './video/cerita-4.jpg',
   './video/cerita-5.jpg',
   './video/cerita-6.jpg',
+
+  // Poster pembuka. Video pembuka (mp4) sengaja TIDAK masuk cache inti —
+  // ukurannya besar dan hanya dipakai sekali per sesi; ia tertangkap cache
+  // aset saat benar-benar diputar.
+  './bersama/pembuka.css',
+  './bersama/pembuka.js',
+  './video/pembuka.jpg',
 ];
 
 self.addEventListener('install', (peristiwa) => {
