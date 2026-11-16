@@ -817,11 +817,20 @@ Sejak fitur ini ditambahkan, `pemilik/` dan `admin/` **tidak langsung terbuka**.
   lalu **baru** membuang kunci lama setelah dipastikan tersimpan (kalau tidak,
   akun yang dihapus pengelola akan muncul lagi). Dijaga `uji/uji-masuk.py`
   (uji "akun lama").
-- Akun bawaan pengelola: saat aplikasi pengelola dibuka dan belum ada akun
-  pengelola, dibuatkan **`admin` / `admin123`** yang ditandai `harusGanti`.
-  Gerbang mengumumkannya terang-terangan dan panel "Akun saya" memperingatkan
-  sampai kata sandinya benar-benar diganti. Ini perlu karena tidak ada cara
-  lain menyediakan akun pengelola pertama (tidak ada pendaftaran surel).
+- **Tidak ada akun bawaan berkata-sandi tetap.** Dulu aplikasi pengelola
+  membuat sendiri akun `admin` / `admin123` dan gerbang mengumumkannya di layar
+  masuk. Itu dihapus: kata sandi tetap yang tertulis di kode publik sama saja
+  dengan tidak terkunci — siapa pun yang membuka `bersama/masuk.js` bisa
+  membacanya, dan mengumumkannya di layar masuk menghapus privasi bagi semua
+  pengguna. Sekarang, bila sebuah peran belum punya akun, gerbang menawarkan
+  **"Buat akun"** dan pemiliknya memilih sendiri nama pengguna & kata sandinya
+  (berlaku untuk Pemilik maupun Pengelola). **Jangan kembalikan akun bawaan,
+  dan jangan pernah menampilkan kredensial di layar masuk** — termasuk di
+  placeholder, teks bantuan, atau layar "Lupa kata sandi". Penanda `harusGanti`
+  masih dikenali supaya akun lama di perangkat yang pernah memakai akun bawaan
+  tetap diperingatkan di panel "Akun saya". Dijaga `uji/uji-masuk.py`
+  (uji 8: gerbang tidak membocorkan kata sandi; tidak ada akun dibuat
+  diam-diam).
 - **Kelola akun** ada di panel "Akun saya" milik pengelola: membuat akun
   (pemilik atau pengelola) dan menghapusnya. **Akun pengelola terakhir tidak
   boleh dihapus** supaya tidak ada yang mengunci dirinya sendiri dari panel.
@@ -859,10 +868,10 @@ bantu.masuk_cepat(pg, "pemilik")     # tulis akun + sesi, lalu reload (cepat)
 # atau bantu.masuk(pg, "pemilik")    # tempuh alurnya seperti manusia
 ```
 
-**Akun bawaan pengelola** (`admin` / `admin123`) dibuat otomatis saat aplikasi
-pengelola dibuka, jadi uji pengelola bisa langsung memakainya:
-`bantu.masuk(pg, "pengelola", sandi="admin123")` — atau `masuk_cepat` yang
-menulis akunnya sendiri.
+**Akun pengelola untuk uji:** tidak ada akun bawaan lagi, jadi uji menulis
+akunnya sendiri. `bantu.masuk(pg, "pengelola")` dan `masuk_cepat` memakai
+`bantu.AKUN_UJI` (`uji-admin` / `warungku123`) — ganti bila perlu dengan
+argumen `username=` / `sandi=`.
 
 ## Kemasan APK & IPA (Capacitor)
 

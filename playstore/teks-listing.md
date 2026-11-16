@@ -184,7 +184,6 @@ Perbaikan masuk di aplikasi Android.
   Google dulu, dan Google menolak tampil di WebView sehingga pengguna mentok.
   Google kini hanya pintasan tambahan bila Client ID diisi.
 • Pengelola bisa membuat dan menghapus akun mitra lewat panel Akun saya.
-  Akun bawaan pengelola: admin / admin123 (segera ganti kata sandinya).
 • Pembuka video di beranda lebih ringan (7,9 MB -> 6,9 MB) dan tidak lagi
   tersendat saat diputar.
 ```

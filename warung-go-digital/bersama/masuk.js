@@ -15,10 +15,14 @@
       Pengelola, serta mengganti kata sandinya sendiri.
    5. Setiap pengguna bisa mengganti kata sandinya sendiri.
 
-   AKUN BAWAAN
-   Saat Panel Pengelola pertama kali dibuka dan belum ada akun pengelola,
-   dibuatkan satu akun bawaan: nama pengguna `admin`, kata sandi `admin123`.
-   Akun itu ditandai "wajib ganti" sampai kata sandinya diganti.
+   AKUN PERTAMA DIBUAT SENDIRI
+   TIDAK ada akun bawaan dengan kata sandi tetap, dan tidak ada kredensial
+   yang pernah ditampilkan di layar masuk. Kata sandi tetap yang tertulis di
+   kode publik sama saja dengan tidak terkunci: siapa pun yang membuka sumber
+   berkas ini bisa membacanya. Karena itu, bila belum ada akun untuk sebuah
+   peran, gerbang menawarkan "Buat akun" dan pemiliknya memilih sendiri nama
+   pengguna & kata sandinya. Penanda `harusGanti` masih dikenali supaya akun
+   lama di perangkat yang pernah memakai akun bawaan tetap diperingatkan.
 
    SATU DAFTAR AKUN UNTUK DUA APLIKASI
    Akun disimpan di kunci `wgd-akun-v1` yang dibaca kedua aplikasi. Ini
@@ -56,8 +60,6 @@ const Masuk = (() => {
   const KUNCI_LAMA = ['wgd-pemilik-akun-v1', 'wgd-admin-akun-v1'];
   const LAMA_SESI_JAM = 12;
   const PBKDF2_ULANGAN = 150000;
-
-  const ADMIN_BAWAAN = { username: 'admin', sandi: 'admin123', nama: 'Pengelola' };
 
   const S = Data.buatPenyimpanan(KUNCI_AKUN);
 
@@ -293,19 +295,7 @@ const Masuk = (() => {
     return { ok: true };
   };
 
-  const adminBawaanBelumAda = () => !daftar().some((a) => a.peran === 'pengelola');
-
-  const pastikanAdminBawaan = async () => {
-    if (adminBawaanBelumAda() && adaKripto()) {
-      await buatAkun({
-        peran: 'pengelola',
-        username: ADMIN_BAWAAN.username,
-        sandi: ADMIN_BAWAAN.sandi,
-        nama: ADMIN_BAWAAN.nama,
-        harusGanti: true,
-      });
-    }
-  };
+  const belumAdaAkun = (peran) => !daftar().some((a) => a.peran === peran);
 
   /* ── Sesi ─────────────────────────────────────────────── */
   const bukaSesi = (peran, username) => {
@@ -412,25 +402,18 @@ const Masuk = (() => {
 
     /* Layar: masuk dengan nama pengguna & kata sandi */
     const layarMasuk = () => {
-      const adaPengelola = daftar().some((a) => a.peran === 'pengelola');
-      const akunBawaan = peran === 'pengelola'
-        ? daftar().find((a) => a.username === ADMIN_BAWAAN.username && a.peran === 'pengelola')
-        : null;
-      const pakaiBawaan = !!(akunBawaan && akunBawaan.harusGanti);
+      const belumAda = belumAdaAkun(peran);
 
       kartu.innerHTML = `
         ${kartuMerek(peran)}
         <h2>Masuk ke aplikasi</h2>
         <p class="gerbang__ket">${bersih(info.sapaan)}. Masuk dulu agar catatan Anda tidak terbuka untuk siapa pun yang memegang HP ini.</p>
-        ${pakaiBawaan ? notis('awas', 'alert',
-          'Panel Pengelola memakai akun bawaan: nama pengguna <b>admin</b>, kata sandi <b>admin123</b>. ' +
-          'Segera ganti kata sandi lewat menu <b>Akun saya</b> setelah masuk.') : ''}
         <form id="gbForm" novalidate>
           <div class="gb-field">
             <label for="gbNamaPengguna">Nama pengguna</label>
             <input id="gbNamaPengguna" name="username" autocomplete="username"
                    autocapitalize="none" spellcheck="false"
-                   placeholder="${pakaiBawaan ? 'admin' : 'mis. bu-tini'}" />
+                   placeholder="mis. bu-tini" />
           </div>
           <div class="gb-field">
             <label for="gbSandi">Kata sandi</label>
@@ -440,14 +423,13 @@ const Masuk = (() => {
           <div id="gbGalat"></div>
           <button class="gb-btn gb-btn--utama" type="submit">Masuk</button>
         </form>
-        ${peran === 'pemilik' && !daftar().some((a) => a.peran === 'pemilik') ? `
+        ${belumAda ? `
           <div class="gerbang__kaki">
-            Belum punya akun? <button class="gerbang__tautan" id="gbKeBuat">Buat akun</button>
-          </div>` : ''}
-        ${peran === 'pemilik' ? `
+            Belum ada akun di perangkat ini. <button class="gerbang__tautan" id="gbKeBuat">Buat akun</button>
+          </div>` : `
           <div class="gerbang__kaki">
             <button class="gerbang__tautan" id="gbLupa">Lupa kata sandi?</button>
-          </div>` : ''}
+          </div>`}
         ${adaClientId() ? `
           <div class="gerbang__pisah">atau</div>
           <button class="btn-google" id="gbGoogle">
@@ -487,12 +469,12 @@ const Masuk = (() => {
       }
     };
 
-    /* Layar: buat akun sendiri (pemilik) */
+    /* Layar: buat akun pertama (dipakai bila peran ini belum punya akun) */
     const layarBuat = () => {
       kartu.innerHTML = `
         ${kartuMerek(peran)}
         <h2>Buat cara masuk Anda</h2>
-        <p class="gerbang__ket">Pilih nama pengguna dan kata sandi yang mudah Anda ingat. Setelah ini, Anda masuk tanpa perlu Google.</p>
+        <p class="gerbang__ket">Pilih nama pengguna dan kata sandi yang mudah Anda ingat. Hanya Anda yang tahu kata sandi ini — aplikasi tidak menampilkannya dan tidak mengirimkannya ke mana pun.</p>
         <form id="gbBuat" novalidate>
           <div class="gb-field">
             <label for="gbBaruNama">Nama pengguna</label>
@@ -554,8 +536,8 @@ const Masuk = (() => {
         <p class="gerbang__ket">Kata sandi tidak bisa dikirim ulang, sebab kami tidak menyimpan surel pemulihan.</p>
         ${notis('info', 'shield',
           peran === 'pengelola'
-            ? 'Bila Anda pengelola, mintalah pemilik akun membuat ulang lewat Panel Pengelola. Bila tidak ada lagi yang bisa masuk, hapus data aplikasi lalu masuk dengan akun bawaan <b>admin</b> / <b>admin123</b>.'
-            : 'Mintalah <b>Pengelola</b> membuat ulang akun Anda, atau membuat akun baru. Bila ini perangkat Anda sendiri dan belum ada akun pengelola, Anda bisa membuat akun baru di layar awal.')}
+            ? 'Mintalah pengelola lain membuat ulang akun Anda lewat panel Akun saya. Bila Anda satu-satunya pengelola dan kata sandinya hilang, hapus data aplikasi di HP ini lalu buat akun baru di layar awal — data usaha yang belum tersinkron akan ikut terhapus.'
+            : 'Mintalah <b>Pengelola</b> membuat ulang akun Anda lewat panel Akun saya. Bila ini perangkat Anda sendiri dan belum ada akun pengelola, Anda bisa membuat akun baru di layar awal — tetapi data usaha yang belum tersinkron akan ikut terhapus.')}
         <div class="gerbang__tindak">
           <button class="gb-btn gb-btn--halus" id="gbBalik">Kembali</button>
         </div>`;
@@ -796,8 +778,6 @@ const Masuk = (() => {
 
   /* ── Pasang gerbang pada sebuah aplikasi ──────────────── */
   async function pasang({ peran, setelahMasuk }) {
-    if (peran === 'pengelola') await pastikanAdminBawaan();
-
     const sesi = sesiAktif(peran);
     if (sesi) {
       const akun = cariUsername(peran, sesi.username);
@@ -812,7 +792,7 @@ const Masuk = (() => {
     pasang, panelAkun, keluar, sesiAktif,
     akunPeran, semuaAkun, buatAkun, hapusAkun, gantiSandi,
     setelNamaSandi, masukNamaSandi, periksaSandi, ukurKekuatan,
-    adaClientId, ADMIN_BAWAAN,
+    adaClientId, belumAdaAkun,
   };
 })();
 

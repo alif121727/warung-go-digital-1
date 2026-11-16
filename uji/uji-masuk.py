@@ -10,8 +10,10 @@ keamanannya:
 3. Kata sandi TIDAK PERNAH tersimpan apa adanya.
 4. Sesi bertahan saat halaman dimuat ulang, dan hilang setelah keluar.
 5. Kata sandi lemah / tidak sama ditolak, nama pengguna ngawur ditolak.
-6. Akun bawaan pengelola (admin/admin123) dibuat otomatis dan ditandai wajib
-   diganti sampai kata sandinya benar-benar diganti.
+6. TIDAK ada akun bawaan berkata-sandi tetap, dan gerbang TIDAK pernah
+   menampilkan kredensial apa pun. Bila sebuah peran belum punya akun, gerbang
+   menawarkan "Buat akun" dan pemiliknya memilih nama pengguna & kata sandi
+   sendiri.
 7. Pengelola bisa MEMBUAT dan MENGHAPUS akun, serta mengganti kata sandinya.
 8. Akun yang dihapus tidak bisa lagi masuk, termasuk lewat sesi lamanya.
 9. Data usaha Pemilik dan Pengelola tetap terpisah (hanya daftar akun dibagi).
@@ -163,24 +165,40 @@ def utama():
         cek("lupa sandi: tidak ada error konsol", not errs, errs[:2])
         ctx.close()
 
-        # ═══ 8. Akun bawaan pengelola dibuat otomatis ═══
+        # ═══ 8. Pengelola pertama membuat akunnya sendiri (tanpa akun bawaan) ═══
+        # Tidak boleh ada kata sandi tetap di kode: kata sandi yang tertulis di
+        # kode publik sama saja dengan tidak terkunci. Karena itu gerbang tidak
+        # pernah mengumumkan kredensial apa pun, dan pemiliknya membuat akun.
         ctx2, pg2, errs2 = buka(br, "pengelola")
         cek("pengelola: gerbang tampil", pg2.eval_on_selector_all(".gerbang", "e=>e.length") == 1)
-        cek("pengelola: akun bawaan diumumkan di gerbang",
-            "admin123" in pg2.inner_text("#gbKartu"), pg2.inner_text("#gbKartu")[:80])
+        teks_gerbang = pg2.inner_text("#gbKartu")
+        cek("pengelola: gerbang TIDAK membocorkan kata sandi",
+            "admin123" not in teks_gerbang and "kata sandi bawaan" not in teks_gerbang.lower(),
+            teks_gerbang[:90].replace("\n", " "))
+        cek("pengelola: tidak ada akun dibuat diam-diam",
+            pg2.evaluate("""()=>{const d=JSON.parse(localStorage.getItem('wgd-akun-v1')||'{}');
+                return Array.isArray(d.akun) ? d.akun.length : 0;}""") == 0)
         cek("pengelola: form nama pengguna langsung tampil",
             pg2.eval_on_selector_all("#gbForm", "e=>e.length") == 1)
+        cek("pengelola: ditawari buat akun karena belum ada akun",
+            pg2.eval_on_selector_all("#gbKeBuat", "e=>e.length") == 1)
 
-        pg2.fill("#gbNamaPengguna", "admin")
-        pg2.fill("#gbSandi", "admin123")
-        pg2.click("#gbForm button[type=submit]")
-        pg2.wait_for_timeout(1600)
-        cek("pengelola: masuk dengan admin/admin123",
+        # Buat akun pengelola pertama.
+        pg2.click("#gbKeBuat")
+        pg2.wait_for_timeout(400)
+        pg2.fill("#gbBaruNama", "pengelola-uji")
+        pg2.fill("#gbBaruSandi", "rahasia-uji-123")
+        pg2.fill("#gbUlangSandi", "rahasia-uji-123")
+        pg2.click("#gbBuat button[type=submit]")
+        pg2.wait_for_timeout(1800)
+        cek("pengelola: masuk setelah buat akun sendiri",
             pg2.eval_on_selector_all(".gerbang", "e=>e.length") == 0)
         cek("pengelola: aplikasi terbuka", pg2.eval_on_selector_all("#view .card", "e=>e.length") > 0)
         cek("pengelola: akun tersimpan di daftar akun",
             pg2.evaluate("""()=>JSON.parse(localStorage.getItem('wgd-akun-v1'))
-                .akun.find(a=>a.peran==='pengelola').username""") == "admin")
+                .akun.find(a=>a.peran==='pengelola').username""") == "pengelola-uji")
+        cek("pengelola: kata sandi tidak tersimpan apa adanya",
+            "rahasia-uji-123" not in pg2.evaluate("()=>localStorage.getItem('wgd-akun-v1')"))
         cek("pengelola: tanpa error konsol", not errs2, errs2[:2])
 
         # ═══ 9. Pengelola: ganti kata sandi sendiri ═══
@@ -188,10 +206,9 @@ def utama():
         pg2.wait_for_timeout(700)
         modal = pg2.inner_text("#modal").lower()
         cek("panel akun: ada bagian ganti kata sandi", "ganti kata sandi" in modal)
-        cek("panel akun: memperingatkan sandi bawaan", "bawaan" in modal)
         cek("panel akun: ada bagian kelola akun", "kelola akun" in modal)
 
-        pg2.fill("#akLama", "admin123")
+        pg2.fill("#akLama", "rahasia-uji-123")
         pg2.fill("#akBaru", "warungku123")
         pg2.fill("#akUlang", "warungku123")
         pg2.click("#akGanti button[type=submit]")
@@ -203,28 +220,26 @@ def utama():
         pg2.evaluate("()=>localStorage.removeItem('wgd-admin-sesi-v1')")
         pg2.reload(wait_until="load")
         pg2.wait_for_timeout(1200)
-        pg2.fill("#gbNamaPengguna", "admin")
+        pg2.fill("#gbNamaPengguna", "pengelola-uji")
         pg2.fill("#gbSandi", "warungku123")
         pg2.click("#gbForm button[type=submit]")
         pg2.wait_for_timeout(1600)
         cek("pengelola: masuk dengan kata sandi baru",
             pg2.eval_on_selector_all(".gerbang", "e=>e.length") == 0)
-        cek("pengelola: akun bawaan tidak ditandai lagi",
-            "kata sandi bawaan" not in pg2.inner_text("body"))
 
         # Kata sandi lama tidak boleh lagi berlaku.
         pg2.evaluate("()=>localStorage.removeItem('wgd-admin-sesi-v1')")
         pg2.reload(wait_until="load")
         pg2.wait_for_timeout(1200)
-        pg2.fill("#gbNamaPengguna", "admin")
-        pg2.fill("#gbSandi", "admin123")
+        pg2.fill("#gbNamaPengguna", "pengelola-uji")
+        pg2.fill("#gbSandi", "rahasia-uji-123")
         pg2.click("#gbForm button[type=submit]")
         pg2.wait_for_timeout(1300)
         cek("pengelola: kata sandi lama tidak berlaku lagi",
             pg2.eval_on_selector_all(".gerbang", "e=>e.length") == 1)
 
         # Masuk kembali untuk uji kelola akun.
-        pg2.fill("#gbNamaPengguna", "admin")
+        pg2.fill("#gbNamaPengguna", "pengelola-uji")
         pg2.fill("#gbSandi", "warungku123")
         pg2.click("#gbForm button[type=submit]")
         pg2.wait_for_timeout(1600)
@@ -271,7 +286,7 @@ def utama():
         daftar2 = pg2.evaluate("""()=>JSON.parse(localStorage.getItem('wgd-akun-v1'))
             .akun.map(a=>a.peran+':'+a.username)""")
         cek("pengelola: akun pemilik terhapus", "pemilik:bu-sari" not in daftar2, str(daftar2))
-        cek("pengelola: akun pengelola tetap ada", "pengelola:admin" in daftar2, str(daftar2))
+        cek("pengelola: akun pengelola tetap ada", "pengelola:pengelola-uji" in daftar2, str(daftar2))
 
         # Akun terhapus tidak bisa masuk lagi, meski sesinya masih tersimpan.
         pg2.goto(B + "pemilik/", wait_until="load")
@@ -292,7 +307,7 @@ def utama():
         pg2.wait_for_timeout(700)
         pg2.evaluate("""()=>{
             const b=[...document.querySelectorAll('[data-hapus]')].find(x=>
-              x.closest('[data-akun]').innerText.includes('admin'));
+              x.closest('[data-akun]').innerText.includes('pengelola-uji'));
             b.click();
         }""")
         pg2.wait_for_timeout(500)
@@ -300,7 +315,7 @@ def utama():
         pg2.wait_for_timeout(1400)
         daftar3 = pg2.evaluate("""()=>JSON.parse(localStorage.getItem('wgd-akun-v1'))
             .akun.map(a=>a.peran+':'+a.username)""")
-        cek("akun pengelola terakhir tidak terhapus", "pengelola:admin" in daftar3, str(daftar3))
+        cek("akun pengelola terakhir tidak terhapus", "pengelola:pengelola-uji" in daftar3, str(daftar3))
         cek("pengelola: tanpa error konsol 2", not errs2, errs2[:3])
         ctx2.close()
 

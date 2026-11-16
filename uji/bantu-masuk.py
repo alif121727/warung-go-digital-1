@@ -14,8 +14,9 @@ Ada dua cara:
 
 PERAN = ("pemilik", "pengelola")
 
-# Akun bawaan Panel Pengelola (dibuat saat aplikasi pengelola dibuka pertama kali).
-BAWAAN = {"username": "admin", "sandi": "admin123"}
+# Tidak ada lagi akun bawaan berkata-sandi tetap (kata sandi tetap di kode
+# publik sama saja dengan tidak terkunci). Uji menulis akunnya sendiri.
+AKUN_UJI = {"pengelola": {"username": "uji-admin", "sandi": "warungku123"}}
 
 
 def _awalan(peran):
@@ -57,7 +58,7 @@ def masuk_cepat(pg, peran="pemilik", username=None, sandi="warungku123"):
     (yang menolak sesi milik akun terhapus) tetap lolos.
     """
     if username is None:
-        username = BAWAAN["username"] if peran == "pengelola" else "uji-wgd"
+        username = AKUN_UJI["pengelola"]["username"] if peran == "pengelola" else "uji-wgd"
     _tulis_akun(pg, peran, username, sandi)
     pg.evaluate(
         """({peran, username}) => {
@@ -78,16 +79,12 @@ def masuk_cepat(pg, peran="pemilik", username=None, sandi="warungku123"):
 def masuk(pg, peran="pemilik", username=None, sandi="warungku123"):
     """Tempuh alur gerbang seperti manusia: isi nama pengguna & kata sandi.
 
-    Akun dibuat lebih dulu (kecuali memakai akun bawaan pengelola), lalu
+    Akun ditulis lebih dulu (aplikasi tidak lagi punya akun bawaan), lalu
     formulir diisi dan dikirim.
     """
     if username is None:
-        username = BAWAAN["username"] if peran == "pengelola" else "uji-wgd"
-    pakai_bawaan = (
-        peran == "pengelola" and username == BAWAAN["username"] and sandi == BAWAAN["sandi"]
-    )
-    if not pakai_bawaan:
-        _tulis_akun(pg, peran, username, sandi)
+        username = AKUN_UJI["pengelola"]["username"] if peran == "pengelola" else "uji-wgd"
+    _tulis_akun(pg, peran, username, sandi)
     pg.wait_for_selector(".gerbang", timeout=8000)
     pg.fill("#gbNamaPengguna", username)
     pg.fill("#gbSandi", sandi)
