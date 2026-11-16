@@ -84,15 +84,18 @@
   font-size: 12px; font-weight: 600;
   color: rgba(246,240,226,.8);
 }
-.gb-field input {
+.gb-field input,
+.gb-field select {
   width: 100%; padding: 12px 14px;
   border: 1px solid rgba(246,240,226,.2);
   border-radius: var(--r);
   background: rgba(0,0,0,.28);
   color: #fffdf7;
 }
+.gb-field select { appearance: none; -webkit-appearance: none; }
 .gb-field input::placeholder { color: rgba(246,240,226,.35); }
-.gb-field input:focus {
+.gb-field input:focus,
+.gb-field select:focus {
   outline: none;
   border-color: var(--amber);
   box-shadow: 0 0 0 3px rgba(245,165,36,.2);

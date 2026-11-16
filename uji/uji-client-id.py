@@ -1,17 +1,22 @@
-"""Uji Client ID Google: pembacaan lewat meta, dan perilaku mode contoh.
+"""Uji Client ID Google: pembacaan lewat meta.
 
-Yang dibuktikan:
-  1. <meta name="google-client-id"> benar-benar DIBACA (dulu tidak ada kode
-     pembacanya, jadi mengisinya tidak berpengaruh sama sekali).
-  2. Saat terisi, gerbang masuk berhenti memakai mode contoh.
-  3. Saat kosong, mode contoh tetap ditandai terang-terangan (jangan pernah
-     menyamarkan bahwa Google belum tersambung).
+Google kini BONUS, bukan jalan masuk utama. Yang dibuktikan:
+
+  1. <meta name="google-client-id"> benar-benar DIBACA ke window.
+  2. Saat terisi, tombol Google MUNCUL di gerbang masuk.
+  3. Saat kosong, tombol Google TIDAK muncul — dan gerbang tetap bisa dipakai
+     lewat nama pengguna + kata sandi (inilah yang membuat APK bisa dipakai).
   4. window.WGD_GOOGLE_CLIENT_ID yang diisi lebih dulu tidak ditimpa meta.
+  5. Halaman pengelola juga membaca meta yang sama.
+
+Jalankan: python3 uji/uji-client-id.py
 """
 import sys
+from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 BASE = "http://localhost:12000/warung-go-digital/"
+SITUS = Path(__file__).resolve().parent.parent / "warung-go-digital"
 hasil = []
 
 
@@ -20,44 +25,44 @@ def cek(nama, ok, ket=""):
     print(("  OK  " if ok else " GAGAL") + f"  {nama}" + (f"   [{ket}]" if ket and not ok else ""))
 
 
+def halaman(berkas, client_id):
+    return (SITUS / berkas / "index.html").read_text(encoding="utf-8").replace(
+        'name="google-client-id" content=""',
+        f'name="google-client-id" content="{client_id}"',
+    )
+
+
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path="/usr/bin/chromium", args=["--no-sandbox"])
 
-    # ═══ 1. Meta terisi -> dibaca ke window ═══
+    # ═══ 1. Meta terisi -> dibaca ke window, tombol Google muncul ═══
     ctx = b.new_context(viewport={"width": 390, "height": 844})
     pg = ctx.new_page()
     pg.route("**/pemilik/", lambda r: r.fulfill(
         status=200, content_type="text/html; charset=utf-8",
-        body=open("/workspace/project/warung-go-digital/pemilik/index.html", encoding="utf-8")
-        .read().replace('name="google-client-id" content=""',
-                        'name="google-client-id" content="123456789012-contoh.apps.googleusercontent.com"')))
+        body=halaman("pemilik", "123456789012-contoh.apps.googleusercontent.com")))
     pg.goto(BASE + "pemilik/", wait_until="load")
     pg.wait_for_timeout(1200)
     nilai = pg.evaluate("()=>window.WGD_GOOGLE_CLIENT_ID || ''")
     cek("meta google-client-id dibaca ke window",
         nilai == "123456789012-contoh.apps.googleusercontent.com", nilai)
-
-    # Dengan Client ID terisi, gerbang masuk TIDAK boleh menampilkan mode contoh.
-    pg.click("#gbGoogle")
-    pg.wait_for_timeout(1500)
-    teks = pg.inner_text("body")
-    cek("client id terisi: mode contoh tidak muncul", "Mode contoh" not in teks)
-    cek("client id terisi: tidak ada peringatan client id kosong",
-        "WGD_GOOGLE_CLIENT_ID" not in teks)
+    cek("client id terisi: tombol Google muncul",
+        pg.eval_on_selector_all("#gbGoogle", "e=>e.length") == 1)
+    cek("client id terisi: form kata sandi tetap ada (Google hanya bonus)",
+        pg.eval_on_selector_all("#gbForm", "e=>e.length") == 1)
     ctx.close()
 
-    # ═══ 2. Meta kosong -> mode contoh, ditandai jelas ═══
+    # ═══ 2. Meta kosong -> tombol Google tidak muncul, gerbang tetap jalan ═══
     ctx2 = b.new_context(viewport={"width": 390, "height": 844})
     pg2 = ctx2.new_page()
     pg2.goto(BASE + "pemilik/", wait_until="load")
     pg2.wait_for_timeout(1200)
     cek("meta kosong: window kosong",
         not pg2.evaluate("()=>window.WGD_GOOGLE_CLIENT_ID || ''"))
-    pg2.click("#gbGoogle")
-    pg2.wait_for_timeout(1200)
-    teks2 = pg2.inner_text("body")
-    cek("meta kosong: mode contoh ditandai terang-terangan", "Mode contoh" in teks2)
-    cek("meta kosong: menyebut WGD_GOOGLE_CLIENT_ID", "WGD_GOOGLE_CLIENT_ID" in teks2)
+    cek("meta kosong: tombol Google tidak muncul",
+        pg2.eval_on_selector_all("#gbGoogle", "e=>e.length") == 0)
+    cek("meta kosong: form kata sandi tetap tersedia",
+        pg2.eval_on_selector_all("#gbForm", "e=>e.length") == 1)
     ctx2.close()
 
     # ═══ 3. window yang diisi lebih dulu menang atas meta ═══
@@ -66,9 +71,7 @@ with sync_playwright() as p:
     pg3.add_init_script("window.WGD_GOOGLE_CLIENT_ID='999-dari-window.apps.googleusercontent.com'")
     pg3.route("**/pemilik/", lambda r: r.fulfill(
         status=200, content_type="text/html; charset=utf-8",
-        body=open("/workspace/project/warung-go-digital/pemilik/index.html", encoding="utf-8")
-        .read().replace('name="google-client-id" content=""',
-                        'name="google-client-id" content="123-dari-meta.apps.googleusercontent.com"')))
+        body=halaman("pemilik", "123-dari-meta.apps.googleusercontent.com")))
     pg3.goto(BASE + "pemilik/", wait_until="load")
     pg3.wait_for_timeout(1200)
     cek("window diisi lebih dulu tidak ditimpa meta",
@@ -80,9 +83,7 @@ with sync_playwright() as p:
     pg4 = ctx4.new_page()
     pg4.route("**/admin/", lambda r: r.fulfill(
         status=200, content_type="text/html; charset=utf-8",
-        body=open("/workspace/project/warung-go-digital/admin/index.html", encoding="utf-8")
-        .read().replace('name="google-client-id" content=""',
-                        'name="google-client-id" content="777-pengelola.apps.googleusercontent.com"')))
+        body=halaman("admin", "777-pengelola.apps.googleusercontent.com")))
     pg4.goto(BASE + "admin/", wait_until="load")
     pg4.wait_for_timeout(1200)
     cek("halaman pengelola juga membaca meta",

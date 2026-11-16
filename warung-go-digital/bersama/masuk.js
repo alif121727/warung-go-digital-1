@@ -2,14 +2,31 @@
    masuk.js — gerbang masuk untuk Pemilik Warung & Pengelola.
 
    ATURAN UTAMA
-   1. Cara masuk pertama adalah akun Google. Itu sekaligus bukti bahwa
-      orangnya benar-benar pemilik akun itu.
-   2. Setelah masuk sekali, pengguna boleh membuat nama pengguna dan kata
-      sandi sendiri untuk masuk berikutnya — tanpa perlu Google lagi.
+   1. Cara masuk yang selalu tersedia adalah NAMA PENGGUNA + KATA SANDI.
+      Tidak perlu Google. Ini penting karena di dalam APK (WebView Android)
+      Google menolak menampilkan layar masuknya, sehingga gerbang yang
+      bergantung pada Google membuat aplikasi tidak bisa dibuka sama sekali.
+   2. Google hanya BONUS. Bila `WGD_GOOGLE_CLIENT_ID` diisi, tombol Google
+      muncul sebagai jalan pintas di peramban biasa. Bila tidak, ia tidak
+      ditampilkan dan tidak ada yang hilang.
    3. Kata sandi tidak pernah disimpan apa adanya. Yang disimpan hanya
       sidik jarinya (PBKDF2-SHA256 + garam acak per akun).
-   4. Lupa kata sandi hanya bisa dipulihkan lewat Google. Tanpa itu,
-      tidak ada cara masuk kembali — sebab tidak ada surel pemulihan.
+   4. Pengelola mengelola akun: membuat dan menghapus akun Pemilik maupun
+      Pengelola, serta mengganti kata sandinya sendiri.
+   5. Setiap pengguna bisa mengganti kata sandinya sendiri.
+
+   AKUN BAWAAN
+   Saat Panel Pengelola pertama kali dibuka dan belum ada akun pengelola,
+   dibuatkan satu akun bawaan: nama pengguna `admin`, kata sandi `admin123`.
+   Akun itu ditandai "wajib ganti" sampai kata sandinya diganti.
+
+   SATU DAFTAR AKUN UNTUK DUA APLIKASI
+   Akun disimpan di kunci `wgd-akun-v1` yang dibaca kedua aplikasi. Ini
+   disengaja: pengelola harus bisa membuat dan menghapus akun pemilik, dan
+   itu mustahil bila keduanya memakai daftar yang terpisah. Yang dibagi
+   hanya nama pengguna dan sidik kata sandi. Data usaha (laporan, mitra,
+   catatan penjualan) tetap TERPISAH di kunci masing-masing aplikasi —
+   `wgd-pemilik-v1` dan `wgd-admin-v1`.
 
    CATATAN JUJUR SOAL KEAMANAN
    Seluruh pemeriksaan di berkas ini berjalan di peramban pengguna. Artinya
@@ -18,10 +35,6 @@
    orang lain memakai aplikasi tanpa izin, dan mencegah kata sandi yang
    sama bocor antar-layanan — bukan melindungi dari penyerang yang sudah
    memegang perangkat.
-
-   Akun Google benar-benar diverifikasi bila `window.WGD_GOOGLE_CLIENT_ID`
-   diisi di halaman. Bila belum diisi, tombol Google berjalan dalam MODE
-   CONTOH: jelas-jelas ditandai, tidak mengaku sebagai Google asli.
    ══════════════════════════════════════════════════════════ */
 const Masuk = (() => {
   'use strict';
@@ -36,29 +49,21 @@ const Masuk = (() => {
     if (nilai) window.WGD_GOOGLE_CLIENT_ID = nilai;
   })();
 
-  // Akun Pemilik dan Pengelola disimpan di kunci yang BERBEDA, dan sesinya pun
-  // terpisah. Alasannya: ada uji yang memastikan aplikasi Pemilik tidak pernah
-  // menyentuh data Pengelola (dan sebaliknya). Kalau keduanya menulis di satu
-  // kunci, batas itu hilang.
-  // Awalan kunci disamakan dengan penyimpanan tiap aplikasi, sehingga aturan
-  // "aplikasi Pemilik hanya menyentuh kunci wgd-pemilik*" tetap berlaku.
   const AWALAN = { pemilik: 'pemilik', pengelola: 'admin' };
-  const kunciAkun = (peran) => 'wgd-' + AWALAN[peran] + '-akun-v1';
   const kunciSesi = (peran) => 'wgd-' + AWALAN[peran] + '-sesi-v1';
+  const KUNCI_AKUN = 'wgd-akun-v1';
   const LAMA_SESI_JAM = 12;
   const PBKDF2_ULANGAN = 150000;
 
-  const simpanan = {};
-  const S = (peran) => {
-    if (!simpanan[peran]) simpanan[peran] = Data.buatPenyimpanan(kunciAkun(peran));
-    return simpanan[peran];
-  };
+  const ADMIN_BAWAAN = { username: 'admin', sandi: 'admin123', nama: 'Pengelola' };
+
+  const S = Data.buatPenyimpanan(KUNCI_AKUN);
 
   /* ── Utilitas kripto ──────────────────────────────────── */
   // `crypto.subtle` hanya ada di konteks aman (https, localhost, atau APK
   // Capacitor yang memakai https://localhost). Dibuka lewat file:// ia tidak
   // ada. Dalam keadaan itu kata sandi tidak bisa dibuat — dan tidak boleh
-  // dibuat dengan cara yang lemah. Pengguna tetap bisa masuk lewat Google.
+  // dibuat dengan cara yang lemah.
   const adaKripto = () => !!(window.crypto && window.crypto.subtle);
 
   const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
@@ -84,65 +89,40 @@ const Masuk = (() => {
     return beda === 0;
   };
 
-  /* ── Simpanan akun ────────────────────────────────────── */
-  const akunPeran = (peran) => {
-    const d = S(peran).load();
-    return d.akun || null;
+  /* ── Daftar akun ──────────────────────────────────────── */
+  const daftar = () => {
+    const d = S.load();
+    if (!Array.isArray(d.akun)) d.akun = [];
+    return d.akun;
   };
 
-  const tulisAkun = (peran, data) => {
-    const d = S(peran).load();
-    d.akun = data;
-    S(peran).simpanSegera();
-    return data;
+  const simpanDaftar = (isi) => {
+    const d = S.load();
+    d.akun = isi;
+    S.simpanSegera();
+    return isi;
   };
 
-  const akunDariGoogle = (profil) => {
-    const lama = akunPeran(profil.peran) || {};
-    // Akun Google yang berbeda berarti orang yang berbeda. Mulai dari kosong
-    // supaya nama pengguna & kata sandi milik orang sebelumnya tidak ikut.
-    const bedaOrang = !!(lama.google && lama.google.sub && lama.google.sub !== profil.sub);
-    const dasar = bedaOrang ? {} : lama;
-    return tulisAkun(profil.peran, {
-      ...dasar,
-      google: {
-        sub: profil.sub,
-        email: profil.email,
-        nama: profil.nama,
-        foto: profil.foto || '',
-        sejak: lama.google ? lama.google.sejak : new Date().toISOString(),
-      },
-      dibuat: lama.dibuat || new Date().toISOString(),
-    });
+  const akunPeran = (peran) => daftar().find((a) => a.peran === peran) || null;
+  const semuaAkun = () => daftar();
+  const cariUsername = (peran, username) => {
+    const v = String(username || '').trim().toLowerCase();
+    return daftar().find((a) => a.peran === peran && a.username === v) || null;
   };
 
-  /* ── Sesi ─────────────────────────────────────────────── */
-  const bukaSesi = (peran) => {
-    const sesi = {
-      peran,
-      sejak: new Date().toISOString(),
-      kedaluwarsa: Date.now() + LAMA_SESI_JAM * 3600 * 1000,
-    };
-    localStorage.setItem(kunciSesi(peran), JSON.stringify(sesi));
-    return sesi;
+  const uid = () =>
+    'a-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+  const tulisAkun = (akun) => {
+    const isi = daftar();
+    const idx = isi.findIndex((a) => a.id === akun.id);
+    if (idx >= 0) isi[idx] = akun;
+    else isi.push(akun);
+    simpanDaftar(isi);
+    return akun;
   };
 
-  const sesiAktif = (peran) => {
-    try {
-      const s = JSON.parse(localStorage.getItem(kunciSesi(peran)) || 'null');
-      if (!s || s.peran !== peran) return null;
-      if (!s.kedaluwarsa || s.kedaluwarsa < Date.now()) {
-        localStorage.removeItem(kunciSesi(peran));
-        return null;
-      }
-      return s;
-    } catch { return null; }
-  };
-
-  const keluar = (peran) => {
-    if (peran) localStorage.removeItem(kunciSesi(peran));
-    location.reload();
-  };
+  const buangAkun = (id) => simpanDaftar(daftar().filter((a) => a.id !== id));
 
   /* ── Nama pengguna & kata sandi ───────────────────────── */
   const NAMA_PENGGUNA = /^[a-z][a-z0-9._-]{2,23}$/;
@@ -177,46 +157,144 @@ const Masuk = (() => {
     return { sah: true };
   };
 
-  const setelNamaSandi = async (peran, namaPengguna, sandi) => {
-    const cekU = periksaNamaPengguna(namaPengguna);
+  // Simpan kata sandi baru ke sebuah akun (sidik + garam baru).
+  const pasangSandi = async (akun, sandi) => {
+    const garam = b64(acakBita(16));
+    const sidik = await hashSandi(sandi, garam);
+    akun.sandiGaram = garam;
+    akun.sandiSidik = sidik;
+    akun.sandiDiubah = new Date().toISOString();
+    akun.harusGanti = false;
+    return tulisAkun(akun);
+  };
+
+  // Buat akun baru. Dipakai pengelola, dan dipakai pemilik saat mendaftar
+  // sendiri di perangkatnya.
+  const buatAkun = async ({ peran, username, sandi, nama = '', harusGanti = false }) => {
+    if (!adaKripto()) {
+      return { ok: false, pesan: 'Perangkat ini tidak mengizinkan pengamanan kata sandi.' };
+    }
+    const cekU = periksaNamaPengguna(username);
     if (!cekU.sah) return { ok: false, pesan: cekU.pesan };
     const cekS = periksaSandi(sandi);
     if (!cekS.sah) return { ok: false, pesan: cekS.pesan };
-
-    const garam = b64(acakBita(16));
-    const sidik = await hashSandi(sandi, garam);
-    const lama = akunPeran(peran) || {};
-    tulisAkun(peran, {
-      ...lama,
+    if (cariUsername(peran, cekU.nilai)) {
+      return { ok: false, pesan: 'Nama pengguna itu sudah dipakai. Pilih yang lain.' };
+    }
+    const akun = {
+      id: uid(),
+      peran,
       username: cekU.nilai,
-      sandiGaram: garam,
-      sandiSidik: sidik,
-      sandiDiubah: new Date().toISOString(),
-    });
-    return { ok: true };
+      nama: String(nama || '').trim(),
+      dibuat: new Date().toISOString(),
+    };
+    await pasangSandi(akun, sandi);
+    if (harusGanti) { akun.harusGanti = true; tulisAkun(akun); }
+    return { ok: true, akun };
   };
 
-  const masukNamaSandi = async (peran, namaPengguna, sandi) => {
-    const akun = akunPeran(peran);
-    if (!akun || !akun.username) {
-      return { ok: false, pesan: 'Akun ini belum punya nama pengguna. Masuk dengan Google dulu.' };
+  // Kompatibilitas: menyetel (membuat atau memperbarui) akun sebuah peran.
+  const setelNamaSandi = async (peran, username, sandi) => {
+    const cekU = periksaNamaPengguna(username);
+    if (!cekU.sah) return { ok: false, pesan: cekU.pesan };
+    const cekS = periksaSandi(sandi);
+    if (!cekS.sah) return { ok: false, pesan: cekS.pesan };
+    let akun = cariUsername(peran, cekU.nilai) || akunPeran(peran);
+    if (!akun) {
+      return buatAkun({ peran, username: cekU.nilai, sandi });
     }
-    const cekU = periksaNamaPengguna(namaPengguna);
-    if (!cekU.sah || cekU.nilai !== akun.username) {
+    akun.username = cekU.nilai;
+    await pasangSandi(akun, sandi);
+    return { ok: true, akun };
+  };
+
+  const masukNamaSandi = async (peran, username, sandi) => {
+    const akun = cariUsername(peran, username);
+    if (!akun) {
       return { ok: false, pesan: 'Nama pengguna atau kata sandi tidak cocok.' };
     }
     const sidik = await hashSandi(String(sandi || ''), akun.sandiGaram);
     if (!samakanWaktu(sidik, akun.sandiSidik)) {
       return { ok: false, pesan: 'Nama pengguna atau kata sandi tidak cocok.' };
     }
+    return { ok: true, akun };
+  };
+
+  // Ganti kata sandi milik sendiri: wajib membuktikan kata sandi lama.
+  const gantiSandi = async (peran, username, sandiLama, sandiBaru) => {
+    const akun = cariUsername(peran, username);
+    if (!akun) return { ok: false, pesan: 'Akun tidak ditemukan.' };
+    const sidik = await hashSandi(String(sandiLama || ''), akun.sandiGaram);
+    if (!samakanWaktu(sidik, akun.sandiSidik)) {
+      return { ok: false, pesan: 'Kata sandi lama tidak cocok.' };
+    }
+    const cekS = periksaSandi(sandiBaru);
+    if (!cekS.sah) return { ok: false, pesan: cekS.pesan };
+    await pasangSandi(akun, sandiBaru);
+    return { ok: true, akun };
+  };
+
+  // Pengelola menghapus akun. Akun pengelola terakhir tidak boleh dihapus,
+  // supaya tidak ada yang bisa mengunci dirinya sendiri dari panel.
+  const hapusAkun = (id) => {
+    const akun = daftar().find((a) => a.id === id);
+    if (!akun) return { ok: false, pesan: 'Akun tidak ditemukan.' };
+    if (akun.peran === 'pengelola') {
+      const n = daftar().filter((a) => a.peran === 'pengelola').length;
+      if (n <= 1) {
+        return { ok: false, pesan: 'Akun pengelola terakhir tidak boleh dihapus.' };
+      }
+    }
+    buangAkun(id);
     return { ok: true };
   };
 
-  /* ── Akun Google ──────────────────────────────────────── */
+  const adminBawaanBelumAda = () => !daftar().some((a) => a.peran === 'pengelola');
+
+  const pastikanAdminBawaan = async () => {
+    if (adminBawaanBelumAda() && adaKripto()) {
+      await buatAkun({
+        peran: 'pengelola',
+        username: ADMIN_BAWAAN.username,
+        sandi: ADMIN_BAWAAN.sandi,
+        nama: ADMIN_BAWAAN.nama,
+        harusGanti: true,
+      });
+    }
+  };
+
+  /* ── Sesi ─────────────────────────────────────────────── */
+  const bukaSesi = (peran, username) => {
+    const sesi = {
+      peran,
+      username,
+      sejak: new Date().toISOString(),
+      kedaluwarsa: Date.now() + LAMA_SESI_JAM * 3600 * 1000,
+    };
+    localStorage.setItem(kunciSesi(peran), JSON.stringify(sesi));
+    return sesi;
+  };
+
+  const sesiAktif = (peran) => {
+    try {
+      const s = JSON.parse(localStorage.getItem(kunciSesi(peran)) || 'null');
+      if (!s || s.peran !== peran) return null;
+      if (!s.kedaluwarsa || s.kedaluwarsa < Date.now()) {
+        localStorage.removeItem(kunciSesi(peran));
+        return null;
+      }
+      return s;
+    } catch { return null; }
+  };
+
+  const keluar = (peran) => {
+    if (peran) localStorage.removeItem(kunciSesi(peran));
+    location.reload();
+  };
+
+  /* ── Akun Google (opsional) ───────────────────────────── */
   const adaClientId = () => !!String(window.WGD_GOOGLE_CLIENT_ID || '').trim();
 
-  // Membaca isi token Google. Dipakai hanya untuk menampilkan nama & surel;
-  // keasliannya yang menjamin adalah Google, bukan kode ini.
   const isiToken = (jwt) => {
     try {
       const b = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
@@ -255,16 +333,18 @@ const Masuk = (() => {
       </div>
     </div>`;
 
+  const notis = (jenis, ikon, isi) =>
+    `<div class="gb-notis gb-notis--${jenis}"><span>${Inti.ikon(ikon, '', 16)}</span><span>${isi}</span></div>`;
+
   function tampilkanGerbang({ peran, setelahMasuk }) {
     const info = PERAN[peran];
-    const akun = akunPeran(peran);
 
     const gerbang = document.createElement('div');
     gerbang.className = 'gerbang';
     gerbang.setAttribute('role', 'dialog');
     gerbang.setAttribute('aria-modal', 'true');
     gerbang.setAttribute('aria-label', 'Masuk ' + info.nama);
-    gerbang.innerHTML = `<div class="gerbang__kartu" id="gbKartu"></div>`;
+    gerbang.innerHTML = '<div class="gerbang__kartu" id="gbKartu"></div>';
     document.body.appendChild(gerbang);
     document.body.style.overflow = 'hidden';
 
@@ -275,20 +355,57 @@ const Masuk = (() => {
       gerbang.remove();
     };
 
-    const beres = () => {
+    const beres = (akun) => {
       tutup();
-      bukaSesi(peran);
-      setelahMasuk(akunPeran(peran) || {});
+      bukaSesi(peran, akun.username);
+      setelahMasuk(akun);
     };
 
-    /* Layar: pilih cara masuk */
-    const layarPilih = () => {
-      const punyaNamaSandi = !!(akun && akun.username) && adaKripto();
+    const tunjukGalat = (id, pesan) => {
+      const el = kartu.querySelector(id);
+      if (el) el.innerHTML = notis('salah', 'alert', bersih(pesan));
+    };
+
+    /* Layar: masuk dengan nama pengguna & kata sandi */
+    const layarMasuk = () => {
+      const adaPengelola = daftar().some((a) => a.peran === 'pengelola');
+      const akunBawaan = peran === 'pengelola'
+        ? daftar().find((a) => a.username === ADMIN_BAWAAN.username && a.peran === 'pengelola')
+        : null;
+      const pakaiBawaan = !!(akunBawaan && akunBawaan.harusGanti);
+
       kartu.innerHTML = `
         ${kartuMerek(peran)}
         <h2>Masuk ke aplikasi</h2>
         <p class="gerbang__ket">${bersih(info.sapaan)}. Masuk dulu agar catatan Anda tidak terbuka untuk siapa pun yang memegang HP ini.</p>
-        <div class="gerbang__tindak">
+        ${pakaiBawaan ? notis('awas', 'alert',
+          'Panel Pengelola memakai akun bawaan: nama pengguna <b>admin</b>, kata sandi <b>admin123</b>. ' +
+          'Segera ganti kata sandi lewat menu <b>Akun saya</b> setelah masuk.') : ''}
+        <form id="gbForm" novalidate>
+          <div class="gb-field">
+            <label for="gbNamaPengguna">Nama pengguna</label>
+            <input id="gbNamaPengguna" name="username" autocomplete="username"
+                   autocapitalize="none" spellcheck="false"
+                   placeholder="${pakaiBawaan ? 'admin' : 'mis. bu-tini'}" />
+          </div>
+          <div class="gb-field">
+            <label for="gbSandi">Kata sandi</label>
+            <input id="gbSandi" name="password" type="password" autocomplete="current-password"
+                   placeholder="Kata sandi Anda" />
+          </div>
+          <div id="gbGalat"></div>
+          <button class="gb-btn gb-btn--utama" type="submit">Masuk</button>
+        </form>
+        ${peran === 'pemilik' && !daftar().some((a) => a.peran === 'pemilik') ? `
+          <div class="gerbang__kaki">
+            Belum punya akun? <button class="gerbang__tautan" id="gbKeBuat">Buat akun</button>
+          </div>` : ''}
+        ${peran === 'pemilik' ? `
+          <div class="gerbang__kaki">
+            <button class="gerbang__tautan" id="gbLupa">Lupa kata sandi?</button>
+          </div>` : ''}
+        ${adaClientId() ? `
+          <div class="gerbang__pisah">atau</div>
           <button class="btn-google" id="gbGoogle">
             <svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true">
               <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2.5 24 .5 14.6.5 6.4 5.9 2.5 13.7l7.8 6.1C12.2 13.7 17.6 9.5 24 9.5z"/>
@@ -297,187 +414,46 @@ const Masuk = (() => {
               <path fill="#34A853" d="M24 47.5c6.2 0 11.5-2 15.3-5.5l-7.6-5.9c-2.1 1.4-4.8 2.3-7.7 2.3-6.4 0-11.8-4.2-13.7-10.2l-7.8 6.1C6.4 42.1 14.6 47.5 24 47.5z"/>
             </svg>
             Lanjut dengan Google
-          </button>
-          ${punyaNamaSandi ? `
-            <div class="gerbang__pisah">atau</div>
-            <form id="gbForm" novalidate>
-              <div class="gb-field">
-                <label for="gbNamaPengguna">Nama pengguna</label>
-                <input id="gbNamaPengguna" name="username" autocomplete="username"
-                       autocapitalize="none" spellcheck="false" placeholder="mis. bu-tini" />
-              </div>
-              <div class="gb-field">
-                <label for="gbSandi">Kata sandi</label>
-                <input id="gbSandi" name="password" type="password" autocomplete="current-password"
-                       placeholder="Kata sandi Anda" />
-              </div>
-              <div id="gbGalat"></div>
-              <button class="gb-btn gb-btn--utama" type="submit">Masuk</button>
-            </form>
-            <div class="gerbang__kaki">
-              <button class="gerbang__tautan" id="gbLupa">Lupa kata sandi?</button>
-            </div>
-          ` : `
-            <div class="gb-notis gb-notis--info">
-              <span>${Inti.ikon('info', '', 16)}</span>
-              <span>Ini masuk pertama Anda. Setelah masuk dengan Google, Anda boleh membuat
-                <b>nama pengguna dan kata sandi sendiri</b> untuk masuk berikutnya.</span>
-            </div>
-          `}
-        </div>`;
-      kartu.querySelector('#gbGoogle').addEventListener('click', layarGoogle);
+          </button>` : ''}
+        ${!adaKripto() ? notis('awas', 'alert',
+          'Perangkat ini tidak mengizinkan pengamanan kata sandi. Buka lewat alamat https atau pasang aplikasinya di HP.') : ''}`;
+
       const form = kartu.querySelector('#gbForm');
-      if (form) {
-        form.addEventListener('submit', async (ev) => {
-          ev.preventDefault();
-          const b = form.querySelector('button[type=submit]');
-          b.disabled = true; b.textContent = 'Memeriksa…';
-          const u = kartu.querySelector('#gbNamaPengguna').value;
-          const s = kartu.querySelector('#gbSandi').value;
-          const r = await masukNamaSandi(peran, u, s);
-          if (r.ok) return beres();
-          kartu.querySelector('#gbGalat').innerHTML =
-            `<div class="gb-notis gb-notis--salah"><span>${Inti.ikon('alert', '', 16)}</span><span>${bersih(r.pesan)}</span></div>`;
-          b.disabled = false; b.textContent = 'Masuk';
-          kartu.querySelector('#gbSandi').select();
-        });
-      }
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const b = form.querySelector('button[type=submit]');
+        b.disabled = true; b.textContent = 'Memeriksa…';
+        const r = await masukNamaSandi(peran, kartu.querySelector('#gbNamaPengguna').value,
+          kartu.querySelector('#gbSandi').value);
+        if (r.ok) return beres(r.akun);
+        tunjukGalat('#gbGalat', r.pesan);
+        b.disabled = false; b.textContent = 'Masuk';
+        kartu.querySelector('#gbSandi').select();
+      });
+
+      const keBuat = kartu.querySelector('#gbKeBuat');
+      if (keBuat) keBuat.addEventListener('click', layarBuat);
       const lupa = kartu.querySelector('#gbLupa');
       if (lupa) lupa.addEventListener('click', layarLupa);
-    };
+      const g = kartu.querySelector('#gbGoogle');
+      if (g) g.addEventListener('click', layarGoogle);
 
-    /* Layar: masuk dengan Google */
-    const layarGoogle = async () => {
-      kartu.innerHTML = `
-        ${kartuMerek(peran)}
-        <h2>Masuk dengan Google</h2>
-        <p class="gerbang__ket">Kami hanya memakai nama dan alamat surel Anda untuk mengenali akun. Tidak ada yang dikirim ke mana pun.</p>
-        <div id="gbGoogleArea"></div>
-        <div class="gerbang__kaki">
-          <button class="gerbang__tautan" id="gbKembali">Kembali</button>
-        </div>`;
-      kartu.querySelector('#gbKembali').addEventListener('click', layarPilih);
-      const area = kartu.querySelector('#gbGoogleArea');
-
-      if (!adaClientId()) {
-        // MODE CONTOH — ditandai terang-terangan supaya tidak disangka Google asli.
-        const contoh = akun && akun.google ? akun.google : null;
-        area.innerHTML = `
-          <div class="gb-notis gb-notis--awas">
-            <span>${Inti.ikon('alert', '', 16)}</span>
-            <span><b>Mode contoh.</b> Halaman ini belum diisi <code>WGD_GOOGLE_CLIENT_ID</code>,
-              jadi Google asli belum tersambung. Tombol di bawah masuk memakai akun contoh,
-              hanya untuk mencoba alur aplikasi.</span>
-          </div>
-          <div class="gerbang__tindak">
-            <button class="gb-btn gb-btn--utama" id="gbContoh">
-              ${contoh ? 'Lanjut sebagai ' + bersih(contoh.nama) : 'Masuk dengan akun contoh'}
-            </button>
-          </div>`;
-        area.querySelector('#gbContoh').addEventListener('click', () => {
-          const profil = contoh || {
-            sub: 'contoh-' + peran,
-            email: peran === 'pengelola'
-              ? 'pengelola@warunggodigital.id'
-              : 'pemilik@contoh.id',
-            nama: peran === 'pengelola' ? 'Pengelola Warung Go' : 'Pemilik Warung',
-            foto: '',
-          };
-          akunDariGoogle({ ...profil, peran });
-          lanjutSetelahGoogle();
-        });
-        return;
-      }
-
-      area.innerHTML = `<div class="gb-notis gb-notis--info"><span>${Inti.ikon('clock', '', 16)}</span><span>Memuat Google…</span></div>`;
-      try {
-        await muatSkripGoogle();
-        window.google.accounts.id.initialize({
-          client_id: String(window.WGD_GOOGLE_CLIENT_ID).trim(),
-          callback: (res) => {
-            const p = isiToken(res.credential);
-            if (!p) return;
-            akunDariGoogle({
-              peran,
-              sub: p.sub,
-              email: p.email,
-              nama: p.name || p.email,
-              foto: p.picture || '',
-            });
-            lanjutSetelahGoogle();
-          },
-        });
-        area.innerHTML = `<div id="gbTombol" style="display:flex;justify-content:center"></div>`;
-        window.google.accounts.id.renderButton(area.querySelector('#gbTombol'), {
-          theme: 'filled_black', size: 'large', shape: 'pill',
-          text: 'continue_with', locale: 'id', width: 300,
-        });
-      } catch (e) {
-        area.innerHTML = `<div class="gb-notis gb-notis--salah"><span>${Inti.ikon('alert', '', 16)}</span><span>${bersih(e.message)} Periksa sambungan internet Anda.</span></div>`;
-      }
-    };
-
-    /* Setelah Google berhasil: buat kata sandi (sekali) atau langsung masuk */
-    const lanjutSetelahGoogle = () => {
-      const a = akunPeran(peran);
-      if (a && a.username) {
-        // Sudah punya nama pengguna: tawarkan langsung masuk, atau ganti.
-        kartu.innerHTML = `
-          ${kartuMerek(peran)}
-          <h2>Halo, ${bersih(a.google.nama)}</h2>
-          <p class="gerbang__ket">Akun ini sudah punya nama pengguna dan kata sandi. Masuk sekarang, atau atur ulang bila lupa.</p>
-          ${blokAkunGoogle(a)}
-          <div class="gerbang__tindak">
-            <button class="gb-btn gb-btn--utama" id="gbMasukSekarang">Masuk sekarang</button>
-            <button class="gb-btn gb-btn--halus" id="gbAturUlang">Atur nama pengguna &amp; kata sandi baru</button>
-          </div>`;
-        kartu.querySelector('#gbMasukSekarang').addEventListener('click', beres);
-        kartu.querySelector('#gbAturUlang').addEventListener('click', layarBuat);
-        return;
-      }
-      layarBuat();
-    };
-
-    const blokAkunGoogle = (a) => a.google ? `
-      <div class="gb-akun">
-        ${a.google.foto
-          ? `<img class="gb-akun__foto" src="${bersih(a.google.foto)}" alt="" referrerpolicy="no-referrer" />`
-          : `<div class="gb-akun__foto">${bersih((a.google.nama || '?').trim().charAt(0).toUpperCase())}</div>`}
-        <div class="gb-akun__isi">
-          <b>${bersih(a.google.nama)}</b>
-          <span>${bersih(a.google.email)}</span>
-        </div>
-      </div>` : '';
-
-    /* Layar: buat nama pengguna & kata sandi */
-    const layarBuat = () => {
-      const a = akunPeran(peran);
       if (!adaKripto()) {
-        kartu.innerHTML = `
-          ${kartuMerek(peran)}
-          <h2>Tidak bisa membuat kata sandi di sini</h2>
-          <p class="gerbang__ket">Halaman ini dibuka lewat alamat yang tidak aman, sehingga peramban tidak mengizinkan pengamanan kata sandi. Buka lewat alamat https, atau pasang aplikasinya di HP.</p>
-          <div class="gb-notis gb-notis--awas">
-            <span>${Inti.ikon('alert', '', 16)}</span>
-            <span>Anda tetap bisa memakai aplikasi ini dengan masuk lewat Google.</span>
-          </div>
-          <div class="gerbang__tindak">
-            <button class="gb-btn gb-btn--utama" id="gbMasukLangsung">Lanjut masuk</button>
-          </div>`;
-        kartu.querySelector('#gbMasukLangsung').addEventListener('click', beres);
-        return;
+        form.querySelector('button[type=submit]').disabled = true;
       }
+    };
+
+    /* Layar: buat akun sendiri (pemilik) */
+    const layarBuat = () => {
       kartu.innerHTML = `
         ${kartuMerek(peran)}
         <h2>Buat cara masuk Anda</h2>
-        <p class="gerbang__ket">Sekarang Anda bisa masuk tanpa Google. Pilih nama pengguna dan kata sandi yang mudah Anda ingat — bebas, tidak ada aturan dari kami selain panjangnya.</p>
-        ${blokAkunGoogle(a)}
+        <p class="gerbang__ket">Pilih nama pengguna dan kata sandi yang mudah Anda ingat. Setelah ini, Anda masuk tanpa perlu Google.</p>
         <form id="gbBuat" novalidate>
           <div class="gb-field">
             <label for="gbBaruNama">Nama pengguna</label>
             <input id="gbBaruNama" autocomplete="username" autocapitalize="none"
-                   spellcheck="false" placeholder="mis. bu-tini"
-                   value="${bersih((a && a.username) || '')}" />
+                   spellcheck="false" placeholder="mis. bu-tini" />
             <div class="gb-field__bantu">3–24 karakter: huruf kecil, angka, titik, garis bawah, tanda hubung.</div>
           </div>
           <div class="gb-field">
@@ -493,32 +469,37 @@ const Masuk = (() => {
           </div>
           <div id="gbGalat2"></div>
           <button class="gb-btn gb-btn--utama" type="submit">Simpan &amp; masuk</button>
-        </form>`;
+        </form>
+        <div class="gerbang__kaki">
+          <button class="gerbang__tautan" id="gbBalik">Sudah punya akun? Masuk</button>
+        </div>`;
 
       const kuat = kartu.querySelector('#gbKuat');
       kartu.querySelector('#gbBaruSandi').addEventListener('input', (e) => {
         const n = ukurKekuatan(e.target.value);
-        [...kuat.children].forEach((i, idx) => {
-          i.className = idx < n ? 'on-' + n : '';
-        });
+        [...kuat.children].forEach((i, idx) => { i.className = idx < n ? 'on-' + n : ''; });
       });
 
       kartu.querySelector('#gbBuat').addEventListener('submit', async (ev) => {
         ev.preventDefault();
-        const u = kartu.querySelector('#gbBaruNama').value;
         const s = kartu.querySelector('#gbBaruSandi').value;
         const s2 = kartu.querySelector('#gbUlangSandi').value;
-        const galat = kartu.querySelector('#gbGalat2');
-        const tunjuk = (pesan) => {
-          galat.innerHTML = `<div class="gb-notis gb-notis--salah"><span>${Inti.ikon('alert', '', 16)}</span><span>${bersih(pesan)}</span></div>`;
-        };
-        if (s !== s2) return tunjuk('Kedua kata sandi belum sama.');
+        if (s !== s2) return tunjukGalat('#gbGalat2', 'Kedua kata sandi belum sama.');
         const b = ev.target.querySelector('button[type=submit]');
         b.disabled = true; b.textContent = 'Menyimpan…';
-        const r = await setelNamaSandi(peran, u, s);
-        if (!r.ok) { tunjuk(r.pesan); b.disabled = false; b.textContent = 'Simpan & masuk'; return; }
-        beres();
+        const r = await buatAkun({
+          peran,
+          username: kartu.querySelector('#gbBaruNama').value,
+          sandi: s,
+        });
+        if (!r.ok) {
+          tunjukGalat('#gbGalat2', r.pesan);
+          b.disabled = false; b.textContent = 'Simpan & masuk';
+          return;
+        }
+        beres(r.akun);
       });
+      kartu.querySelector('#gbBalik').addEventListener('click', layarMasuk);
     };
 
     /* Layar: lupa kata sandi */
@@ -526,26 +507,114 @@ const Masuk = (() => {
       kartu.innerHTML = `
         ${kartuMerek(peran)}
         <h2>Lupa kata sandi</h2>
-        <p class="gerbang__ket">Kata sandi tidak bisa dikirim ulang, sebab kami tidak menyimpan surel pemulihan. Yang bisa dilakukan: masuk lagi dengan Google, lalu buat kata sandi baru.</p>
-        <div class="gb-notis gb-notis--info">
-          <span>${Inti.ikon('shield', '', 16)}</span>
-          <span>Ini disengaja. Tanpa surel pemulihan, satu-satunya kunci cadangan adalah akun Google Anda sendiri — tidak ada pihak lain yang bisa membuka akun ini.</span>
-        </div>
+        <p class="gerbang__ket">Kata sandi tidak bisa dikirim ulang, sebab kami tidak menyimpan surel pemulihan.</p>
+        ${notis('info', 'shield',
+          peran === 'pengelola'
+            ? 'Bila Anda pengelola, mintalah pemilik akun membuat ulang lewat Panel Pengelola. Bila tidak ada lagi yang bisa masuk, hapus data aplikasi lalu masuk dengan akun bawaan <b>admin</b> / <b>admin123</b>.'
+            : 'Mintalah <b>Pengelola</b> membuat ulang akun Anda, atau membuat akun baru. Bila ini perangkat Anda sendiri dan belum ada akun pengelola, Anda bisa membuat akun baru di layar awal.')}
         <div class="gerbang__tindak">
-          <button class="gb-btn gb-btn--utama" id="gbKeGoogle">Masuk dengan Google</button>
           <button class="gb-btn gb-btn--halus" id="gbBalik">Kembali</button>
         </div>`;
-      kartu.querySelector('#gbKeGoogle').addEventListener('click', layarGoogle);
-      kartu.querySelector('#gbBalik').addEventListener('click', layarPilih);
+      kartu.querySelector('#gbBalik').addEventListener('click', layarMasuk);
     };
 
-    layarPilih();
+    /* Layar: masuk dengan Google (opsional) */
+    const layarGoogle = async () => {
+      kartu.innerHTML = `
+        ${kartuMerek(peran)}
+        <h2>Masuk dengan Google</h2>
+        <p class="gerbang__ket">Kami hanya memakai nama dan alamat surel Anda untuk mengenali akun. Tidak ada yang dikirim ke mana pun.</p>
+        <div id="gbGoogleArea"></div>
+        <div class="gerbang__kaki">
+          <button class="gerbang__tautan" id="gbKembali">Kembali</button>
+        </div>`;
+      kartu.querySelector('#gbKembali').addEventListener('click', layarMasuk);
+      const area = kartu.querySelector('#gbGoogleArea');
+      area.innerHTML = notis('info', 'clock', 'Memuat Google…');
+      try {
+        await muatSkripGoogle();
+        window.google.accounts.id.initialize({
+          client_id: String(window.WGD_GOOGLE_CLIENT_ID).trim(),
+          callback: async (res) => {
+            const p = isiToken(res.credential);
+            if (!p) return;
+            const email = String(p.email || '').toLowerCase();
+            // Google hanya jalan pintas: bila nama penggunanya belum ada,
+            // dibuatkan akun tanpa kata sandi (kata sandi tetap bisa
+            // ditambahkan nanti lewat menu Akun saya).
+            let akun = cariUsername(peran, email.split('@')[0]) || akunPeran(peran);
+            if (!akun) {
+              akun = { id: uid(), peran, username: email.split('@')[0], nama: p.name || email, dibuat: new Date().toISOString() };
+              tulisAkun(akun);
+            }
+            akun.nama = p.name || akun.nama;
+            akun.google = { sub: p.sub, email, nama: p.name || email, foto: p.picture || '' };
+            tulisAkun(akun);
+            beres(akun);
+          },
+        });
+        area.innerHTML = '<div id="gbTombol" style="display:flex;justify-content:center"></div>';
+        window.google.accounts.id.renderButton(area.querySelector('#gbTombol'), {
+          theme: 'filled_black', size: 'large', shape: 'pill',
+          text: 'continue_with', locale: 'id', width: 300,
+        });
+      } catch (e) {
+        area.innerHTML = notis('salah', 'alert',
+          bersih(e.message) + ' Periksa sambungan internet Anda.');
+      }
+    };
+
+    layarMasuk();
   }
 
   /* ── Panel kelola akun (dipakai dari dalam aplikasi) ──── */
   function panelAkun(peran, saatBerubah) {
-    const a = akunPeran(peran) || {};
-    const g = a.google || {};
+    // Pengelola boleh membuat banyak akun Pemilik, jadi akun yang ditampilkan
+    // harus akun yang sedang dipakai (dari sesi), bukan akun pertama seperan.
+    const akunSesi = sesiAktif(peran);
+    const username = (akunSesi && akunSesi.username) || '';
+    const akun = cariUsername(peran, username) || akunPeran(peran) || {};
+    const g = akun.google || {};
+    const pengelola = peran === 'pengelola';
+
+    const barisAkun = (a) => `
+      <div class="akun__baris" data-akun="${bersih(a.id)}">
+        <div>
+          <b>${bersih(a.username)}</b>
+          <span>${a.peran === 'pengelola' ? 'Pengelola' : 'Pemilik Warung'}${a.nama ? ' · ' + bersih(a.nama) : ''}</span>
+        </div>
+        <button class="btn btn--sm btn--dgr" data-hapus="${bersih(a.id)}" title="Hapus akun">
+          ${Inti.ikon('trash', '', 15)}
+        </button>
+      </div>`;
+
+    const bagianKelola = pengelola ? `
+      <div class="akun__bagian">
+        <div class="akun__judul">Kelola akun</div>
+        ${semuaAkun().map(barisAkun).join('') || '<p class="teks-biasa">Belum ada akun.</p>'}
+        <form id="akTambah" novalidate style="margin-top:12px">
+          <div class="gb-field">
+            <label for="akBaruPeran">Jenis akun</label>
+            <select id="akBaruPeran">
+              <option value="pemilik">Pemilik Warung</option>
+              <option value="pengelola">Pengelola</option>
+            </select>
+          </div>
+          <div class="gb-field">
+            <label for="akBaruNama">Nama pengguna</label>
+            <input id="akBaruNama" autocapitalize="none" spellcheck="false" placeholder="mis. bu-tini" />
+          </div>
+          <div class="gb-field">
+            <label for="akBaruSandi">Kata sandi</label>
+            <input id="akBaruSandi" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter" />
+          </div>
+          <div id="akTambahGalat"></div>
+          <button class="btn btn--pri" type="submit" style="width:100%">
+            ${Inti.ikon('plus', '', 16)} Buat akun
+          </button>
+        </form>
+      </div>` : '';
+
     const m = Inti.modal({
       judul: 'Akun saya',
       isi: `
@@ -553,51 +622,49 @@ const Masuk = (() => {
           <div class="gb-akun">
             ${g.foto
               ? `<img class="gb-akun__foto" src="${bersih(g.foto)}" alt="" referrerpolicy="no-referrer" />`
-              : `<div class="gb-akun__foto">${bersih((g.nama || '?').trim().charAt(0).toUpperCase())}</div>`}
+              : `<div class="gb-akun__foto">${bersih((username || '?').trim().charAt(0).toUpperCase())}</div>`}
             <div class="gb-akun__isi">
-              <b>${bersih(g.nama || 'Belum tersambung Google')}</b>
-              <span>${bersih(g.email || '—')}</span>
+              <b>${bersih(akun.nama || username || 'Akun')}</b>
+              <span>${bersih(username || '—')}${g.email ? ' · ' + bersih(g.email) : ''}</span>
             </div>
           </div>
           <div class="akun__baris">
-            <div><b>Nama pengguna</b><br /><span>${a.username ? bersih(a.username) : 'Belum dibuat'}</span></div>
+            <div><b>Kata sandi</b><br /><span>${akun.sandiDiubah ? 'Diubah ' + Inti.tglPendek(akun.sandiDiubah) : 'Belum dibuat'}</span></div>
           </div>
-          <div class="akun__baris">
-            <div><b>Kata sandi</b><br /><span>${a.sandiDiubah ? 'Diubah ' + Inti.tglPendek(a.sandiDiubah) : 'Belum dibuat'}</span></div>
-          </div>
+          ${akun.harusGanti ? notis('awas', 'alert',
+            'Anda masih memakai kata sandi bawaan. Ganti sekarang.') : ''}
         </div>
 
         <div class="akun__bagian">
-          <div class="akun__judul">${a.username ? 'Ganti cara masuk' : 'Buat cara masuk'}</div>
-          <form id="akBuat" novalidate>
+          <div class="akun__judul">Ganti kata sandi</div>
+          <form id="akGanti" novalidate>
             <div class="gb-field">
-              <label for="akNama">Nama pengguna</label>
-              <input id="akNama" autocapitalize="none" spellcheck="false"
-                     value="${bersih(a.username || '')}" placeholder="mis. bu-tini" />
+              <label for="akLama">Kata sandi sekarang</label>
+              <input id="akLama" type="password" autocomplete="current-password" />
             </div>
             <div class="gb-field">
-              <label for="akSandi">Kata sandi baru</label>
-              <input id="akSandi" type="password" autocomplete="new-password"
+              <label for="akBaru">Kata sandi baru</label>
+              <input id="akBaru" type="password" autocomplete="new-password"
                      placeholder="Minimal 8 karakter" />
               <div class="akun__kekuatan" id="akKuat"><i></i><i></i><i></i></div>
             </div>
             <div class="gb-field">
-              <label for="akUlang">Ulangi kata sandi</label>
+              <label for="akUlang">Ulangi kata sandi baru</label>
               <input id="akUlang" type="password" autocomplete="new-password" />
             </div>
             <div id="akGalat"></div>
-            <button class="btn btn--pri" type="submit" style="width:100%">${Inti.ikon('save', '', 16)} Simpan</button>
+            <button class="btn btn--pri" type="submit" style="width:100%">
+              ${Inti.ikon('save', '', 16)} Simpan kata sandi baru
+            </button>
           </form>
         </div>
 
+        ${bagianKelola}
+
         <div class="akun__bagian">
           <div class="akun__judul">Keamanan</div>
-          <div class="gb-notis gb-notis--awas">
-            <span>${Inti.ikon('alert', '', 16)}</span>
-            <span>Penjaga ini berjalan di HP Anda sendiri. Siapa pun yang bisa membuka HP ini
-              juga bisa membuka data yang tersimpan di dalamnya. Kuncinya bukan kata sandi ini,
-              melainkan kunci layar HP Anda.</span>
-          </div>
+          ${notis('awas', 'alert',
+            'Penjaga ini berjalan di HP Anda sendiri. Siapa pun yang bisa membuka HP ini juga bisa membuka data yang tersimpan di dalamnya. Kuncinya bukan kata sandi ini, melainkan kunci layar HP Anda.')}
           <button class="btn btn--dgr" id="akKeluar" style="width:100%">
             ${Inti.ikon('logout', '', 16)} Keluar dari akun
           </button>
@@ -608,27 +675,69 @@ const Masuk = (() => {
     Inti.qa('[data-tutup]', m).forEach((b) => b.addEventListener('click', Inti.tutupModal));
 
     const kuat = Inti.q('#akKuat', m);
-    Inti.q('#akSandi', m).addEventListener('input', (e) => {
+    Inti.q('#akBaru', m).addEventListener('input', (e) => {
       const n = ukurKekuatan(e.target.value);
       [...kuat.children].forEach((i, idx) => { i.className = idx < n ? 'on-' + n : ''; });
     });
 
-    Inti.q('#akBuat', m).addEventListener('submit', async (ev) => {
+    const galat = (id, p) => {
+      const el = Inti.q(id, m);
+      if (el) el.innerHTML = `<div class="gb-notis gb-notis--salah" style="margin-bottom:10px"><span>${Inti.ikon('alert', '', 16)}</span><span>${bersih(p)}</span></div>`;
+    };
+
+    Inti.q('#akGanti', m).addEventListener('submit', async (ev) => {
       ev.preventDefault();
-      const u = Inti.q('#akNama', m).value;
-      const s = Inti.q('#akSandi', m).value;
-      const s2 = Inti.q('#akUlang', m).value;
-      const galat = Inti.q('#akGalat', m);
-      const tunjuk = (p) => {
-        galat.innerHTML = `<div class="gb-notis gb-notis--salah" style="margin-bottom:10px"><span>${Inti.ikon('alert', '', 16)}</span><span>${bersih(p)}</span></div>`;
-      };
-      if (s !== s2) return tunjuk('Kedua kata sandi belum sama.');
-      const r = await setelNamaSandi(peran, u, s);
-      if (!r.ok) return tunjuk(r.pesan);
-      Inti.toast('Cara masuk disimpan. Lain kali bisa masuk tanpa Google.');
+      const lama = Inti.q('#akLama', m).value;
+      const baru = Inti.q('#akBaru', m).value;
+      const ulang = Inti.q('#akUlang', m).value;
+      if (baru !== ulang) return galat('#akGalat', 'Kedua kata sandi belum sama.');
+      const b = ev.target.querySelector('button[type=submit]');
+      b.disabled = true;
+      const r = await gantiSandi(peran, username, lama, baru);
+      b.disabled = false;
+      if (!r.ok) return galat('#akGalat', r.pesan);
+      Inti.toast('Kata sandi berhasil diganti.');
       Inti.tutupModal();
-      if (saatBerubah) saatBerubah(akunPeran(peran));
+      if (saatBerubah) saatBerubah(r.akun);
     });
+
+    const formTambah = Inti.q('#akTambah', m);
+    if (formTambah) {
+      formTambah.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const b = ev.target.querySelector('button[type=submit]');
+        b.disabled = true;
+        const r = await buatAkun({
+          peran: Inti.q('#akBaruPeran', m).value,
+          username: Inti.q('#akBaruNama', m).value,
+          sandi: Inti.q('#akBaruSandi', m).value,
+        });
+        b.disabled = false;
+        if (!r.ok) return galat('#akTambahGalat', r.pesan);
+        Inti.toast('Akun ' + r.akun.username + ' dibuat.');
+        Inti.tutupModal();
+        panelAkun(peran, saatBerubah);
+      });
+
+      Inti.qa('[data-hapus]', m).forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.hapus;
+          const a = semuaAkun().find((x) => x.id === id);
+          const ya = await Inti.konfirmasi({
+            judul: 'Hapus akun?',
+            pesan: `Akun "${a ? a.username : ''}" tidak akan bisa masuk lagi. Data usaha yang sudah tercatat tidak dihapus.`,
+            labelYa: 'Hapus',
+            bahaya: true,
+          });
+          if (!ya) return;
+          const r = hapusAkun(id);
+          if (!r.ok) return Inti.toast(r.pesan, 'err');
+          Inti.toast('Akun dihapus.');
+          Inti.tutupModal();
+          panelAkun(peran, saatBerubah);
+        });
+      });
+    }
 
     Inti.q('#akKeluar', m).addEventListener('click', async () => {
       const ya = await Inti.konfirmasi({
@@ -642,19 +751,24 @@ const Masuk = (() => {
   }
 
   /* ── Pasang gerbang pada sebuah aplikasi ──────────────── */
-  function pasang({ peran, setelahMasuk }) {
+  async function pasang({ peran, setelahMasuk }) {
+    if (peran === 'pengelola') await pastikanAdminBawaan();
+
     const sesi = sesiAktif(peran);
     if (sesi) {
-      setelahMasuk(akunPeran(peran) || {});
-      return;
+      const akun = cariUsername(peran, sesi.username);
+      // Akun yang sudah dihapus tidak boleh lanjut memakai sesinya.
+      if (akun) { setelahMasuk(akun); return; }
+      localStorage.removeItem(kunciSesi(peran));
     }
     tampilkanGerbang({ peran, setelahMasuk });
   }
 
   return {
     pasang, panelAkun, keluar, sesiAktif,
-    akunPeran, setelNamaSandi, masukNamaSandi, periksaSandi, ukurKekuatan,
-    adaClientId,
+    akunPeran, semuaAkun, buatAkun, hapusAkun, gantiSandi,
+    setelNamaSandi, masukNamaSandi, periksaSandi, ukurKekuatan,
+    adaClientId, ADMIN_BAWAAN,
   };
 })();
 
