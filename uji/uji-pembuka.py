@@ -12,7 +12,9 @@ fatal: beranda tertutup selamanya. Yang dijaga di sini:
    isi beranda tetap terbaca. Ini yang paling penting: beranda tidak boleh
    bergantung pada skrip untuk bisa dilihat.
 5. Video gagal dimuat (berkas hilang) -> lapisan otomatis dilewati.
-6. Tanpa error console.
+6. Video "Cerita Bu Tini" tidak ikut berputar selama pembuka tampil, supaya
+   tidak berebut bandwidth dan membuat pembuka tersendat di sambungan lambat.
+7. Tanpa error console.
 
 Jalankan: python3 uji/uji-pembuka.py
 Perlu server aktif di http://localhost:12000/warung-go-digital/
@@ -202,6 +204,32 @@ with sync_playwright() as p:
         "()=>document.documentElement.classList.contains('pembuka-aktif')"
     )
     cek("skrip gagal: jaring pengaman melepas lapisan", not r2, str(r2))
+    ctx.close()
+
+    # ── 9. Video cerita tidak berebut bandwidth dengan pembuka ─────
+    # Enam video "Cerita Bu Tini" berada jauh di bawah layar, tetapi satu di
+    # antaranya (adegan pertama) ikut diputar begitu halaman dimuat. Pada
+    # sambungan 500-700 kb/s ia merebut bandwidth dengan video pembuka dan
+    # membuat pembuka tersendat. Terukur: tanpa penjagaan ini, pada 700 kb/s
+    # video pembuka berhenti 4 kali dalam 16 detik; dengan penjagaan, nol.
+    ctx = b.new_context(viewport={"width": 1280, "height": 900}, service_workers="block")
+    pg = ctx.new_page()
+    pg.goto(LANDING, wait_until="load")
+    pg.wait_for_timeout(2000)
+    r = pg.evaluate(
+        "()=>[...document.querySelectorAll('.cerita__video')].map(v=>v.paused)"
+    )
+    cek("saat pembuka tampil: semua video cerita dijeda", all(r), str(r))
+    pg.click("#pembukaLewati")
+    pg.wait_for_timeout(1500)
+    r2 = pg.evaluate(
+        """()=>{
+             const v=document.querySelector('.cerita__video');
+             return {aktif: v.classList.contains('aktif'), jeda: v.paused};
+           }"""
+    )
+    cek("setelah Lewati: video cerita aktif kembali berjalan",
+        r2["aktif"] and not r2["jeda"], str(r2))
     ctx.close()
 
     b.close()

@@ -15,6 +15,7 @@ python3 uji/uji-dua-aplikasi.py   # 38 uji alur Pemilik -> laporan -> Pengelola
 python3 uji/uji-sinkron.py        # 23 uji sinkron otomatis (menjalankan server asli)
 python3 uji/uji-cerita.py         # 40 uji bagian "Cerita Bu Tini" (video + panggung)
 python3 uji/uji-menu-publik.py    # 16 uji halaman menu publik + terbitkan menu
+python3 uji/uji-pesanan.py        # 36 uji QR 3-in-1: pesanan, notifikasi, 30 menit (server asli)
 python3 uji/uji-client-id.py      # 8 uji pembaca Client ID Google
 python3 uji/uji-terbit-otomatis.py # 14 uji penerbitan menu otomatis
 python3 uji/uji-google.py         # 57 uji kesiapan mesin pencari (SEO)
@@ -25,6 +26,12 @@ Uji yang memeriksa data terisi memanggil `Store.muatContoh()` lebih dulu, karena
 aplikasi kini dimulai dengan data kosong. Perhatikan bahwa `b.new_page()` dan
 `new_context()` membuat penyimpanan baru, jadi tiap konteks perlu memuat data contoh
 sendiri.
+
+`uji-pesanan.py` menjalankan `sinkron/server.mjs` sendiri di port acak, menulis berkas
+menu uji `warung-go-digital/menu/wr-uji-9.json` (dihapus lagi di akhir), lalu membuka dua
+konteks peramban: pelanggan memesan, pemilik menerima. Uji ini juga memeriksa bunyi
+notifikasi secara nyata — menghitung osilator Web Audio yang dibuat dan merekam teks yang
+diucapkan `speechSynthesis`.
 
 Uji QR membutuhkan Node + jsqr + pngjs:
 

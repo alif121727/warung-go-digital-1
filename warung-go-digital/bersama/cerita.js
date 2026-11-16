@@ -47,6 +47,14 @@
   var mintaGambar = false;
   var dipasang = false;
 
+  // Selama lapisan pembuka (video intro) masih menutupi beranda, video cerita
+  // yang jauh di bawah layar tidak boleh ikut berputar: ia berebut bandwidth
+  // dengan video pembuka dan membuat pembuka tersendat. Terukur, mematikan
+  // satu video cerita ini menghilangkan seluruh tersendatnya.
+  function pembukaTampil() {
+    return document.documentElement.classList.contains("pembuka-aktif");
+  }
+
   function bangun() {
     if (dipasang) return;
     dipasang = true;
@@ -165,8 +173,12 @@
       // Hanya video adegan aktif yang berjalan; sisanya dijeda supaya
       // tidak ada enam video berputar sekaligus di belakang layar.
       if (el.tagName === "VIDEO") {
-        if (n === i) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
-        else el.pause();
+        if (n === i && !pembukaTampil()) {
+          var pr = el.play();
+          if (pr && pr.catch) pr.catch(function () {});
+        } else {
+          el.pause();
+        }
       }
     });
     teks.forEach(function (el, n) {
@@ -216,7 +228,7 @@
       function (entri) {
         entri.forEach(function (e) {
           var v = e.target;
-          if (e.isIntersecting) {
+          if (e.isIntersecting && !pembukaTampil()) {
             var pr = v.play();
             if (pr && pr.catch) pr.catch(function () {});
           } else {
@@ -256,6 +268,24 @@
     if (mq.addEventListener) mq.addEventListener("change", sesuaikan);
     else if (mq.addListener) mq.addListener(sesuaikan);
   });
+
+  // Begitu lapisan pembuka ditutup, video cerita yang tadinya ditahan boleh
+  // mulai. `aktif = -1` memaksa `tampilkan` mengevaluasi ulang adegan yang
+  // sedang tampil, karena tanpa itu ia menganggap tidak ada yang berubah.
+  if ("MutationObserver" in window) {
+    var tadiTampil = pembukaTampil();
+    new MutationObserver(function () {
+      var kini = pembukaTampil();
+      if (kini === tadiTampil) return;
+      tadiTampil = kini;
+      if (kini) return;
+      aktif = -1;
+      saatGulir();
+    }).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+  }
 
   sesuaikan();
 })();

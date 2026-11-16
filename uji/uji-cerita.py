@@ -197,6 +197,32 @@ def utama():
             cek(f"cerita {w}px: tanpa geser mendatar", not luber, luber)
         pg.close()
 
+        # ── 9. Video tidak berputar di belakang lapisan pembuka ───────
+        # Adegan pertama ada di puncak daftar, jadi ia langsung "terlihat"
+        # menurut IntersectionObserver meski masih jauh di bawah layar. Bila
+        # ia dibiarkan berputar, ia berebut bandwidth dengan video pembuka dan
+        # membuat pembuka tersendat di sambungan lambat.
+        ctx = b.new_context(viewport={"width": 1280, "height": 900},
+                            service_workers="block")
+        pg = ctx.new_page()
+        pg.goto(LANDING, wait_until="load")
+        pg.wait_for_timeout(2000)
+        r = pg.evaluate(
+            "()=>[...document.querySelectorAll('.cerita__video')].map(v=>v.paused)"
+        )
+        cek("pembuka tampil: semua video cerita dijeda", all(r), str(r))
+        pg.click("#pembukaLewati")
+        pg.wait_for_timeout(1500)
+        r2 = pg.evaluate(
+            """()=>{
+                 const v=document.querySelector('.cerita__video');
+                 return {aktif:v.classList.contains('aktif'), jeda:v.paused};
+               }"""
+        )
+        cek("setelah Lewati: video cerita aktif berjalan lagi",
+            r2["aktif"] and not r2["jeda"], str(r2))
+        ctx.close()
+
         b.close()
 
 

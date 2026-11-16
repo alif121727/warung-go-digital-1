@@ -37,7 +37,7 @@ SPLASH_LAND = {k: (t[1], t[0]) for k, t in SPLASH_TEGAK.items()}
 
 
 def ambil_logo(dasar: Image.Image) -> Image.Image:
-    """Memisahkan huruf 'W' dari latar kuning menjadi gambar transparan."""
+    """Memisahkan lambang gelap dari latar kuning menjadi gambar transparan."""
     rgba = dasar.convert("RGBA")
     px = rgba.load()
     lebar, tinggi = rgba.size
@@ -48,7 +48,7 @@ def ambil_logo(dasar: Image.Image) -> Image.Image:
                 px[x, y] = (r, g, b, 0)
     kotak = rgba.getbbox()
     if not kotak:
-        raise SystemExit("Tidak menemukan huruf W pada ikon sumber.")
+        raise SystemExit("Tidak menemukan lambang pada ikon sumber.")
     return rgba.crop(kotak)
 
 
@@ -65,7 +65,7 @@ def tempel_di_tengah(kanvas: Image.Image, gambar: Image.Image, skala: float) -> 
 
 
 def bulat(logo: Image.Image, warna: tuple) -> Image.Image:
-    """Ikon bulat: lingkaran warna merek dengan huruf W di tengahnya."""
+    """Ikon bulat: lingkaran warna merek dengan lambang di tengahnya."""
     sisi = KANVAS_ADAPTIF_MAKS
     kanvas = Image.new("RGBA", (sisi, sisi), (0, 0, 0, 0))
     ImageDraw.Draw(kanvas).ellipse((0, 0, sisi - 1, sisi - 1), fill=warna)
@@ -109,7 +109,7 @@ def main() -> int:
             folder / "ic_launcher_round.png", "PNG", optimize=True
         )
 
-        # Lapisan depan ikon adaptif: huruf W saja, di dalam zona aman.
+        # Lapisan depan ikon adaptif: lambangnya saja, di dalam zona aman.
         kanvas = Image.new("RGBA", (KANVAS_ADAPTIF[nama],) * 2, (0, 0, 0, 0))
         tempel_di_tengah(kanvas, logo, 0.46)
         kanvas.save(folder / "ic_launcher_foreground.png", "PNG", optimize=True)

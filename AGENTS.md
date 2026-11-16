@@ -141,13 +141,20 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   `bersama/pembuka.css` + `bersama/pembuka.js`, gaya sejajar `ax-`/`fx-`.
   Sumbernya rekaman layar situs ini sendiri (640x360) yang dinaikkan ke HD dengan
   `python3 buat-video-pembuka.py` (butuh `video-sumber-pembuka.mp4`; penapis
-  `scale=1280:720:flags=lanczos` lalu H.264 High + `faststart`). CRF 23, preset
-  `slow`, audio 64k. **Jangan pasang `unsharp`:** dulu dipakai dan justru
-  merusak — ia menebalkan tepi huruf pada rekaman layar sehingga menambah halo
-  dan memperkuat derau rekaman. **Jangan pasang `-g`:** memaksa kerangka kunci
-  tiap 2 detik hanya berguna untuk melompat waktu, sedangkan pembuka diputar
-  lurus sampai habis. Terukur, `-g 60` menambah 876 KB (13%) tanpa satu pun
-  perubahan mutu (SSIM sama persis).
+  `scale=1280:720:flags=lanczos` lalu H.264 High + `faststart`). CRF 28, preset
+  `slow`, **`-maxrate 480k -bufsize 960k`**, audio 48k mono. **Jangan pasang
+  `unsharp`:** dulu dipakai dan justru merusak — ia menebalkan tepi huruf pada
+  rekaman layar sehingga menambah halo dan memperkuat derau rekaman. **Jangan
+  pasang `-g`:** memaksa kerangka kunci tiap 2 detik hanya berguna untuk
+  melompat waktu, sedangkan pembuka diputar lurus sampai habis. Terukur, `-g 60`
+  menambah 876 KB (13%) tanpa satu pun perubahan mutu (SSIM sama persis).
+  **Kenapa ada batas `-maxrate` (jangan dihapus):** naik ke 1280x720 tanpa batas
+  membuat bitrate melompat ke **941 kb/s**. Terukur di Chromium pada sambungan
+  500-700 kb/s, video itu berhenti 4 kali dalam 16 detik — inilah "ngelag" yang
+  dikeluhkan pengguna. Batas 480 kb/s menurunkan berkas dari 7,1 MB ke **3,6 MB**
+  dan menghilangkan tersendatnya; SSIM frame terburuk masih 0,983 terhadap hasil
+  tanpa batas (nyaris tak terbedakan). Mutu HD (1280x720) tetap utuh — yang
+  turun hanya berat berkasnya.
   Aturan yang **harus dijaga** (dijaga `uji/uji-pembuka.py`):
   - Kelas `pembuka-aktif` dipasang oleh skrip kecil di `<head>` **sebelum**
     halaman digambar, supaya beranda tidak berkelip lebih dulu. Lapisan hanya
@@ -171,11 +178,34 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
     disimpan di `sessionStorage` (`wgd-pembuka`) sehingga tidak muncul lagi pada
     sesi yang sama. Video gagal dimuat → lapisan otomatis dilewati.
   - Tidak tampil saat `prefers-reduced-motion: reduce`.
+  - **Video cerita ditahan selama pembuka tampil.** Adegan pertama
+    "Cerita Bu Tini" ada di puncak daftar, jadi `IntersectionObserver` di
+    `cerita.js` menganggapnya terlihat dan memutarnya meski masih jauh di bawah
+    layar. Video itu lalu berebut bandwidth dengan video pembuka: terukur pada
+    700 kb/s, pembuka berhenti 4 kali dalam 16 detik karenanya, dan **nol**
+    setelah `cerita.js` menahan semua video cerita selama kelas `pembuka-aktif`
+    terpasang. `MutationObserver` di `cerita.js` memulai kembali adegan yang
+    tampil begitu lapisan ditutup. Ini berlaku untuk kedua jalur: panggung
+    lengket (`tampilkan()`) maupun daftar/pengamat (`IntersectionObserver`).
   - Video mp4 **tidak** di-precache service worker; hanya poster
     `pembuka.jpg` yang masuk cache inti.
 - **Maskot**: 4 ilustrasi SVG di `warung-go-digital/ilustrasi/` (Pak Warung,
   Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
   terbaca di latar gelap maupun krem. Bebas dipakai untuk poster/stand QR.
+- **Logo**: bentuk **warung** (tenda/kanopi + badan + konter), bukan huruf "W"
+  lagi. Bentuknya satu sumber di ikon `warung` (`bersama/inti.js`, viewBox 24x24)
+  dan disalin ke `styles.css`, `gaya-unduh.css`, `index.html`, `unduh.html`,
+  `privasi.html`, `pemilik/index.html`, `admin/index.html`, `app/index.html`,
+  kuitansi (`app/modul-transaksi.js`, `app/modul-laporan.js`), banner pasang
+  (`pasang.js`), dan halaman pembuka APK (`apk/siapkan.mjs`).
+  Tulisan **"warung go digital" diletakkan di bawah lambang**, jadi `.logo`
+  memakai `flex-direction: column`. Jangan kembalikan ke sebaris: permintaannya
+  memang tulisan di bawah lambang. Ukuran lambang dipadatkan (30px di beranda,
+  34px di topbar aplikasi) agar bilah atas tetap ringkas (~75px).
+  Ikon aplikasi PNG dibuat `python3 buat-ikon.py` (bentuk warung digambar
+  dengan Pillow, bukan lagi huruf "W"). `apk/siapkan-aset-android.py` memisahkan
+  lambang gelap dari latar amber secara otomatis, jadi tidak perlu diubah saat
+  bentuknya berganti. `playstore/ikon-512.png` hanya salinan `ikon-512.png`.
 
 ### Terlihat di mesin pencari (SEO)
 
@@ -470,6 +500,71 @@ akan lolos. Beberapa perubahan cepat digabung jadi satu kiriman (`Terbit.antre`,
 **Cache.** `sw.js` memakai jaringan-dulu untuk `.css/.js/.json` agar harga di berkas
 menu tidak basi. Jangan hapus `.json` dari pola itu.
 
+### QR 3-in-1: menu + penilaian + pesanan/pembayaran
+
+Satu pindai QR membuka **tiga tab** di `app/menu.html` (`app/menu.js`):
+
+1. **Menu** — semua item, **paling laris di atas**. Tombol `+` memasukkan ke keranjang.
+2. **Nilai** — bintang 1–5 per hidangan (disimpan di HP pelanggan, `wgd-nilai-v1`) plus
+   peta warung (`placeId` → Google Maps).
+3. **Bayar** — keranjang, total, tujuan pembayaran warung, lalu kirim pesanan.
+
+**Urutan "paling laris".** Dihitung dari catatan harian pemilik (`catatan[].item[]`),
+dijumlahkan per nama item. Dua jalur menyediakannya:
+- **Server** — `/api/menu?id=<id>` menghitung `laris` dari laporan yang tersimpan.
+- **Berkas terbit** — `menu/<id>.json` hanya memuat `laris` bila pengelola menambahkannya.
+
+Pencocokan nama item memakai huruf kecil + `trim` agar "Nasi Goreng" dan "nasi goreng "
+dianggap sama. Jangan memakai pencocokan persis.
+
+**Pesanan lintas perangkat.** Pembeli dan pemilik memakai HP berbeda, jadi pesanan harus
+lewat server (`sinkron/server.mjs`). Endpoint:
+
+| Endpoint | Kunci | Guna |
+|---|---|---|
+| `POST /api/pesanan` | **tidak perlu** | Pelanggan membuat pesanan. Bentuknya divalidasi dan itemnya dibatasi 60. |
+| `GET /api/pesanan?w=<id>` | kunci baca/tulis | Pemilik menarik pesanan warungnya. |
+| `POST /api/pesanan-ubah` | kunci baca/tulis | Pemilik menandai `lunas`/`batal`. Warung lain ditolak 403. |
+
+`POST /api/pesanan` sengaja **terbuka**: pelanggan tidak memegang kunci apa pun. Yang
+menjaganya adalah validasi bentuk, batas jumlah item, dan batas 400 pesanan tersimpan.
+Status: `menunggu` → `dibayar-klaim` (pelanggan menekan "saya sudah bayar") → `lunas`
+(pemilik memastikan uang masuk). **Tanpa unggah bukti** — sengaja, agar tidak menyulitkan
+pelanggan (keputusan pemilik produk).
+
+**Batas 30 menit.** Server menulis `batas = dibuat + 30 menit`. Pemilik melihat
+"Belum bayar · lewat N menit" dan penghitung **Lewat 30 menit** di tab Pesanan
+(`Pesanan.lewatBatas`). Hitungan ini dari waktu, bukan dari pesan tambahan.
+
+**Alamat server untuk pelanggan.** Pelanggan tidak boleh disuruh mengisi apa pun.
+`app/terbit.js` dan `berkasMenu()` menulis `server` ke dalam berkas menu, lalu
+`app/menu.js` menyimpannya di `localStorage` (`wgd-menu-server`). `bersama/pesanan.js`
+mencari alamat berurutan: `<meta name="wgd-menu-server">` → `wgd-menu-server` →
+setelan `Sinkron`. Bila server mati, pesanan **tidak hilang**: ia masuk antrean
+(`wgd-antrean-pesanan-v1`) dan dikirim ulang saat halaman dibuka lagi
+(`Pesanan.kirimAntrean`).
+
+### Bunyi notifikasi khas
+
+`bersama/bunyi.js` membuat **kicauan burung** dengan Web Audio (4 nada, osilator sine) —
+tanpa berkas suara, jadi tidak ada urusan hak cipta — lalu mengucapkan
+**"Pembayaran diterima sejumlah N rupiah"** lewat `speechSynthesis` (suara bawaan HP).
+
+Dua syarat yang harus diingat:
+1. Peramban baru mengizinkan bunyi **setelah pengguna menyentuh halaman**. Karena itu
+   `Bunyi.bukaKunci()` dipasang pada `pointerdown`/`keydown` pertama. Jangan menghapusnya.
+2. Bila aplikasi **benar-benar tertutup**, tidak ada web yang bisa membunyikan suara.
+   Aplikasi pemilik harus terbuka (atau berjalan sebagai APK/PWA). Ini batas teknologi,
+   bukan bug. Tombol **Uji bunyi notifikasi** di tab Pesanan memudahkan pemeriksaan.
+
+### Tab Pesanan di aplikasi pemilik
+
+`pemilik/pesanan-pemilik.js` menarik pesanan tiap 20 detik (`PesananPemilik.mulai`),
+membunyikan notifikasi untuk pesanan yang **baru** (bukan hasil muat awal — dibatasi
+5 menit, dan id yang sudah dibunyikan dicatat), lalu menampilkan lencana di tabbar.
+Pemilik menandai **Uang sudah masuk** atau **Batalkan**. Tanpa server, tab ini menjelaskan
+apa yang kurang — bukan layar kosong.
+
 ### Data kosong & data contoh
 
 Kondisi awal **kosong** (`Store.kosongkan()` / `kosong()` di `store.js`): semua koleksi
@@ -481,11 +576,10 @@ Setiap modul punya **empty state** (`UI.kosong`) yang ramah, dan harus tahan dat
 tanpa `NaN`/`undefined`. Tombol **Cadangan** mengunduh JSON; **Pulihkan** memuatnya kembali.
 
 ⚠️ **Batas penting:** halaman publik `app/menu.html` membaca data dari `localStorage`
-perangkat **pemilik**. Jadi QR hanya menampilkan menu di perangkat yang sudah punya data
-tersebut (mis. saat demo). Pelanggan yang memindai dari HP-nya sendiri akan melihat
-"Warung tidak ditemukan", karena perangkat mereka tidak punya data itu. Agar menu bisa
-dibuka pelanggan mana pun, data menu harus disajikan dari server (mis. berkas JSON per
-warung di hosting), bukan dari `localStorage`. Lihat bagian "Yang belum dikerjakan".
+perangkat **pemilik** hanya sebagai pilihan terakhir (untuk demo di satu HP). Dua jalur
+yang benar sudah tersedia: **berkas terbit** `menu/<id>.json` dan **server sinkron**
+`/api/menu?id=<id>`. Untuk pesanan dan notifikasi pembayaran, server sinkron **wajib
+menyala** — lihat bagian "QR 3-in-1" di atas.
 
 ### Ikon SVG wajib punya ukuran
 
@@ -779,11 +873,28 @@ Sejak fitur ini ditambahkan, `pemilik/` dan `admin/` **tidak langsung terbuka**.
   `wgd-admin-sesi-v1`. Karena itu aturan "aplikasi Pemilik hanya menyentuh
   kunci `wgd-pemilik*`" kini punya **satu pengecualian**: `wgd-akun-v1`
   (dijaga `uji/uji-dua-aplikasi.py`).
-- Akun bawaan pengelola: saat aplikasi pengelola dibuka dan belum ada akun
-  pengelola, dibuatkan **`admin` / `admin123`** yang ditandai `harusGanti`.
-  Gerbang mengumumkannya terang-terangan dan panel "Akun saya" memperingatkan
-  sampai kata sandinya benar-benar diganti. Ini perlu karena tidak ada cara
-  lain menyediakan akun pengelola pertama (tidak ada pendaftaran surel).
+  Sebelum 1.4.1 akun justru disimpan terpisah per peran
+  (`wgd-pemilik-akun-v1`, `wgd-admin-akun-v1`). **Jangan hapus migrasinya** di
+  awal `bersama/masuk.js`: tanpa itu akun yang dibuat sebelum pembaruan jadi
+  yatim — pemiliknya tidak bisa masuk lagi dan gerbang menawarkan "Buat akun"
+  seolah belum pernah ada akun. Migrasi memindahkan akun lama ke `wgd-akun-v1`
+  lalu **baru** membuang kunci lama setelah dipastikan tersimpan (kalau tidak,
+  akun yang dihapus pengelola akan muncul lagi). Dijaga `uji/uji-masuk.py`
+  (uji "akun lama").
+- **Tidak ada akun bawaan berkata-sandi tetap.** Dulu aplikasi pengelola
+  membuat sendiri akun `admin` / `admin123` dan gerbang mengumumkannya di layar
+  masuk. Itu dihapus: kata sandi tetap yang tertulis di kode publik sama saja
+  dengan tidak terkunci — siapa pun yang membuka `bersama/masuk.js` bisa
+  membacanya, dan mengumumkannya di layar masuk menghapus privasi bagi semua
+  pengguna. Sekarang, bila sebuah peran belum punya akun, gerbang menawarkan
+  **"Buat akun"** dan pemiliknya memilih sendiri nama pengguna & kata sandinya
+  (berlaku untuk Pemilik maupun Pengelola). **Jangan kembalikan akun bawaan,
+  dan jangan pernah menampilkan kredensial di layar masuk** — termasuk di
+  placeholder, teks bantuan, atau layar "Lupa kata sandi". Penanda `harusGanti`
+  masih dikenali supaya akun lama di perangkat yang pernah memakai akun bawaan
+  tetap diperingatkan di panel "Akun saya". Dijaga `uji/uji-masuk.py`
+  (uji 8: gerbang tidak membocorkan kata sandi; tidak ada akun dibuat
+  diam-diam).
 - **Kelola akun** ada di panel "Akun saya" milik pengelola: membuat akun
   (pemilik atau pengelola) dan menghapusnya. **Akun pengelola terakhir tidak
   boleh dihapus** supaya tidak ada yang mengunci dirinya sendiri dari panel.
@@ -821,10 +932,10 @@ bantu.masuk_cepat(pg, "pemilik")     # tulis akun + sesi, lalu reload (cepat)
 # atau bantu.masuk(pg, "pemilik")    # tempuh alurnya seperti manusia
 ```
 
-**Akun bawaan pengelola** (`admin` / `admin123`) dibuat otomatis saat aplikasi
-pengelola dibuka, jadi uji pengelola bisa langsung memakainya:
-`bantu.masuk(pg, "pengelola", sandi="admin123")` — atau `masuk_cepat` yang
-menulis akunnya sendiri.
+**Akun pengelola untuk uji:** tidak ada akun bawaan lagi, jadi uji menulis
+akunnya sendiri. `bantu.masuk(pg, "pengelola")` dan `masuk_cepat` memakai
+`bantu.AKUN_UJI` (`uji-admin` / `warungku123`) — ganti bila perlu dengan
+argumen `username=` / `sandi=`.
 
 ## Kemasan APK & IPA (Capacitor)
 

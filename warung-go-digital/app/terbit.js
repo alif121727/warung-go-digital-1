@@ -63,7 +63,7 @@ const Terbit = (() => {
 
   /* Isi berkas menu terbit — sama bentuknya dengan yang diunduh tangan.
      Hanya data etalase; tanpa transaksi dan tanpa catatan harian. */
-  const isiBerkas = (w, fotoDari) => {
+  const isiBerkas = (w, fotoDari, server = '') => {
     const foto = {};
     for (const f of fotoDari || []) {
       if (!f.dataUrl) continue;
@@ -74,10 +74,14 @@ const Terbit = (() => {
       wgd: 2,
       jenis: 'menu-publik',
       dibuat: new Date().toISOString(),
+      // Alamat server ikut ditulis ke berkas menu supaya HP pelanggan tahu
+      // ke mana mengirim pesanan, tanpa pelanggan mengisi apa pun.
+      server: String(server || '').replace(/\/+$/, ''),
       warung: {
         id: w.id, nama: w.nama, pemilik: w.pemilik, wa: w.wa, alamat: w.alamat,
         kategori: w.kategori, placeId: w.placeId || null,
         rating: w.ratingMaps ?? null, ulasan: w.jumlahUlasan ?? null,
+        bayar: w.bayar || null,
       },
       menu: (w.menu || []).map((m) => ({
         nama: m.nama, harga: m.harga, kategori: m.kategori, ket: m.ket || '',
@@ -158,7 +162,7 @@ const Terbit = (() => {
     }
     if (!w || !w.id) return { ok: false, pesan: 'Warung tidak sah.' };
 
-    const isi = isiBerkas(w, fotoDari);
+    const isi = isiBerkas(w, fotoDari, s.metode === 'server' ? s.server : '');
     try {
       const hasil = s.metode === 'github'
         ? await kirimGithub(s, w, isi)

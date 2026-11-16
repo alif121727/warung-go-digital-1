@@ -172,19 +172,23 @@ h1 em, h2 em, .contact__head h2 em {
 }
 .topbar__inner {
   max-width: var(--wrap); margin: 0 auto;
-  padding: .85rem var(--gutter);
+  padding: .6rem var(--gutter);
   display: flex; align-items: center; gap: 1.5rem;
 }
 
-.logo { display: inline-flex; align-items: center; gap: .6rem; font-family: var(--f-display); font-weight: 700; font-size: 1.1rem; letter-spacing: -.03em; color: var(--t-strong); }
+/* Logo: lambang warung (tenda + badan + konter) di atas, tulisan di bawahnya.
+   Tata letak menumpuk sengaja, agar tulisan "warung go digital" selalu berada
+   di bawah lambang — di header, footer, maupun halaman unduh. */
+.logo { display: inline-flex; flex-direction: column; align-items: center; gap: .22rem; font-family: var(--f-display); font-weight: 700; font-size: .88rem; letter-spacing: -.03em; color: var(--t-strong); }
 .logo__mark {
-  width: 34px; height: 34px; border-radius: 11px;
+  width: 30px; height: 30px; border-radius: 10px;
   background: var(--ink); color: var(--amber);
   display: grid; place-items: center; flex-shrink: 0;
   transition: transform .35s var(--ease), background .3s;
 }
-.logo__mark svg { width: 19px; height: 19px; }
+.logo__mark svg { width: 17px; height: 17px; }
 .logo:hover .logo__mark { transform: rotate(-8deg) scale(1.07); }
+.logo__word { white-space: nowrap; text-align: center; }
 .logo__word b { color: var(--clay); }
 .logo--light { color: var(--cream); }
 .logo--light .logo__mark { background: var(--amber); color: var(--ink); }

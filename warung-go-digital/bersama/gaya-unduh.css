@@ -86,13 +86,15 @@ em.serif { font-family: var(--f-serif); font-style: italic; font-weight: 400; }
     radial-gradient(34% 40% at 76% 26%, rgba(59,165,93,.32), transparent 72%);
 }
 .kepala__isi { position: relative; z-index: 1; }
-.kepala .logo { display: inline-flex; align-items: center; gap: .55rem; font-weight: 700;
-                font-size: 1.02rem; color: var(--cream); margin-bottom: 1.4rem; }
+.kepala .logo { display: inline-flex; flex-direction: column; align-items: center; gap: .3rem; font-weight: 700;
+                font-size: .95rem; color: var(--cream); margin-bottom: 1.4rem; }
 .kepala .logo__mark {
   width: 32px; height: 32px; border-radius: 10px; background: var(--amber); color: var(--ink);
   display: grid; place-items: center; flex-shrink: 0;
 }
 .kepala .logo__mark svg { width: 18px; height: 18px; }
+.kepala .logo__word { white-space: nowrap; text-align: center; }
+.kepala .logo__word b { color: var(--amber); }
 .kepala h1 { color: var(--cream); margin-bottom: .8rem; }
 .kepala p { color: var(--t-onDark-2); max-width: 60ch; }
 

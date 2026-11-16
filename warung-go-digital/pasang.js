@@ -128,7 +128,7 @@
     bilah.setAttribute('role', 'dialog');
     bilah.setAttribute('aria-label', 'Pasang aplikasi');
     bilah.innerHTML = `
-      <span class="wgd-pasang__ikon" aria-hidden="true">W</span>
+      <span class="wgd-pasang__ikon" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14l3.5 5.5h-21z"/><path d="M4 9.5v10h16v-10"/><path d="M8.5 19.5V15h7v4.5"/></svg></span>
       <span class="wgd-pasang__teks">
         <span class="wgd-pasang__judul">Pasang di layar utama</span>
         <span class="wgd-pasang__sub"></span>

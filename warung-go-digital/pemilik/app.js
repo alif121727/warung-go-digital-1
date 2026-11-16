@@ -672,9 +672,251 @@
     });
   };
 
+  /* ═══════════════ TAB: PESANAN ═══════════════ */
+  const renderPesanan = (root) => {
+    const daftar = PesananPemilik.semua();
+    const belumBayar = daftar.filter((p) => p.status === 'menunggu');
+    const lewat = PesananPemilik.belumBayarLewatBatas();
+    const klaim = daftar.filter((p) => p.status === 'dibayar-klaim');
+    const lunas = daftar.filter((p) => p.status === 'lunas');
+    const nilaiLunas = lunas.reduce((s, p) => s + (Number(p.total) || 0), 0);
+
+    const kartuPesanan = (p) => {
+      const sudahLewat = Pesanan.lewatBatas(p);
+      const warna = p.status === 'lunas' ? 'hijau'
+        : p.status === 'dibayar-klaim' ? 'biru'
+        : sudahLewat ? 'merah' : 'kuning';
+      const label = p.status === 'lunas' ? 'Lunas'
+        : p.status === 'dibayar-klaim' ? 'Pelanggan bilang sudah bayar'
+        : p.status === 'batal' ? 'Dibatalkan'
+        : Pesanan.labelSisa(p);
+      return `
+        <div class="card" style="margin-bottom:12px">
+          <div class="card__head">
+            <h3>${Inti.esc(p.nama || 'Pelanggan')}${p.meja ? ' · ' + Inti.esc(p.meja) : ''}</h3>
+            <div class="card__spacer"></div>
+            <span class="badge badge--${warna}"><span class="dot dot--${warna}"></span>${Inti.esc(label)}</span>
+          </div>
+          <div class="card__body">
+            ${p.item.map((i) => `<div class="kv"><span class="kv__k">${Inti.esc(i.nama)} × ${i.jumlah}</span><span class="kv__v mono">${Inti.rupiah(i.harga * i.jumlah)}</span></div>`).join('')}
+            <div class="kv" style="border-top:2px solid var(--line);margin-top:6px;padding-top:9px">
+              <span class="kv__k"><b>Total</b></span>
+              <span class="kv__v mono" style="font-size:16px"><b>${Inti.rupiah(p.total)}</b></span>
+            </div>
+            ${p.catatan ? `<p class="dim kecil" style="margin:8px 0 0">Catatan: ${Inti.esc(p.catatan)}</p>` : ''}
+            <p class="dim kecil" style="margin:8px 0 0">Dipesan ${Inti.waktuID(p.dibuat)}${sudahLewat && p.status === 'menunggu' ? ` · <b style="color:#b4451f">lewat batas 30 menit</b>` : ''}</p>
+          </div>
+          <div class="card__foot">
+            <div class="baris-tombol">
+              ${p.status !== 'lunas' ? `<button class="btn btn--sm btn--pri" data-lunas="${p.id}">${Inti.ikon('check', '', 14)} Uang sudah masuk</button>` : ''}
+              ${p.status !== 'batal' && p.status !== 'lunas' ? `<button class="btn btn--sm btn--dgr" data-batal="${p.id}">${Inti.ikon('x', '', 14)} Batalkan</button>` : ''}
+              ${p.status === 'lunas' ? `<span class="pill pill--hijau">${Inti.ikon('check', '', 13)} Sudah lunas</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+    };
+
+    root.innerHTML = `
+      <div class="grid grid--4" style="margin-bottom:15px">
+        ${Inti.kartuStat({ ikon: 'cart', warna: 'kuning', label: 'Belum bayar', nilai: belumBayar.length, sub: lewat ? lewat + ' lewat batas' : 'Semua dalam batas waktu' })}
+        ${Inti.kartuStat({ ikon: 'wallet', warna: 'biru', label: 'Menunggu dipastikan', nilai: klaim.length, sub: 'Pelanggan bilang sudah bayar' })}
+        ${Inti.kartuStat({ ikon: 'check', warna: 'hijau', label: 'Lunas hari ini', nilai: lunas.length, sub: Inti.rupiah(nilaiLunas) })}
+        ${Inti.kartuStat({ ikon: 'clock', warna: 'merah', label: 'Lewat 30 menit', nilai: lewat, sub: lewat ? 'Perlu ditagih' : 'Tidak ada' })}
+      </div>
+
+      ${!Sinkron.aktif() ? `<div class="notis notis--kuning" style="margin-bottom:14px">${Inti.ikon('alert', '', 18)}<span>Pesanan dari pelanggan baru bisa masuk setelah <b>alamat server</b> diisi di tab Sinkron. Tanpa itu, notifikasi pembayaran tidak dapat sampai ke HP ini.</span></div>` : ''}
+
+      ${daftar.length ? daftar.map(kartuPesanan).join('') : Inti.kosong({
+        ikon: 'cart', judul: 'Belum ada pesanan',
+        pesan: 'Saat pelanggan memindai QR menu dan memesan, pesanannya muncul di sini beserta notifikasi bunyi.',
+      })}
+
+      <div class="card" style="margin-top:14px">
+        <div class="card__body">
+          <div class="baris-tombol">
+            <button class="btn btn--sm" id="tarikPesanan">${Inti.ikon('refresh', '', 14)} Periksa pesanan baru</button>
+            <button class="btn btn--sm" id="ujiBunyi">${Inti.ikon('play', '', 14)} Uji bunyi notifikasi</button>
+          </div>
+          <p class="dim kecil" style="margin:10px 0 0">Aplikasi memeriksa pesanan baru setiap ${Math.round(PesananPemilik.JEDA_TARIK / 1000)} detik selama aplikasi terbuka.</p>
+        </div>
+      </div>`;
+
+    Inti.qa('[data-lunas]', root).forEach((b) =>
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        const h = await PesananPemilik.ubahStatus(b.dataset.lunas, 'lunas');
+        Inti.toast(h.ok ? 'Ditandai lunas' : h.pesan, h.ok ? 'ok' : 'err');
+        render();
+      }));
+    Inti.qa('[data-batal]', root).forEach((b) =>
+      b.addEventListener('click', async () => {
+        const ya = await Inti.konfirmasi({
+          judul: 'Batalkan pesanan?',
+          pesan: 'Pesanan ini ditandai batal dan tidak dihitung sebagai penjualan.',
+          labelYa: 'Ya, batalkan', bahaya: true,
+        });
+        if (!ya) return;
+        const h = await PesananPemilik.ubahStatus(b.dataset.batal, 'batal');
+        Inti.toast(h.ok ? 'Pesanan dibatalkan' : h.pesan, h.ok ? 'ok' : 'err');
+        render();
+      }));
+
+    Inti.q('#tarikPesanan', root).addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      const h = await PesananPemilik.tarik();
+      Inti.toast(h.ok ? 'Pesanan diperbarui' : h.pesan, h.ok ? 'ok' : 'err');
+      render();
+    });
+    Inti.q('#ujiBunyi', root).addEventListener('click', () => {
+      if (typeof Bunyi === 'undefined') return;
+      Bunyi.pembayaran(25000);
+    });
+  };
+
+  /* ═══════════════ TAB: MENU (daftar makanan) ═══════════════ */
+  const renderMenu = (root) => {
+    const w = warung() || {};
+    const menu = Array.isArray(w.menu) ? w.menu : [];
+    const b = w.bayar || { bank: '', nomor: '', atasNama: '', tautan: '', qris: '' };
+
+    root.innerHTML = `
+      <div class="card">
+        <div class="card__head"><h3>Daftar makanan &amp; minuman</h3></div>
+        <div class="card__body">
+          <p class="dim kecil" style="margin-top:0">Daftar ini yang dilihat pelanggan saat memindai QR. Urutan di HP pelanggan mengikuti yang paling laris, dihitung dari catatan penjualan Anda.</p>
+          <div id="daftarMenu"></div>
+          <div class="baris-tombol" style="margin-top:11px">
+            <button class="btn btn--sm" id="tambahMenu">${Inti.ikon('plus', '', 14)} Tambah item</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__head"><h3>Cara pelanggan membayar</h3></div>
+        <div class="card__body">
+          <p class="dim kecil" style="margin-top:0">Isi nomor rekening atau QRIS warung. Angka ini yang ditampilkan ke pelanggan, dan mereka menekan "saya sudah bayar" setelah mengirim uang.</p>
+          <div class="field">
+            <label for="bBank">Bank / e-wallet</label>
+            <input class="inp" id="bBank" value="${Inti.esc(b.bank || '')}" placeholder="mis. BCA, DANA, GoPay">
+          </div>
+          <div class="field">
+            <label for="bNomor">Nomor rekening / nomor tujuan</label>
+            <input class="inp" id="bNomor" inputmode="numeric" value="${Inti.esc(b.nomor || '')}" placeholder="mis. 1234567890">
+          </div>
+          <div class="field">
+            <label for="bAtasNama">Atas nama</label>
+            <input class="inp" id="bAtasNama" value="${Inti.esc(b.atasNama || '')}" placeholder="mis. Sari Wulandari">
+          </div>
+          <div class="field">
+            <label for="bTautan">Tautan pembayaran (opsional)</label>
+            <input class="inp" id="bTautan" value="${Inti.esc(b.tautan || '')}" placeholder="https://...">
+          </div>
+          <div class="field">
+            <label for="bQris">Gambar QRIS (opsional)</label>
+            <input class="inp" id="bQris" type="file" accept="image/*">
+            <span class="hint">Foto QRIS warung Anda. Ditampilkan di layar pembayaran pelanggan.</span>
+            ${b.qris ? `<div style="margin-top:9px"><img src="${b.qris}" alt="QRIS" style="max-width:150px;border-radius:10px;border:1px solid var(--line)"></div>` : ''}
+          </div>
+        </div>
+        <div class="card__foot">
+          <button class="btn btn--pri btn--blok" id="simpanBayar">${Inti.ikon('save')} Simpan cara pembayaran</button>
+        </div>
+      </div>`;
+
+    const gambarItem = () => {
+      const wadah = Inti.q('#daftarMenu', root);
+      if (!menu.length) {
+        wadah.innerHTML = `<p class="dim kecil">Belum ada item. Tekan "Tambah item".</p>`;
+        return;
+      }
+      wadah.innerHTML = menu.map((m, i) => `
+        <div class="field" data-baris="${i}" style="border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:9px">
+          <div class="baris-tombol" style="margin-bottom:8px">
+            <input class="inp" data-f="nama" value="${Inti.esc(m.nama)}" placeholder="Nama makanan">
+            <input class="inp" data-f="harga" inputmode="numeric" style="max-width:110px" value="${Number(m.harga) || 0}" placeholder="Harga">
+            <button class="btn btn--sm btn--icon btn--dgr" data-hapus-menu="${i}" aria-label="Hapus">${Inti.ikon('trash', '', 14)}</button>
+          </div>
+          <div class="baris-tombol">
+            <select class="inp" data-f="kategori">
+              ${['Makanan', 'Minuman', 'Tambahan', 'Sembako', 'Jasa'].map((k) => `<option ${m.kategori === k ? 'selected' : ''}>${k}</option>`).join('')}
+            </select>
+            <input class="inp" data-f="ket" value="${Inti.esc(m.ket || '')}" placeholder="Keterangan (opsional)">
+          </div>
+        </div>`).join('');
+
+      Inti.qa('[data-baris]', wadah).forEach((baris) => {
+        const i = Number(baris.dataset.baris);
+        Inti.qa('[data-f]', baris).forEach((inp) =>
+          inp.addEventListener('input', () => {
+            const f = inp.dataset.f;
+            menu[i][f] = f === 'harga' ? Number(String(inp.value).replace(/[^0-9]/g, '')) || 0 : inp.value;
+          }));
+      });
+      Inti.qa('[data-hapus-menu]', wadah).forEach((b) =>
+        b.addEventListener('click', () => {
+          menu.splice(Number(b.dataset.hapusMenu), 1);
+          simpanMenu();
+          gambarItem();
+        }));
+    };
+
+    const simpanMenu = () => {
+      const w2 = warung() || {};
+      w2.menu = menu;
+      simpanWarung(w2);
+      if (typeof Terbit !== 'undefined') {
+        Terbit.antre(() => warung(), {});
+      }
+    };
+
+    Inti.q('#tambahMenu', root).addEventListener('click', () => {
+      menu.push({ id: Data.uid('mn'), nama: '', harga: 0, kategori: 'Makanan', ket: '', foto: null });
+      simpanMenu();
+      gambarItem();
+      const inp = Inti.qa('[data-baris] [data-f="nama"]', root).pop();
+      if (inp) inp.focus();
+    });
+
+    Inti.q('#simpanBayar', root).addEventListener('click', () => {
+      const w2 = warung() || {};
+      w2.bayar = {
+        bank: Inti.q('#bBank', root).value.trim(),
+        nomor: Inti.q('#bNomor', root).value.trim(),
+        atasNama: Inti.q('#bAtasNama', root).value.trim(),
+        tautan: Inti.q('#bTautan', root).value.trim(),
+        qris: w2.bayar ? w2.bayar.qris || '' : '',
+      };
+      simpanWarung(w2);
+      if (typeof Terbit !== 'undefined') Terbit.antre(() => warung(), {});
+      Inti.toast('Cara pembayaran tersimpan', 'ok');
+      render();
+    });
+
+    const inpQris = Inti.q('#bQris', root);
+    inpQris.addEventListener('change', () => {
+      const f = inpQris.files[0];
+      if (!f) return;
+      if (f.size > 300 * 1024) { Inti.toast('Gambar terlalu besar (maks 300 KB)', 'err'); return; }
+      const rd = new FileReader();
+      rd.onload = () => {
+        const w2 = warung() || {};
+        w2.bayar = { ...(w2.bayar || {}), qris: String(rd.result) };
+        simpanWarung(w2);
+        if (typeof Terbit !== 'undefined') Terbit.antre(() => warung(), {});
+        Inti.toast('QRIS tersimpan', 'ok');
+        render();
+      };
+      rd.readAsDataURL(f);
+    });
+
+    gambarItem();
+  };
+
   /* ═══════════════ Kerangka ═══════════════ */
   const TAB = [
     { id: 'catat', label: 'Catat', ic: 'plus', judul: 'Catat Penjualan', sub: 'Pendapatan harian warung' },
+    { id: 'pesanan', label: 'Pesanan', ic: 'cart', judul: 'Pesanan Masuk', sub: 'Pesanan & pembayaran pelanggan' },
+    { id: 'menu', label: 'Menu', ic: 'menu', judul: 'Daftar Menu', sub: 'Makanan, harga & cara bayar' },
     { id: 'riwayat', label: 'Riwayat', ic: 'chart', judul: 'Riwayat', sub: 'Rekap penjualan Anda' },
     { id: 'kirim', label: 'Kirim', ic: 'send', judul: 'Kirim Laporan', sub: 'Ke pengelola Warung Go' },
     { id: 'warung', label: 'Warung', ic: 'store', judul: 'Data Warung', sub: 'Profil & pengaturan' },
@@ -682,9 +924,12 @@
   ];
 
   // Laporan untuk dikirim otomatis: seluruh catatan + data warung.
+  // Catatan boleh kosong — perubahannya mungkin hanya daftar menu atau
+  // cara pembayaran, dan itu tetap perlu sampai ke situs agar QR pelanggan
+  // menampilkan menu terbaru.
   const laporanSinkron = () => {
     const w = warung();
-    if (!w || !catatan().length) return null;
+    if (!w) return null;
     return Data.buatLaporan(w, catatan());
   };
 
@@ -766,9 +1011,11 @@
 
   const bangunTabbar = () => {
     const tb = Inti.q('#tabbar');
+    const perlu = typeof PesananPemilik !== 'undefined' ? PesananPemilik.perluPerhatian() : 0;
     tb.innerHTML = TAB.map((t) => `
       <button class="tabbar__item ${state.tab === t.id ? 'on' : ''}" data-tab="${t.id}">
         ${Inti.ikon(t.ic, '', 21)}<span>${t.label}</span>
+        ${t.id === 'pesanan' && perlu ? `<span class="tabbar__badge">${perlu > 99 ? '99+' : perlu}</span>` : ''}
       </button>`).join('');
     Inti.qa('[data-tab]', tb).forEach((b) =>
       b.addEventListener('click', () => pindah(b.dataset.tab))
@@ -790,6 +1037,8 @@
     view.innerHTML = '';
     try {
       if (t.id === 'catat') renderCatat(view);
+      else if (t.id === 'pesanan') renderPesanan(view);
+      else if (t.id === 'menu') renderMenu(view);
       else if (t.id === 'riwayat') renderRiwayat(view);
       else if (t.id === 'kirim') renderKirim(view);
       else if (t.id === 'sinkron') renderSinkron(view);
@@ -838,6 +1087,15 @@
 
     // Kirim otomatis ke server sinkron (bila pengelola memberi alamat).
     Sinkron.pasangAutoKirim(laporanSinkron);
+
+    // Pesanan masuk + notifikasi pembayaran. Saat pesanan baru tiba,
+    // tabbar digambar ulang supaya lencananya ikut muncul.
+    if (typeof PesananPemilik !== 'undefined') {
+      PesananPemilik.mulai(() => {
+        bangunTabbar();
+        if (state.tab === 'pesanan') render();
+      });
+    }
   };
 
   // Aplikasi hanya terbuka setelah masuk. Catatan warung ini milik satu orang;

@@ -78,7 +78,7 @@ await writeFile(
 </head>
 <body>
   <div class="kartu">
-    <div class="logo">W</div>
+    <div class="logo"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14l3.5 5.5h-21z"/><path d="M4 9.5v10h16v-10"/><path d="M8.5 19.5V15h7v4.5"/></svg></div>
     <h1>Warung Go Digital</h1>
     <p>Pilih aplikasi yang ingin dibuka.</p>
     <a class="p1" href="pemilik/index.html">Aplikasi Warung (Pemilik)</a>

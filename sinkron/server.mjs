@@ -36,8 +36,12 @@ const KUNCI_TULIS = String(process.env.KUNCI_TULIS || KUNCI);
 const KUNCI_BACA = String(process.env.KUNCI_BACA || KUNCI);
 const ASAL = String(process.env.ASAL || '*');
 const BATAS = 5000; // batas jumlah laporan tersimpan
+const BATAS_PESANAN = 400; // batas pesanan tersimpan (yang lama dibuang)
 
 let data = []; // [{ diterima, warung, catatan }]
+let pesanan = []; // [{ id, warungId, dibuat, batas, item, total, status, ... }]
+
+const BERKAS_PESANAN = BERKAS.replace(/\.json$/, '') + '-pesanan.json';
 
 const muat = async () => {
   try {
@@ -49,12 +53,42 @@ const muat = async () => {
   }
 };
 
+const muatPesanan = async () => {
+  try {
+    if (!existsSync(BERKAS_PESANAN)) return;
+    const isi = JSON.parse(await readFile(BERKAS_PESANAN, 'utf8'));
+    if (Array.isArray(isi)) pesanan = isi;
+  } catch (e) {
+    console.warn('Berkas pesanan tidak terbaca, mulai kosong:', e.message);
+  }
+};
+
 // Tulis lewat berkas sementara agar tidak rusak bila proses berhenti di tengah.
 const simpan = async () => {
   await mkdir(path.dirname(BERKAS), { recursive: true });
   const sementara = BERKAS + '.tmp';
   await writeFile(sementara, JSON.stringify(data), 'utf8');
   await rename(sementara, BERKAS);
+};
+
+const simpanPesanan = async () => {
+  await mkdir(path.dirname(BERKAS_PESANAN), { recursive: true });
+  const sementara = BERKAS_PESANAN + '.tmp';
+  await writeFile(sementara, JSON.stringify(pesanan), 'utf8');
+  await rename(sementara, BERKAS_PESANAN);
+};
+
+// Tujuan pembayaran warung. Hanya data ini yang boleh keluar ke pelanggan.
+const bersihkanBayar = (b) => {
+  if (!b || typeof b !== 'object') return null;
+  const bersih = {
+    bank: String(b.bank || '').slice(0, 40),
+    nomor: String(b.nomor || '').slice(0, 40),
+    atasNama: String(b.atasNama || '').slice(0, 60),
+    tautan: String(b.tautan || '').slice(0, 300),
+    qris: typeof b.qris === 'string' && b.qris.startsWith('data:image/') ? b.qris.slice(0, 400_000) : '',
+  };
+  return (bersih.nomor || bersih.qris || bersih.tautan) ? bersih : null;
 };
 
 const kirim = (res, kode, isi) => {
@@ -128,6 +162,7 @@ const server = createServer(async (req, res) => {
       placeId: isi.warung.placeId ? String(isi.warung.placeId).slice(0, 80) : null,
       rating: Number.isFinite(+isi.warung.rating) ? +isi.warung.rating : null,
       ulasan: Number.isFinite(+isi.warung.ulasan) ? +isi.warung.ulasan : null,
+      bayar: bersihkanBayar(isi.warung.bayar),
       // Daftar menu untuk halaman publik. Dibatasi agar berkas tidak membengkak.
       menu: Array.isArray(isi.warung.menu)
         ? isi.warung.menu.slice(0, 200).map((m) => ({
@@ -182,6 +217,7 @@ const server = createServer(async (req, res) => {
       placeId: isi.warung.placeId ? String(isi.warung.placeId).slice(0, 80) : null,
       rating: Number.isFinite(+isi.warung.rating) ? +isi.warung.rating : null,
       ulasan: Number.isFinite(+isi.warung.ulasan) ? +isi.warung.ulasan : null,
+      bayar: bersihkanBayar(isi.warung.bayar),
       menu: Array.isArray(isi.menu)
         ? isi.menu.slice(0, 200).map((m) => ({
             nama: String(m && m.nama || '').slice(0, 80),
@@ -211,6 +247,18 @@ const server = createServer(async (req, res) => {
     const id = String(url.searchParams.get('id') || '');
     const d = data.find((x) => x.warung.id === id);
     if (!d) return kirim(res, 404, { ok: false, pesan: 'Menu warung tidak ditemukan.' });
+
+    // Hitung jumlah terjual per nama menu dari catatan harian pemilik.
+    // Inilah yang membuat menu terlaris muncul paling atas di HP pelanggan.
+    const terjual = new Map();
+    for (const c of d.catatan || []) {
+      for (const it of (c && c.item) || []) {
+        const nama = String((it && it.nama) || '').trim().toLowerCase();
+        if (!nama) continue;
+        terjual.set(nama, (terjual.get(nama) || 0) + (Number(it.jumlah) || 0));
+      }
+    }
+
     return kirim(res, 200, {
       wgd: 2, jenis: 'menu-publik', dibuat: d.diterima || new Date().toISOString(),
       warung: {
@@ -218,11 +266,13 @@ const server = createServer(async (req, res) => {
         wa: d.warung.wa, alamat: d.warung.alamat, kategori: d.warung.jenis,
         placeId: d.warung.placeId || null, rating: d.warung.rating ?? null,
         ulasan: d.warung.ulasan ?? null,
+        bayar: d.warung.bayar || null,
       },
       menu: Array.isArray(d.warung.menu)
         ? d.warung.menu.map((m) => ({
             nama: m.nama, harga: m.harga, kategori: m.kategori, ket: m.ket || '',
             foto: m.foto || null,
+            laris: terjual.get(String(m.nama || '').trim().toLowerCase()) || 0,
           }))
         : [],
     });
@@ -247,12 +297,115 @@ const server = createServer(async (req, res) => {
     });
   }
 
+  /* ── Pesanan dari pelanggan ──────────────────────────────
+     Pelanggan tidak memegang kunci apa pun, jadi POST di sini
+     TERBUKA. Yang dijaga: bentuknya harus pesanan yang sah, dan
+     jumlahnya dibatasi supaya tidak bisa dipakai membanjiri server. */
+  if (req.method === 'POST' && jalur === '/api/pesanan') {
+    let isi;
+    try { isi = await bacaBadan(req); }
+    catch (e) { return kirim(res, 400, { ok: false, pesan: e.message }); }
+
+    if (!isi || isi.jenis !== 'pesanan' || !isi.warungId || !Array.isArray(isi.item) || !isi.item.length) {
+      return kirim(res, 400, { ok: false, pesan: 'Ini bukan pesanan yang sah.' });
+    }
+
+    const item = isi.item.slice(0, 60).map((i) => ({
+      nama: String((i && i.nama) || '').slice(0, 80),
+      harga: Number(i && i.harga) || 0,
+      jumlah: Math.max(1, Math.min(999, Number(i && i.jumlah) || 1)),
+    })).filter((i) => i.nama);
+
+    if (!item.length) return kirim(res, 400, { ok: false, pesan: 'Pesanan tanpa item.' });
+
+    const total = item.reduce((s, i) => s + i.harga * i.jumlah, 0);
+    const idPesanan = String(isi.id || '').slice(0, 60) || 'ps-' + Date.now().toString(36);
+    const dibuat = isi.dibuat && !Number.isNaN(Date.parse(isi.dibuat)) ? isi.dibuat : new Date().toISOString();
+
+    const catat = {
+      id: idPesanan,
+      warungId: String(isi.warungId).slice(0, 40),
+      dibuat,
+      batas: new Date(Date.parse(dibuat) + 30 * 60000).toISOString(),
+      nama: String(isi.nama || '').slice(0, 40),
+      meja: String(isi.meja || '').slice(0, 20),
+      catatan: String(isi.catatan || '').slice(0, 200),
+      item,
+      total,
+      // 'menunggu' = belum bayar; 'dibayar-klaim' = pelanggan bilang sudah bayar;
+      // 'lunas' = pemilik sudah memastikan uangnya masuk.
+      // Endpoint ini TERBUKA untuk pelanggan, jadi pelanggan hanya boleh
+      // menyetel dua status pertama. 'lunas'/'batal' hanya lewat
+      // /api/pesanan-ubah yang memerlukan kunci — kalau tidak, pelanggan bisa
+      // menandai pesanannya lunas sendiri.
+      status: ['menunggu', 'dibayar-klaim'].includes(isi.status) ? isi.status : 'menunggu',
+      diklaim: isi.diklaim ? String(isi.diklaim).slice(0, 40) : null,
+      diterima: new Date().toISOString(),
+    };
+
+    // Pesanan dengan id sama ditimpa — ini yang membuat pelanggan bisa
+    // mengubah "menunggu" menjadi "sudah bayar" dengan id yang sama.
+    // Tetapi status akhir milik pemilik tidak boleh diturunkan oleh kiriman
+    // pelanggan: pesanan yang sudah 'lunas'/'batal' tetap begitu.
+    const lama = pesanan.findIndex((p) => p.id === catat.id);
+    if (lama >= 0) {
+      const akhir = ['lunas', 'batal'].includes(pesanan[lama].status);
+      pesanan[lama] = { ...pesanan[lama], ...catat, status: akhir ? pesanan[lama].status : catat.status };
+    } else {
+      pesanan.push(catat);
+    }
+
+    if (pesanan.length > BATAS_PESANAN) pesanan = pesanan.slice(-BATAS_PESANAN);
+    await simpanPesanan();
+    return kirim(res, 200, { ok: true, id: catat.id, total: catat.total });
+  }
+
+  // Pemilik menarik pesanan warungnya (butuh kunci baca atau tulis).
+  if (req.method === 'GET' && jalur === '/api/pesanan') {
+    if ((KUNCI_BACA || KUNCI_TULIS) && kunciKirim !== KUNCI_BACA && kunciKirim !== KUNCI_TULIS) {
+      return kirim(res, 401, { ok: false, pesan: 'Kunci salah atau kosong.' });
+    }
+    const w = String(url.searchParams.get('w') || '');
+    if (!w) return kirim(res, 400, { ok: false, pesan: 'Kode warung tidak ada.' });
+    const sejak = url.searchParams.get('sejak');
+    const daftar = pesanan
+      .filter((p) => p.warungId === w)
+      .filter((p) => (sejak ? String(p.diterima) > String(sejak) : true))
+      .sort((a, b) => (a.diterima < b.diterima ? 1 : -1));
+    return kirim(res, 200, { ok: true, waktu: new Date().toISOString(), jumlah: daftar.length, pesanan: daftar });
+  }
+
+  // Pemilik mengubah status pesanan (mis. menandai lunas).
+  if (req.method === 'POST' && jalur === '/api/pesanan-ubah') {
+    if ((KUNCI_BACA || KUNCI_TULIS) && kunciKirim !== KUNCI_BACA && kunciKirim !== KUNCI_TULIS) {
+      return kirim(res, 401, { ok: false, pesan: 'Kunci salah atau kosong.' });
+    }
+    let isi;
+    try { isi = await bacaBadan(req); }
+    catch (e) { return kirim(res, 400, { ok: false, pesan: e.message }); }
+
+    const idPesanan = String((isi && isi.id) || '');
+    const p = pesanan.find((x) => x.id === idPesanan);
+    if (!p) return kirim(res, 404, { ok: false, pesan: 'Pesanan tidak ditemukan.' });
+    if (isi.warungId && p.warungId !== String(isi.warungId)) {
+      return kirim(res, 403, { ok: false, pesan: 'Pesanan ini bukan milik warung Anda.' });
+    }
+    const sah = ['menunggu', 'dibayar-klaim', 'lunas', 'batal'];
+    if (!sah.includes(isi.status)) return kirim(res, 400, { ok: false, pesan: 'Status tidak dikenali.' });
+    p.status = isi.status;
+    p.diubah = new Date().toISOString();
+    await simpanPesanan();
+    return kirim(res, 200, { ok: true, id: p.id, status: p.status });
+  }
+
   return kirim(res, 404, { ok: false, pesan: 'Jalur tidak dikenali.' });
 });
 
 await muat();
+await muatPesanan();
 server.listen(PORT, () => {
   console.log(`Server sinkron Warung Go Digital berjalan di http://localhost:${PORT}`);
   console.log(KUNCI ? 'Kunci sinkron: aktif' : 'Kunci sinkron: tidak dipakai (terbuka)');
   console.log(`Laporan tersimpan: ${data.length}`);
+  console.log(`Pesanan tersimpan: ${pesanan.length}`);
 });
