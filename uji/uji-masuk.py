@@ -385,6 +385,50 @@ def utama():
             panel[:90].replace("\n", " "))
         ctx6.close()
 
+        # ═══ 17. Akun lama (kunci per peran) ikut terbaca ═══
+        # Sebelum 1.4.1 akun disimpan di kunci terpisah per peran. Bila migrasi
+        # hilang, akun yang sudah dibuat jadi yatim: pemiliknya tidak bisa masuk
+        # lagi dan aplikasi menawarkan "Buat akun" seolah belum pernah ada akun.
+        ctx7 = br.new_context(viewport={"width": 390, "height": 844})
+        pg7 = ctx7.new_page()
+        errs7 = []
+        pg7.on("pageerror", lambda e: errs7.append(str(e)))
+        pg7.on("console", lambda m: errs7.append(m.text) if m.type == "error" else None)
+        pg7.goto(B + "pemilik/", wait_until="load")
+        pg7.wait_for_timeout(1000)
+        pg7.evaluate("""async () => {
+            const b64 = (b) => btoa(String.fromCharCode(...new Uint8Array(b)));
+            const garam = crypto.getRandomValues(new Uint8Array(16));
+            const k = await crypto.subtle.importKey('raw',
+              new TextEncoder().encode('lama12345'), 'PBKDF2', false, ['deriveBits']);
+            const bit = await crypto.subtle.deriveBits(
+              { name:'PBKDF2', salt:garam, iterations:150000, hash:'SHA-256' }, k, 256);
+            localStorage.setItem('wgd-pemilik-akun-v1', JSON.stringify({ meta:{}, akun:[
+              { id:'a-lama', peran:'pemilik', username:'bu-lama', nama:'',
+                sandiGaram:b64(garam), sandiSidik:b64(bit),
+                sandiDiubah:new Date().toISOString(), harusGanti:false }]}));
+            localStorage.removeItem('wgd-pemilik-sesi-v1');
+        }""")
+        pg7.reload(wait_until="load")
+        pg7.wait_for_timeout(1400)
+        cek("akun lama: tidak ditawari buat akun lagi",
+            pg7.eval_on_selector_all("#gbKeBuat", "e=>e.length") == 0)
+        pg7.fill("#gbNamaPengguna", "bu-lama")
+        pg7.fill("#gbSandi", "lama12345")
+        pg7.click("#gbForm button[type=submit]")
+        pg7.wait_for_timeout(2200)
+        cek("akun lama: bisa masuk dengan kata sandi lamanya",
+            pg7.eval_on_selector_all(".gerbang", "e=>e.length") == 0)
+        sisa = pg7.evaluate("()=>Object.keys(localStorage)")
+        cek("akun lama: kunci lama sudah dibersihkan",
+            "wgd-pemilik-akun-v1" not in sisa, str(sisa))
+        cek("akun lama: akun kini ada di kunci bersama",
+            any(a == "bu-lama" for a in pg7.evaluate(
+                """()=>JSON.parse(localStorage.getItem('wgd-akun-v1')).akun.map(a=>a.username)""")),
+            "")
+        cek("akun lama: tanpa error konsol", not errs7, errs7[:2])
+        ctx7.close()
+
         br.close()
 
 

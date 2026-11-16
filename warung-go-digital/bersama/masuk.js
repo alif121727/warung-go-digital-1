@@ -52,12 +52,56 @@ const Masuk = (() => {
   const AWALAN = { pemilik: 'pemilik', pengelola: 'admin' };
   const kunciSesi = (peran) => 'wgd-' + AWALAN[peran] + '-sesi-v1';
   const KUNCI_AKUN = 'wgd-akun-v1';
+  // Sebelum versi 1.4.1 akun disimpan terpisah per peran (lihat migrasi di bawah).
+  const KUNCI_LAMA = ['wgd-pemilik-akun-v1', 'wgd-admin-akun-v1'];
   const LAMA_SESI_JAM = 12;
   const PBKDF2_ULANGAN = 150000;
 
   const ADMIN_BAWAAN = { username: 'admin', sandi: 'admin123', nama: 'Pengelola' };
 
   const S = Data.buatPenyimpanan(KUNCI_AKUN);
+
+  /* ── Migrasi dari kunci akun lama ─────────────────────── */
+  // Versi 1.4.0 dan sebelumnya menaruh akun di kunci terpisah per peran.
+  // Versi 1.4.1 menyatukannya di `wgd-akun-v1` supaya Pengelola bisa membuat
+  // akun Pemilik. Tanpa migrasi ini, akun yang dibuat sebelum pembaruan jadi
+  // yatim: pemiliknya tidak bisa masuk lagi, dan aplikasi menawarkan "Buat
+  // akun" seolah belum pernah ada akun.
+  const migrasiAkunLama = () => {
+    const isi = S.load();
+    const ada = Array.isArray(isi.akun) ? isi.akun : [];
+    const dipindah = [];
+    for (const kunci of KUNCI_LAMA) {
+      let lama = null;
+      try { lama = JSON.parse(localStorage.getItem(kunci) || 'null'); } catch { lama = null; }
+      if (!lama || !Array.isArray(lama.akun)) continue;
+      for (const a of lama.akun) {
+        if (!a || !a.username || !a.peran) continue;
+        const sudah = ada.some((x) => x.peran === a.peran && x.username === a.username);
+        if (sudah) continue;
+        ada.push(a);
+        dipindah.push(a);
+      }
+    }
+    if (!dipindah.length) return;
+    isi.akun = ada;
+    S.simpanSegera();
+    // Kunci lama baru boleh dibuang setelah semua akun dipastikan tersimpan di
+    // kunci baru. Kalau dibuang lebih dulu dan penulisan gagal (penyimpanan
+    // penuh), akunnya hilang. Membiarkannya juga berbahaya: akun yang dihapus
+    // Pengelola akan muncul lagi saat pemuatan berikutnya.
+    let tersimpan = null;
+    try { tersimpan = JSON.parse(localStorage.getItem(KUNCI_AKUN) || 'null'); } catch { tersimpan = null; }
+    const daftarBaru = tersimpan && Array.isArray(tersimpan.akun) ? tersimpan.akun : [];
+    const semuaAda = dipindah.every((a) =>
+      daftarBaru.some((x) => x.peran === a.peran && x.username === a.username));
+    if (!semuaAda) return;
+    for (const kunci of KUNCI_LAMA) {
+      try { localStorage.removeItem(kunci); } catch { /* abaikan */ }
+    }
+  };
+
+  migrasiAkunLama();
 
   /* ── Utilitas kripto ──────────────────────────────────── */
   // `crypto.subtle` hanya ada di konteks aman (https, localhost, atau APK
@@ -326,7 +370,7 @@ const Masuk = (() => {
 
   const kartuMerek = (peran) => `
     <div class="gerbang__merek">
-      <div class="gerbang__lambang">W</div>
+      <div class="gerbang__lambang">${Inti.ikon('warung', '', 24)}</div>
       <div>
         <b>Warung Go Digital</b>
         <span>${bersih(PERAN[peran].nama)}</span>
