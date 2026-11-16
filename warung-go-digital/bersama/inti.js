@@ -9,6 +9,8 @@ const Inti = (() => {
   const IKON = {
     dashboard: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
     store: '<path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11a1 1 0 001 1h14a1 1 0 001-1V9"/><path d="M3 9a3 3 0 006 0 3 3 0 006 0 3 3 0 006 0"/>',
+    // Warung: tenda (kanopi) + badan + konter, dipakai sebagai lambang merek.
+    warung: '<path d="M5 4h14l3.5 5.5h-21z"/><path d="M4 9.5v10h16v-10"/><path d="M8.5 19.5V15h7v4.5"/>',
     wallet: '<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.4"/>',
     cart: '<circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/><path d="M2 3h3l2.6 12.4a2 2 0 002 1.6h8.2a2 2 0 002-1.6L21.5 7H6"/>',
     chart: '<path d="M3 20h18"/><path d="M6 20V11M11 20V5M16 20v-6M21 20v-9"/>',

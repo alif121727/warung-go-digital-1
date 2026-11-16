@@ -268,7 +268,7 @@
         .lunas { display: inline-block; border: 2px solid ${t.status === 'lunas' ? '#3ba55d' : '#e5484d'}; color: ${t.status === 'lunas' ? '#3ba55d' : '#e5484d'}; padding: 5px 14px; border-radius: 8px; font-weight: 800; letter-spacing: .1em; font-size: 12px; transform: rotate(-4deg); }
       </style></head><body>
       <div class="head">
-        <div class="logo">W</div>
+        <div class="logo"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14l3.5 5.5h-21z"/><path d="M4 9.5v10h16v-10"/><path d="M8.5 19.5V15h7v4.5"/></svg></div>
         <div><h1>Warung Go Digital</h1><div class="sub">Kuitansi Pembayaran</div></div>
       </div>
       <div class="meta">

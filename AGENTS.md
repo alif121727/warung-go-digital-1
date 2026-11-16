@@ -141,13 +141,20 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   `bersama/pembuka.css` + `bersama/pembuka.js`, gaya sejajar `ax-`/`fx-`.
   Sumbernya rekaman layar situs ini sendiri (640x360) yang dinaikkan ke HD dengan
   `python3 buat-video-pembuka.py` (butuh `video-sumber-pembuka.mp4`; penapis
-  `scale=1280:720:flags=lanczos` lalu H.264 High + `faststart`). CRF 23, preset
-  `slow`, audio 64k. **Jangan pasang `unsharp`:** dulu dipakai dan justru
-  merusak — ia menebalkan tepi huruf pada rekaman layar sehingga menambah halo
-  dan memperkuat derau rekaman. **Jangan pasang `-g`:** memaksa kerangka kunci
-  tiap 2 detik hanya berguna untuk melompat waktu, sedangkan pembuka diputar
-  lurus sampai habis. Terukur, `-g 60` menambah 876 KB (13%) tanpa satu pun
-  perubahan mutu (SSIM sama persis).
+  `scale=1280:720:flags=lanczos` lalu H.264 High + `faststart`). CRF 28, preset
+  `slow`, **`-maxrate 480k -bufsize 960k`**, audio 48k mono. **Jangan pasang
+  `unsharp`:** dulu dipakai dan justru merusak — ia menebalkan tepi huruf pada
+  rekaman layar sehingga menambah halo dan memperkuat derau rekaman. **Jangan
+  pasang `-g`:** memaksa kerangka kunci tiap 2 detik hanya berguna untuk
+  melompat waktu, sedangkan pembuka diputar lurus sampai habis. Terukur, `-g 60`
+  menambah 876 KB (13%) tanpa satu pun perubahan mutu (SSIM sama persis).
+  **Kenapa ada batas `-maxrate` (jangan dihapus):** naik ke 1280x720 tanpa batas
+  membuat bitrate melompat ke **941 kb/s**. Terukur di Chromium pada sambungan
+  500-700 kb/s, video itu berhenti 4 kali dalam 16 detik — inilah "ngelag" yang
+  dikeluhkan pengguna. Batas 480 kb/s menurunkan berkas dari 7,1 MB ke **3,6 MB**
+  dan menghilangkan tersendatnya; SSIM frame terburuk masih 0,983 terhadap hasil
+  tanpa batas (nyaris tak terbedakan). Mutu HD (1280x720) tetap utuh — yang
+  turun hanya berat berkasnya.
   Aturan yang **harus dijaga** (dijaga `uji/uji-pembuka.py`):
   - Kelas `pembuka-aktif` dipasang oleh skrip kecil di `<head>` **sebelum**
     halaman digambar, supaya beranda tidak berkelip lebih dulu. Lapisan hanya
@@ -171,11 +178,34 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
     disimpan di `sessionStorage` (`wgd-pembuka`) sehingga tidak muncul lagi pada
     sesi yang sama. Video gagal dimuat → lapisan otomatis dilewati.
   - Tidak tampil saat `prefers-reduced-motion: reduce`.
+  - **Video cerita ditahan selama pembuka tampil.** Adegan pertama
+    "Cerita Bu Tini" ada di puncak daftar, jadi `IntersectionObserver` di
+    `cerita.js` menganggapnya terlihat dan memutarnya meski masih jauh di bawah
+    layar. Video itu lalu berebut bandwidth dengan video pembuka: terukur pada
+    700 kb/s, pembuka berhenti 4 kali dalam 16 detik karenanya, dan **nol**
+    setelah `cerita.js` menahan semua video cerita selama kelas `pembuka-aktif`
+    terpasang. `MutationObserver` di `cerita.js` memulai kembali adegan yang
+    tampil begitu lapisan ditutup. Ini berlaku untuk kedua jalur: panggung
+    lengket (`tampilkan()`) maupun daftar/pengamat (`IntersectionObserver`).
   - Video mp4 **tidak** di-precache service worker; hanya poster
     `pembuka.jpg` yang masuk cache inti.
 - **Maskot**: 4 ilustrasi SVG di `warung-go-digital/ilustrasi/` (Pak Warung,
   Si QR, Mbak Es Teh, Si Meong). Buatan sendiri, duotone, berpelat gelap agar
   terbaca di latar gelap maupun krem. Bebas dipakai untuk poster/stand QR.
+- **Logo**: bentuk **warung** (tenda/kanopi + badan + konter), bukan huruf "W"
+  lagi. Bentuknya satu sumber di ikon `warung` (`bersama/inti.js`, viewBox 24x24)
+  dan disalin ke `styles.css`, `gaya-unduh.css`, `index.html`, `unduh.html`,
+  `privasi.html`, `pemilik/index.html`, `admin/index.html`, `app/index.html`,
+  kuitansi (`app/modul-transaksi.js`, `app/modul-laporan.js`), banner pasang
+  (`pasang.js`), dan halaman pembuka APK (`apk/siapkan.mjs`).
+  Tulisan **"warung go digital" diletakkan di bawah lambang**, jadi `.logo`
+  memakai `flex-direction: column`. Jangan kembalikan ke sebaris: permintaannya
+  memang tulisan di bawah lambang. Ukuran lambang dipadatkan (30px di beranda,
+  34px di topbar aplikasi) agar bilah atas tetap ringkas (~75px).
+  Ikon aplikasi PNG dibuat `python3 buat-ikon.py` (bentuk warung digambar
+  dengan Pillow, bukan lagi huruf "W"). `apk/siapkan-aset-android.py` memisahkan
+  lambang gelap dari latar amber secara otomatis, jadi tidak perlu diubah saat
+  bentuknya berganti. `playstore/ikon-512.png` hanya salinan `ikon-512.png`.
 
 ### Terlihat di mesin pencari (SEO)
 
@@ -779,6 +809,14 @@ Sejak fitur ini ditambahkan, `pemilik/` dan `admin/` **tidak langsung terbuka**.
   `wgd-admin-sesi-v1`. Karena itu aturan "aplikasi Pemilik hanya menyentuh
   kunci `wgd-pemilik*`" kini punya **satu pengecualian**: `wgd-akun-v1`
   (dijaga `uji/uji-dua-aplikasi.py`).
+  Sebelum 1.4.1 akun justru disimpan terpisah per peran
+  (`wgd-pemilik-akun-v1`, `wgd-admin-akun-v1`). **Jangan hapus migrasinya** di
+  awal `bersama/masuk.js`: tanpa itu akun yang dibuat sebelum pembaruan jadi
+  yatim — pemiliknya tidak bisa masuk lagi dan gerbang menawarkan "Buat akun"
+  seolah belum pernah ada akun. Migrasi memindahkan akun lama ke `wgd-akun-v1`
+  lalu **baru** membuang kunci lama setelah dipastikan tersimpan (kalau tidak,
+  akun yang dihapus pengelola akan muncul lagi). Dijaga `uji/uji-masuk.py`
+  (uji "akun lama").
 - Akun bawaan pengelola: saat aplikasi pengelola dibuka dan belum ada akun
   pengelola, dibuatkan **`admin` / `admin123`** yang ditandai `harusGanti`.
   Gerbang mengumumkannya terang-terangan dan panel "Akun saya" memperingatkan

@@ -331,7 +331,7 @@
         .two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
       </style></head><body>
       <div class="head">
-        <div class="logo">W</div>
+        <div class="logo"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14l3.5 5.5h-21z"/><path d="M4 9.5v10h16v-10"/><path d="M8.5 19.5V15h7v4.5"/></svg></div>
         <div><h1>Warung Go Digital</h1><div class="sub">Laporan Bulanan</div></div>
         <div class="periode"><b style="font-size:15px">${lap.label}</b><br>Dibuat ${Store.tglID(lap.dibuat, { day: 'numeric', month: 'long', year: 'numeric' })}</div>
       </div>
