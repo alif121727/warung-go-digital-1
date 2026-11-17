@@ -20,3 +20,6 @@ hasil/
 
 # Berkas sementara pembuat klip video cerita
 .video-tmp/
+
+# Berkas sementara agen (tangkapan layar, rekaman)
+.agent_tmp/

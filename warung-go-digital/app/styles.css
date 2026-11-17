@@ -25,15 +25,28 @@
   --ungu-dim: rgba(139, 92, 246, 0.12);
 
   /* Permukaan */
-  --bg: #f7f5f0;
-  --card: #ffffff;
-  --line: #e6e2d8;
-  --line-2: #f0ece2;
+  /* Tema gelap, senada bilah sisi yang memang sudah gelap sejak awal.
+     Permukaan berundak (bg → card → card-2) memberi kedalaman. */
+  --bg: #0b1410;
+  --card: #14201a;
+  --card-2: #1b2a21;
+  --line: #27382e;
+  --line-2: #1f2d25;
 
   /* Teks */
-  --t1: #0d1a12;
-  --t2: #4a574f;
-  --t3: #646d66;
+  --t1: #eef4ef;
+  --t2: #a9bdb0;
+  --t3: #82978a;
+
+  /* Teks berwarna di atas permukaan gelap. Warna aksen mentah terlalu gelap
+     untuk teks kecil (rasio < 4,5:1), jadi tiap aksen punya versi terang. */
+  --on-amber: #ffc65c;
+  --on-leaf: #6ee08c;
+  --on-merah: #ff9a9d;
+  --on-biru: #7cb3ff;
+  --on-ungu: #c4a8ff;
+  --merah-pekat: #c62d33;
+  --wa-terang: #2ee06f;
 
   /* Bentuk */
   --r-xs: 6px;
@@ -58,6 +71,9 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
+
+  /* Kontrol bawaan peramban ikut gelap. */
+  color-scheme: dark;
 
   /* Gerak */
   --e: cubic-bezier(0.22, 1, 0.36, 1);
@@ -100,11 +116,11 @@ a { color: inherit; text-decoration: none; }
 ::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #d3cdc0;
+  background: #33473b;
   border-radius: 99px;
   border: 3px solid var(--bg);
 }
-::-webkit-scrollbar-thumb:hover { background: #bdb6a6; }
+::-webkit-scrollbar-thumb:hover { background: #435c4c; }
 
 :focus-visible {
   outline: 2px solid var(--amber);
@@ -125,6 +141,7 @@ a { color: inherit; text-decoration: none; }
 .side {
   background: var(--ink);
   color: #cbd6cf;
+  border-right: 1px solid rgba(245, 165, 36, 0.14);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -201,7 +218,7 @@ a { color: inherit; text-decoration: none; }
   font-size: 9.5px;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: #6b7d72;
+  color: #8ba192;
   padding: 14px 10px 7px;
 }
 
@@ -303,7 +320,7 @@ a { color: inherit; text-decoration: none; }
 
 .topbar {
   height: var(--topbar);
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(11, 20, 16, 0.86);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
   display: flex;
@@ -432,16 +449,16 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.2;
 }
 
-.btn:hover { border-color: #cfc8b9; background: #fbfaf7; }
+.btn:hover { border-color: var(--line); background: var(--card-2); }
 .btn:active { transform: translateY(1px); }
 .btn svg { width: 15px; height: 15px; }
 
 .btn--pri {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
+  background: var(--krem);
+  border-color: var(--krem);
+  color: #0d1a12;
 }
-.btn--pri:hover { background: var(--ink-3); border-color: var(--ink-3); }
+.btn--pri:hover { background: #fff; border-color: #fff; }
 
 .btn--amber {
   background: var(--amber);
@@ -455,7 +472,7 @@ a { color: inherit; text-decoration: none; }
   border-color: var(--wa);
   color: #06301a;
 }
-.btn--wa:hover { background: #1fc35c; border-color: #1fc35c; }
+.btn--wa:hover { background: var(--wa-terang); border-color: var(--wa-terang); }
 
 .btn--ghost { background: transparent; border-color: transparent; }
 .btn--ghost:hover { background: var(--line-2); }
@@ -465,7 +482,7 @@ a { color: inherit; text-decoration: none; }
 .btn--icon { padding: 8px; }
 .btn--icon svg { width: 16px; height: 16px; }
 
-.btn--dgr { color: var(--merah); }
+.btn--dgr { color: var(--on-merah); }
 .btn--dgr:hover { background: var(--merah-dim); border-color: rgba(229, 72, 77, 0.3); }
 
 /* ── Lencana ── */
@@ -482,12 +499,12 @@ a { color: inherit; text-decoration: none; }
   white-space: nowrap;
 }
 
-.badge--hijau { background: var(--leaf-dim); color: #1d7a3f; }
-.badge--kuning { background: var(--amber-dim); color: #9a6206; }
-.badge--merah { background: var(--merah-dim); color: #b32a2f; }
-.badge--biru { background: var(--biru-dim); color: #1e5fbf; }
-.badge--ungu { background: var(--ungu-dim); color: #6d3fd6; }
-.badge--abu { background: #eceae4; color: var(--t2); }
+.badge--hijau { background: var(--leaf-dim); color: var(--on-leaf); }
+.badge--kuning { background: var(--amber-dim); color: var(--on-amber); }
+.badge--merah { background: var(--merah-dim); color: var(--on-merah); }
+.badge--biru { background: var(--biru-dim); color: var(--on-biru); }
+.badge--ungu { background: var(--ungu-dim); color: var(--on-ungu); }
+.badge--abu { background: var(--card-2); color: var(--t2); }
 
 .dot {
   width: 7px; height: 7px;
@@ -498,7 +515,7 @@ a { color: inherit; text-decoration: none; }
 .dot--hijau { background: var(--leaf); }
 .dot--kuning { background: var(--amber); }
 .dot--merah { background: var(--merah); }
-.dot--abu { background: #b9b3a5; }
+.dot--abu { background: var(--t3); }
 
 /* ── Kisi ── */
 .grid { display: grid; gap: 15px; }
@@ -535,11 +552,11 @@ a { color: inherit; text-decoration: none; }
   flex: none;
 }
 .stat__ic svg { width: 16px; height: 16px; }
-.stat__ic--amber { background: var(--amber-dim); color: #b3730a; }
-.stat__ic--hijau { background: var(--leaf-dim); color: #1d7a3f; }
-.stat__ic--biru { background: var(--biru-dim); color: #1e5fbf; }
-.stat__ic--ungu { background: var(--ungu-dim); color: #6d3fd6; }
-.stat__ic--merah { background: var(--merah-dim); color: #b32a2f; }
+.stat__ic--amber { background: var(--amber-dim); color: var(--on-amber); }
+.stat__ic--hijau { background: var(--leaf-dim); color: var(--on-leaf); }
+.stat__ic--biru { background: var(--biru-dim); color: var(--on-biru); }
+.stat__ic--ungu { background: var(--ungu-dim); color: var(--on-ungu); }
+.stat__ic--merah { background: var(--merah-dim); color: var(--on-merah); }
 
 .stat__label {
   font-size: 11.5px;
@@ -568,7 +585,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .trend { font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
-.trend--naik { color: #1d7a3f; }
+.trend--naik { color: var(--on-leaf); }
 .trend--turun { color: var(--merah); }
 
 /* ── Tabel ── */
@@ -589,7 +606,7 @@ table.tbl {
 .tbl th {
   text-align: left;
   padding: 11px 15px;
-  background: #faf8f3;
+  background: var(--card-2);
   font-size: 10.5px;
   font-weight: 700;
   color: var(--t2);
@@ -610,7 +627,7 @@ table.tbl {
 
 .tbl tbody tr:last-child td { border-bottom: none; }
 .tbl tbody tr { transition: background 0.12s; }
-.tbl tbody tr:hover { background: #fbfaf7; }
+.tbl tbody tr:hover { background: var(--card-2); }
 .tbl tbody tr.clickable { cursor: pointer; }
 
 .tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -692,8 +709,8 @@ table.tbl {
   transition: all 0.15s var(--e);
   white-space: nowrap;
 }
-.chip:hover { border-color: #cfc8b9; }
-.chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.chip:hover { border-color: var(--line); }
+.chip.on { background: var(--krem); border-color: var(--krem); color: #0d1a12; }
 
 /* ── Kosong ── */
 .empty {
@@ -701,7 +718,7 @@ table.tbl {
   text-align: center;
   color: var(--t2);
 }
-.empty svg { width: 42px; height: 42px; color: #c9c2b3; margin-bottom: 12px; }
+.empty svg { width: 42px; height: 42px; color: var(--t3); margin-bottom: 12px; }
 .empty h3 { font-size: 15px; margin-bottom: 5px; }
 .empty p { font-size: 13px; margin: 0 0 15px; }
 
@@ -735,7 +752,7 @@ table.tbl {
   transition: height 0.5s var(--e);
   min-height: 0;
 }
-.chart__bar--paket { background: linear-gradient(180deg, var(--amber), #dd8b09); }
+.chart__bar--paket { background: linear-gradient(180deg, var(--amber-2), var(--amber)); }
 .chart__bar--lang { background: linear-gradient(180deg, #4fb972, var(--leaf)); }
 .chart__lbl {
   font-size: 11px;
@@ -764,7 +781,7 @@ table.tbl {
 .stars { display: inline-flex; gap: 1.5px; }
 .stars svg { width: 14px; height: 14px; }
 .star--on { color: var(--amber); fill: var(--amber); }
-.star--off { color: #d8d2c4; fill: #d8d2c4; }
+.star--off { color: #3b5245; fill: #3b5245; }
 .stars--lg svg { width: 19px; height: 19px; }
 
 /* ── Modal ── */
@@ -782,7 +799,7 @@ table.tbl {
 .modal__bg {
   position: absolute;
   inset: 0;
-  background: rgba(13, 26, 18, 0.5);
+  background: rgba(3, 8, 6, 0.74); backdrop-filter: blur(2px);
   backdrop-filter: blur(4px);
   animation: fade 0.2s var(--e);
 }
@@ -838,7 +855,7 @@ table.tbl {
   gap: 10px;
   padding: 15px 20px;
   border-top: 1px solid var(--line-2);
-  background: #fbfaf7;
+  background: var(--card-2);
 }
 .modal__foot .spacer { flex: 1; }
 
@@ -874,8 +891,8 @@ table.tbl {
   max-width: 340px;
 }
 .toast svg { width: 17px; height: 17px; flex: none; }
-.toast--ok svg { color: #5fd47f; }
-.toast--err svg { color: #ff8085; }
+.toast--ok svg { color: var(--on-leaf); }
+.toast--err svg { color: var(--on-merah); }
 .toast--info svg { color: var(--amber); }
 .toast.out { animation: slideout 0.22s var(--e) forwards; }
 
@@ -917,7 +934,9 @@ table.tbl {
 .kv__k { color: var(--t2); }
 .kv__v { font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* ── QR ── */
+/* ── QR ──
+   Kotak QR sengaja tetap PUTIH meski tema gelap: kode QR butuh bidang terang
+   dengan modul gelap. Membaliknya membuat banyak pemindai gagal membaca. */
 .qrbox {
   background: #fff;
   border: 1px solid var(--line);
@@ -969,14 +988,14 @@ table.tbl {
 .fotocard:hover { box-shadow: var(--sh); transform: translateY(-2px); }
 .fotocard__img {
   aspect-ratio: 4 / 3;
-  background: linear-gradient(140deg, #e9e4d8, #d8d1c1);
+  background: linear-gradient(140deg, #22342a, #182720);
   display: grid;
   place-items: center;
   position: relative;
   overflow: hidden;
 }
 .fotocard__img img { width: 100%; height: 100%; object-fit: cover; }
-.fotocard__img svg { width: 34px; height: 34px; color: #a9a294; }
+.fotocard__img svg { width: 34px; height: 34px; color: var(--t3); }
 .fotocard__meta { padding: 11px 12px; }
 .fotocard__name { font-size: 12.5px; font-weight: 600; line-height: 1.35; margin-bottom: 5px; }
 .fotocard__row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
@@ -1030,7 +1049,7 @@ table.tbl {
 }
 .poster__foot { font-size: 11px; opacity: .8; font-family: var(--f-mono); }
 
-.poster--amber { background: linear-gradient(160deg, #b3730a, #f5a524 55%, #ffcf70); color: #2a1a02; }
+.poster--amber { background: linear-gradient(160deg, var(--on-amber), #f5a524 55%, #ffcf70); color: #2a1a02; }
 .poster--amber .poster__big { color: #2a1a02; }
 .poster--hijau { background: linear-gradient(160deg, #14512c, #2f8a4e 60%, #58b877); }
 .poster--tinta { background: linear-gradient(160deg, #0d1a12, #24412f 70%, #356247); }
@@ -1068,9 +1087,9 @@ table.tbl {
   align-items: flex-start;
 }
 .note svg { width: 17px; height: 17px; flex: none; margin-top: 1px; }
-.note--info { background: var(--biru-dim); color: #17509f; }
-.note--warn { background: var(--amber-dim); color: #8a5806; }
-.note--ok { background: var(--leaf-dim); color: #176735; }
+.note--info { background: var(--biru-dim); color: var(--on-biru); }
+.note--warn { background: var(--amber-dim); color: var(--on-amber); }
+.note--ok { background: var(--leaf-dim); color: var(--on-leaf); }
 
 /* ── Segmentasi ── */
 .seg {
@@ -1123,7 +1142,7 @@ table.tbl {
   .scrim {
     position: fixed;
     inset: 0;
-    background: rgba(13, 26, 18, 0.45);
+    background: rgba(3, 8, 6, 0.74); backdrop-filter: blur(2px);
     z-index: 35;
     display: none;
   }
@@ -1247,10 +1266,44 @@ table.tbl {
   }
 }
 
+/* Saat dicetak, tema gelap dibalik ke terang: mencetak latar gelap menghabiskan
+   tinta dan sering membuat teks tak terbaca. */
 @media print {
+  :root {
+    --bg: #fff; --card: #fff; --card-2: #fff;
+    --line: #ccc; --line-2: #e5e5e5;
+    --t1: #000; --t2: #333; --t3: #555;
+    --on-amber: #8a5806; --on-leaf: #176735; --on-merah: #b32a2f;
+    --on-biru: #17509f; --on-ungu: #6d3fd6;
+  }
   .side, .topbar, .toolbar, .btn, .toasts { display: none !important; }
   .app { grid-template-columns: 1fr; }
   .view { padding: 0; }
   .card { break-inside: avoid; box-shadow: none; border-color: #ccc; }
   body { background: #fff; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   PERCANTIK — latar berlapis + kartu bercahaya tepi.
+
+   Bilah sisi sudah gelap sejak awal, jadi tema gelap di sini justru menyatukan
+   seluruh halaman. Latar diberi kilau amber/hijau tipis agar tidak rata, dan
+   tiap kartu diberi garis kilau di tepi atas supaya terlihat terangkat.
+   ══════════════════════════════════════════════════════════ */
+
+body {
+  background:
+    radial-gradient(1000px 560px at 8% -12%, rgba(245, 165, 36, 0.07), transparent 62%),
+    radial-gradient(820px 560px at 100% 0%, rgba(59, 165, 93, 0.07), transparent 60%),
+    var(--bg);
+  background-repeat: no-repeat;
+}
+
+.card, .stat, .panel {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 44%);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.card:hover { border-color: #2f4437; }
+
+/* Lencana notifikasi diberi cahaya agar langsung terlihat. */
+.badge-count, .tabbar__badge { box-shadow: 0 0 0 3px rgba(198, 45, 51, 0.18); }

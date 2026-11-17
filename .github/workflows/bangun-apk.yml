@@ -185,16 +185,14 @@ jobs:
 
             Keduanya berfungsi tanpa internet dan tidak membuka peramban.
 
-            Versi 1.4.1:
-            - Masuk kini memakai nama pengguna + kata sandi sebagai cara utama,
-              sehingga APK bisa dibuka di dalam WebView Android. Sebelumnya
-              urutannya Google dulu; Google menolak tampil di WebView
-              (disallowed_useragent) sehingga pengguna mentok di gerbang.
-              Google sekarang hanya pintasan tambahan bila Client ID diisi.
-            - Pengelola bisa membuat dan menghapus akun lewat panel Akun saya.
-              Akun bawaan: admin / admin123 (segera ganti kata sandinya).
-            - Pembuka video: berkas 7,9 MB -> 6,9 MB dan tidak lagi tersendat
-              (animasi beranda dihentikan selama pembuka tampil).
+            Versi 1.4.2:
+            - Tampilan aplikasi kini bertema gelap, senada versi web, dengan
+              warna aksen asli tetap dipakai untuk tombol dan lencana. Teks
+              kecil dijamin lolos kontras WCAG AA.
+            - Beberapa sentuhan percantik: kilau halus di tepi kartu, semburat
+              amber pada tab aktif, dan bayangan lebih dalam pada modal.
+            - Kotak QR tetap putih agar bisa dipindai kamera, dan dokumen
+              cetak (nota, laporan) tetap terang agar hemat tinta.
 
             Tersedia berkas:
             - warung-go-digital.apk — pasang langsung di HP Android.

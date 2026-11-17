@@ -103,6 +103,21 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   **JetBrains Mono** (label). Dimuat dari Google Fonts.
 - Palet: tinta `#0d1a12`, amber `#f5a524`, krem `#f6f0e2`, leaf `#3ba55d`, WA `#25d366`.
 - Token warna/radius/shadow ada di `:root` di `styles.css`.
+- **Aplikasi bertema gelap, situs tetap terang.** Beranda, `unduh.html`, dan
+  `privasi.html` tetap krem seperti aslinya (jangan diberi `color-scheme: dark`).
+  Yang gelap adalah aplikasi: `pemilik/`, `admin/`, `app/` (Panel Mitra), dan
+  `app/menu.html`. Tokennya ada di `bersama/gaya.css` (dipakai `pemilik/` +
+  `admin/`) dan `app/styles.css` (dipakai Panel Mitra + menu). `color-scheme: dark`
+  juga ditulis di CSS agar kontrol bawaan peramban ikut gelap.
+- **Warna di atas warna aksen pakai token `--on-*`.** Di tema gelap, warna aksen
+  (amber, leaf, merah, biru, ungu) dipakai sebagai **teks di atas latar gelap**,
+  bukan sebagai latar. Karena itu ada `--on-amber`, `--on-leaf`, `--on-merah`,
+  `--on-biru`, `--on-ungu` yang versinya lebih terang. Jangan menulis `color:
+  var(--merah)` langsung — pakai `var(--on-merah)`, kalau tidak teksnya gagal
+  kontras WCAG AA.
+- **Dua hal sengaja tetap terang**: kotak QR (`.qrbox`, `.qrstand__card`) harus
+  putih agar bisa dipindai kamera, dan dokumen cetak (nota di `modul-transaksi.js`
+  dan `app.js`) dibuka lewat `window.open` + `print()` agar tintanya hemat.
 - Lapisan futuristik memakai kelas berawalan `fx-` dan `maskot*` (aurora, kaca,
   HUD, teks bergradasi, cincin berputar, butir halus) — tetap memakai palet merek.
 - **Lapisan gerak** ada di `bersama/animasi.css` + `bersama/animasi.js`, memakai
@@ -257,14 +272,14 @@ Google tetap menemukan situs lewat tautan luar, tetapi lebih lambat.
 `warung-go-digital/unduh.html` (+ `unduh.js`, gaya di `bersama/gaya-unduh.css`)
 khusus untuk mengunduh aplikasi:
 
-- Android: APK `v1.4.1` dari rilis resmi GitHub.
+- Android: APK `v1.4.2` dari rilis resmi GitHub.
 **Menaikkan versi aplikasi.** Tag rilis **tidak** ditulis tetap di alur kerja;
 keduanya membacanya dari `apk/package.json`:
 
 | Alur | Tag yang dibuat |
 |---|---|
-| `bangun-apk.yml` | `v<versi>` (mis. `v1.4.1`) |
-| `bangun-ipa.yml` | `ios-v<versi>` (mis. `ios-v1.4.1`) |
+| `bangun-apk.yml` | `v<versi>` (mis. `v1.4.2`) |
+| `bangun-ipa.yml` | `ios-v<versi>` (mis. `ios-v1.4.2`) |
 
 Sebelumnya tag dipatok tetap `v1.3.0`. Akibatnya, begitu rilis pertama dibuat,
 langkah lampirkan selalu terlewati ("rilis sudah punya APK"), sehingga APK yang
@@ -276,7 +291,7 @@ juga menyelaraskan tautan unduh di `index.html`, `unduh.html`, dan
 Catatan: `uji-landing.py` memeriksa tautan unduh secara **teks**, jadi berkas
 itu akan gagal sampai nomor versinya ikut diperbarui.
 - iOS: **tidak memakai berkas**, melainkan menambahkan situs ke layar utama
-  lewat Safari (lihat bagian berikut). Berkas IPA `ios-v1.4.1` tetap tersedia
+  lewat Safari (lihat bagian berikut). Berkas IPA `ios-v1.4.2` tetap tersedia
   sebagai jalur alternatif di dalam kartu yang sama.
 - `unduh.js` menandai kartu yang cocok dengan perangkat ("HP Anda") tanpa
   menghilangkan pilihan lain; tidak pernah memaksa.
@@ -628,6 +643,11 @@ iPad modern, Android, sudah terpasang), tautan silang, dan anti-geser samping
 3. Font termuat (`document.fonts`).
 4. Harga di kartu, blok langganan, dan dropdown formulir sesuai tabel di atas.
 5. Formulir mengirim pesan ke `wa.me/6281563324546`.
+
+**Tema gelap** — jalankan `python3 uji/uji-tema-gelap.py` (19 uji). Menjaga
+empat halaman aplikasi (`pemilik/`, `admin/`, `app/`, `app/menu.html`) benar-benar
+berlatar gelap, `color-scheme` gelap, teks kecil lolos kontras WCAG AA, tidak ada
+galat JS, dan kotak QR tetap putih agar bisa dipindai.
 
 **Panel Mitra** — `http://localhost:12000/warung-go-digital/app/`:
 1. Kedelapan modul terbuka tanpa error (`#/dasbor` … `#/laporan`).

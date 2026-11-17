@@ -566,7 +566,7 @@ const App = (() => {
         <h4 style="font-size:13px;margin-bottom:10px">Ulasan Terbaru</h4>
         <div style="display:grid;gap:11px;margin-bottom:20px">
           ${ulasan.slice(0, 4).map((u) => `
-            <div style="padding:11px 13px;background:#faf8f3;border-radius:var(--r-sm)">
+            <div style="padding:11px 13px;background:var(--card-2);border-radius:var(--r-sm)">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
                 ${UI.bintang(u.skor)}
                 <span class="badge badge--${u.sumber === 'maps' ? 'biru' : 'abu'}">${u.sumber === 'maps' ? 'Google Maps' : 'Internal'}</span>
