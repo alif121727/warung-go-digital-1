@@ -174,7 +174,7 @@ wajib diungkapkan sebagai pengumpulan data otomatis.
 
 ## 6. Catatan rilis
 
-### Versi 1.4.1 (versionCode 10401)
+### Versi 1.4.2 (versionCode 10402)
 
 ```
 Perbaikan masuk di aplikasi Android.

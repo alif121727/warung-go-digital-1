@@ -22,14 +22,31 @@
   --ungu: #8b5cf6;
   --ungu-dim: rgba(139, 92, 246, 0.12);
 
-  --bg: #f7f5f0;
-  --card: #ffffff;
-  --line: #e6e2d8;
-  --line-2: #f0ece2;
+  /* Tema gelap. Permukaan berundak (bg → card → card-2) memberi kedalaman
+     tanpa perlu banyak garis; --line tetap ada untuk batas yang tegas. */
+  --bg: #0b1410;
+  --card: #14201a;
+  --card-2: #1b2a21;
+  --line: #27382e;
+  --line-2: #1f2d25;
 
-  --t1: #0d1a12;
-  --t2: #4a574f;
-  --t3: #646d66;
+  --t1: #eef4ef;
+  --t2: #a9bdb0;
+  --t3: #82978a;
+
+  /* Teks berwarna di atas permukaan gelap. Warna aksen mentah (#f5a524,
+     #3ba55d, …) terlalu gelap untuk teks kecil — rasionya di bawah 4,5:1 —
+     jadi tiap aksen punya versi terang khusus untuk teks. */
+  --on-amber: #ffc65c;
+  --on-leaf: #6ee08c;
+  --on-merah: #ff9a9d;
+  --on-biru: #7cb3ff;
+  --on-ungu: #c4a8ff;
+
+  /* Latar yang memuat teks putih harus cukup pekat; --merah sendiri terlalu
+     terang untuk itu. */
+  --merah-pekat: #c62d33;
+  --wa-terang: #2ee06f;
 
   --r-xs: 6px;
   --r-sm: 9px;
@@ -60,6 +77,8 @@
 html, body {
   margin: 0;
   padding: 0;
+  /* Kontrol bawaan peramban (pilihan, pemilih tanggal, scrollbar) ikut gelap. */
+  color-scheme: dark;
   background: var(--bg);
   color: var(--t1);
   font-family: var(--f-body);
@@ -90,7 +109,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
   gap: 10px;
   min-height: var(--topbar);
   padding: calc(8px + var(--safe-t)) calc(14px + var(--safe-r)) 8px calc(14px + var(--safe-l));
-  background: rgba(247, 245, 240, 0.92);
+  background: rgba(11, 20, 16, 0.88);
   backdrop-filter: saturate(1.4) blur(10px);
   border-bottom: 1px solid var(--line);
 }
@@ -121,7 +140,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
   left: 0; right: 0; bottom: 0;
   z-index: 40;
   display: flex;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(15, 26, 20, 0.94);
   backdrop-filter: saturate(1.4) blur(10px);
   border-top: 1px solid var(--line);
   padding-bottom: var(--safe-b);
@@ -136,13 +155,13 @@ input, select, textarea { font: inherit; font-size: 16px; }
   transition: color 0.15s;
 }
 .tabbar__item svg { width: 21px; height: 21px; }
-.tabbar__item.on { color: var(--ink); }
+.tabbar__item.on { color: var(--t1); }
 .tabbar__item.on svg { color: var(--amber); }
 .tabbar__item:active { background: var(--line-2); }
 .tabbar__item { position: relative; }
 .tabbar__badge {
   position: absolute; top: 5px; left: 50%; margin-left: 4px;
-  background: var(--merah, #d94a3d); color: #fff;
+  background: var(--merah-pekat); color: #fff;
   font-size: 9.5px; font-weight: 800; line-height: 1;
   padding: 3px 5px; border-radius: 999px; min-width: 16px; text-align: center;
 }
@@ -168,7 +187,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
 .card__foot {
   padding: 13px 16px;
   border-top: 1px solid var(--line-2);
-  background: #fbfaf7;
+  background: var(--card-2);
 }
 
 /* ── Statistik ────────────────────────────────────────── */
@@ -189,13 +208,13 @@ input, select, textarea { font: inherit; font-size: 16px; }
 .stat__ic {
   width: 34px; height: 34px; border-radius: 10px; flex: 0 0 auto;
   display: grid; place-items: center;
-  background: var(--amber-dim); color: #b3730a;
+  background: var(--amber-dim); color: var(--on-amber);
 }
 .stat__ic svg { width: 17px; height: 17px; }
-.stat--hijau .stat__ic { background: var(--leaf-dim); color: #1d7a3f; }
-.stat--biru .stat__ic { background: var(--biru-dim); color: #1e5fbf; }
-.stat--ungu .stat__ic { background: var(--ungu-dim); color: #6d3fd6; }
-.stat--merah .stat__ic { background: var(--merah-dim); color: #b32a2f; }
+.stat--hijau .stat__ic { background: var(--leaf-dim); color: var(--on-leaf); }
+.stat--biru .stat__ic { background: var(--biru-dim); color: var(--on-biru); }
+.stat--ungu .stat__ic { background: var(--ungu-dim); color: var(--on-ungu); }
+.stat--merah .stat__ic { background: var(--merah-dim); color: var(--on-merah); }
 .stat__isi { min-width: 0; }
 .stat__label {
   display: block;
@@ -221,17 +240,17 @@ input, select, textarea { font: inherit; font-size: 16px; }
   text-decoration: none;
   transition: background 0.14s, border-color 0.14s, transform 0.06s;
 }
-.btn:hover { border-color: #cfc8b9; background: #fbfaf7; }
+.btn:hover { border-color: var(--line); background: var(--card-2); }
 .btn:active { transform: translateY(1px); }
 .btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
 
-.btn--pri { background: var(--ink); border-color: var(--ink); color: #fff; }
-.btn--pri:hover { background: var(--ink-3); border-color: var(--ink-3); }
+.btn--pri { background: var(--krem); border-color: var(--krem); color: #0d1a12; }
+.btn--pri:hover { background: #fff; border-color: #fff; }
 .btn--amber { background: var(--amber); border-color: var(--amber); color: var(--ink); }
 .btn--amber:hover { background: var(--amber-2); border-color: var(--amber-2); }
-.btn--wa { background: var(--wa); border-color: var(--wa); color: #fff; }
-.btn--wa:hover { background: #1fc35c; border-color: #1fc35c; }
-.btn--dgr { color: var(--merah); }
+.btn--wa { background: var(--wa); border-color: var(--wa); color: #06301a; }
+.btn--wa:hover { background: var(--wa-terang); border-color: var(--wa-terang); }
+.btn--dgr { color: var(--on-merah); }
 .btn--dgr:hover { background: var(--merah-dim); border-color: rgba(229, 72, 77, 0.3); }
 .btn--ghost { background: transparent; border-color: transparent; }
 .btn--ghost:hover { background: var(--line-2); }
@@ -256,19 +275,19 @@ input, select, textarea { font: inherit; font-size: 16px; }
   white-space: nowrap;
 }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.badge--hijau { background: var(--leaf-dim); color: #1d7a3f; }
-.badge--kuning { background: var(--amber-dim); color: #9a6206; }
-.badge--merah { background: var(--merah-dim); color: #b32a2f; }
-.badge--biru { background: var(--biru-dim); color: #1e5fbf; }
-.badge--ungu { background: var(--ungu-dim); color: #6d3fd6; }
+.badge--hijau { background: var(--leaf-dim); color: var(--on-leaf); }
+.badge--kuning { background: var(--amber-dim); color: var(--on-amber); }
+.badge--merah { background: var(--merah-dim); color: var(--on-merah); }
+.badge--biru { background: var(--biru-dim); color: var(--on-biru); }
+.badge--ungu { background: var(--ungu-dim); color: var(--on-ungu); }
 
 .pill {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 5px 11px; border-radius: var(--r-pill);
   background: var(--line-2); font-size: 12px; font-weight: 600; color: var(--t2);
 }
-.pill--amber { background: var(--amber-dim); color: #9a6206; }
-.pill--hijau { background: var(--leaf-dim); color: #1d7a3f; }
+.pill--amber { background: var(--amber-dim); color: var(--on-amber); }
+.pill--hijau { background: var(--leaf-dim); color: var(--on-leaf); }
 
 /* ── Tabel ────────────────────────────────────────────── */
 .tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -282,7 +301,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
 .tbl td { padding: 11px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
 .tbl tbody tr:last-child td { border-bottom: none; }
 .tbl tbody tr.clickable { cursor: pointer; }
-.tbl tbody tr.clickable:hover { background: #fbfaf7; }
+.tbl tbody tr.clickable:hover { background: var(--card-2); }
 .tbl .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tbl .aksi { text-align: right; white-space: nowrap; }
 
@@ -347,7 +366,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
 
 /* ── Keadaan kosong ───────────────────────────────────── */
 .empty { text-align: center; padding: 34px 20px; }
-.empty svg, .empty .empty__ic { width: 42px; height: 42px; color: #c9c2b3; margin-bottom: 12px; }
+.empty svg, .empty .empty__ic { width: 42px; height: 42px; color: var(--t3); margin-bottom: 12px; }
 .empty h3 { font-size: 15px; margin-bottom: 5px; }
 .empty p { font-size: 13px; color: var(--t2); margin: 0 auto 15px; max-width: 42ch; }
 
@@ -359,7 +378,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
 }
 .chart__bar {
   width: 100%; max-width: 34px; border-radius: 6px 6px 2px 2px;
-  background: linear-gradient(180deg, var(--amber), #dd8b09);
+  background: linear-gradient(180deg, var(--amber-2), var(--amber));
   transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .chart__val { font-size: 10px; color: var(--t3); margin-bottom: 4px; white-space: nowrap; }
@@ -368,7 +387,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
 /* ── Modal ────────────────────────────────────────────── */
 .modal { display: none; position: fixed; inset: 0; z-index: 100; align-items: flex-end; justify-content: center; }
 .modal.open { display: flex; }
-.modal::before { content: ''; position: absolute; inset: 0; background: rgba(13, 26, 18, 0.44); }
+.modal::before { content: ''; position: absolute; inset: 0; background: rgba(3, 8, 6, 0.72); backdrop-filter: blur(2px); }
 .modal__box {
   position: relative;
   width: 100%; max-width: 520px;
@@ -394,7 +413,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
 .modal__foot {
   display: flex; gap: 9px; justify-content: flex-end;
   padding: 13px 18px calc(15px + var(--safe-b));
-  border-top: 1px solid var(--line-2); background: #fbfaf7;
+  border-top: 1px solid var(--line-2); background: var(--card-2);
 }
 @media (min-width: 560px) {
   .modal { align-items: center; padding: 20px; }
@@ -412,7 +431,8 @@ input, select, textarea { font: inherit; font-size: 16px; }
 .toast {
   display: flex; align-items: center; gap: 9px;
   padding: 11px 15px; border-radius: var(--r-pill);
-  background: var(--ink); color: #f6f0e2;
+  background: var(--card-2); color: var(--t1);
+  border: 1px solid var(--line);
   font-size: 13.5px; font-weight: 600;
   box-shadow: var(--sh-lg);
   opacity: 0; transform: translateY(10px);
@@ -420,7 +440,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
 }
 .toast.tampil { opacity: 1; transform: none; }
 .toast__ic { color: var(--leaf); flex: 0 0 auto; }
-.toast--err .toast__ic { color: #ff8a8d; }
+.toast--err .toast__ic { color: var(--on-merah); }
 .toast--info .toast__ic { color: var(--amber-2); }
 
 /* ── Lain-lain ────────────────────────────────────────── */
@@ -451,8 +471,10 @@ input, select, textarea { font: inherit; font-size: 16px; }
 .kv__v { font-weight: 600; font-size: 13.5px; text-align: right; }
 
 .hero {
-  background: linear-gradient(140deg, var(--ink) 0%, var(--ink-3) 100%);
-  color: #f6f0e2;
+  background: linear-gradient(140deg, #1f3a28 0%, #12211a 100%);
+  border: 1px solid rgba(245, 165, 36, 0.22);
+  box-shadow: 0 14px 34px -20px rgba(0, 0, 0, 0.95);
+  color: var(--krem);
   border-radius: var(--r-lg);
   padding: 18px;
   margin-bottom: 15px;
@@ -491,4 +513,54 @@ input, select, textarea { font: inherit; font-size: 16px; }
 }
 @media (max-width: 400px) {
   .grid--3 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   PERCANTIK — lapisan tipis di atas tema gelap.
+
+   Tema gelap rata terasa "mati": semua bidang berwarna sama sehingga batas
+   kartu hilang. Tiga hal kecil yang dipakai di sini:
+
+   1. Latar berlapis dua kilau (amber di kiri atas, hijau di kanan atas).
+      Sangat tipis (7%) — cukup memberi kedalaman, tidak mengganggu bacaan.
+   2. Tiap kartu diberi garis kilau halus di tepi atas, meniru pantulan
+      cahaya. Ini yang membuat kartu "terangkat" dari latar.
+   3. Transisi lembut pada kartu dan tombol supaya terasa hidup.
+   ══════════════════════════════════════════════════════════ */
+
+body {
+  background:
+    radial-gradient(900px 520px at 10% -10%, rgba(245, 165, 36, 0.07), transparent 62%),
+    radial-gradient(780px 520px at 100% 2%, rgba(59, 165, 93, 0.07), transparent 60%),
+    var(--bg);
+  background-repeat: no-repeat;
+}
+
+.card, .stat {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 44%);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.card:hover { border-color: #2f4437; box-shadow: var(--sh-sm); }
+
+.hero {
+  background-image:
+    radial-gradient(520px 300px at 88% -12%, rgba(245, 165, 36, 0.14), transparent 66%),
+    linear-gradient(140deg, #1f3a28 0%, #12211a 100%);
+}
+
+.modal__box {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 34%);
+}
+
+/* Semburat amber saat tab aktif: menandai posisi tanpa menambah teks. */
+.tabbar__item.on { position: relative; }
+.tabbar__item.on::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--amber);
+  box-shadow: 0 0 10px 1px rgba(245, 165, 36, 0.5);
 }

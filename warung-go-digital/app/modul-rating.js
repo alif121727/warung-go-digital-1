@@ -408,7 +408,7 @@
                     <p style="margin:0 0 7px;font-size:13px;line-height:1.55">${UI.esc(u.ulasan)}</p>
                     <div class="dim mono" style="font-size:11px">${UI.esc(w ? w.nama : '—')} · ${Store.tglID(u.tgl)}</div>
                     ${u.balas ? `
-                      <div style="margin-top:10px;padding:10px 12px;background:#faf8f3;border-left:3px solid var(--leaf);border-radius:0 var(--r-xs) var(--r-xs) 0">
+                      <div style="margin-top:10px;padding:10px 12px;background:var(--card-2);border-left:3px solid var(--leaf);border-radius:0 var(--r-xs) var(--r-xs) 0">
                         <div class="dim mono" style="font-size:10.5px;margin-bottom:3px">Balasan pengelola</div>
                         <div style="font-size:12.5px">${UI.esc(u.balas)}</div>
                       </div>` : ''}
@@ -443,7 +443,7 @@
     UI.modal({
       judul: 'Balas Ulasan — ' + (w ? w.nama : ''),
       isi: `
-        <div style="padding:13px 15px;background:#faf8f3;border-radius:var(--r);margin-bottom:15px">
+        <div style="padding:13px 15px;background:var(--card-2);border-radius:var(--r);margin-bottom:15px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-weight:600;font-size:13px">${UI.esc(u.nama)}</span>${UI.bintang(u.skor)}
           </div>
