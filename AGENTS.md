@@ -221,6 +221,21 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   dengan Pillow, bukan lagi huruf "W"). `apk/siapkan-aset-android.py` memisahkan
   lambang gelap dari latar amber secara otomatis, jadi tidak perlu diubah saat
   bentuknya berganti. `playstore/ikon-512.png` hanya salinan `ikon-512.png`.
+- **Perangkat logo (baru)**: `warung-go-digital/logo/` berisi set logo lengkap
+  (SVG + PNG) dengan palet **oren, hitam, putih**. Lambangnya warung yang
+  jendelanya berpola temukan QR (kotak-cincin-inti, rasio 1:1:3:1:1) — satu
+  bentuk, dua arti: warung dan digital. Dibuat ulang dengan `python3 buat-logo.py`
+  (menggambar SVG langsung, bukan lewat pembuat gambar berbasis prompt).
+  - `logo-lambang.svg` — lencana oren (utama), varian `-hitam` dan `-putih`.
+  - `lambang-oren.svg` / `lambang-putih.svg` / `lambang-hitam.svg` — tanpa lencana.
+  - `logo-utama*.svg` (sebaris) dan `logo-tumpuk*.svg` (bertumpuk).
+  - `logo-mono-*.svg` — satu warna, jendela dilubangi, untuk cetak/bordir.
+  - `favicon.svg`, `favicon.ico`, dan `png/` (ikon Android/iOS, Play Store, dokumen).
+  - Teks diubah jadi **kurva** memakai Bricolage Grotesque + JetBrains Mono, jadi
+    SVG-nya mandiri tanpa font. Cache font di `.cache/font-logo/` (diabaikan git).
+  - Warna hitam **#111111** (netral). Jangan pakai #0e100f: berona hijau sisa tema lama.
+  - Halaman peraga: `warung-go-digital/logo.html`.
+  - Diperiksa `python3 uji/uji-logo.py` (109 uji) — lihat bagian Verifikasi.
 
 ### Terlihat di mesin pencari (SEO)
 
@@ -643,6 +658,15 @@ iPad modern, Android, sudah terpasang), tautan silang, dan anti-geser samping
 3. Font termuat (`document.fonts`).
 4. Harga di kartu, blok langganan, dan dropdown formulir sesuai tabel di atas.
 5. Formulir mengirim pesan ke `wa.me/6281563324546`.
+
+**Logo** — jalankan `python3 uji/uji-logo.py` (109 uji). Semua diukur dari
+hasil render Chromium: XML sah, tanpa galat JS, tanpa rujukan font eksternal,
+palet hanya oren/hitam/putih (rona tiap piksel 18-54 derajat atau abu-abu netral),
+oren jadi kelas warna terbesar pada lambang utama, tetap berbentuk di 16 dan 32
+piksel, tidak ada isi yang melewati viewBox (uji dengan memperluas viewBox 25%),
+dan tiap PNG seukuran namanya. Uji ini menemukan dua hal saat dibuat: hitam
+#0e100f yang berona hijau, dan `lambang-*` yang terpotong karena tinggi
+ditetapkan tanpa mempertimbangkan lambang 1,35 kali lebih lebar daripada tinggi.
 
 **Tema gelap** — jalankan `python3 uji/uji-tema-gelap.py` (19 uji). Menjaga
 empat halaman aplikasi (`pemilik/`, `admin/`, `app/`, `app/menu.html`) benar-benar

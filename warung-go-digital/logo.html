@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Logo Warung Go Digital — oren, hitam, putih</title>
+<meta name="description" content="Aset logo Warung Go Digital: lambang warung yang jendelanya berpola QR, dalam palet oren, hitam, dan putih." />
+<link rel="icon" href="logo/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --oren: #f7871b;
+    --oren-terang: #ffc061;
+    --oren-tua: #d95c07;
+    --hitam: #111111;
+    --putih: #ffffff;
+    --krem: #f3efe8;
+    --garis: #ded8ce;
+    --tinta: #23201c;
+    --redup: #7d766c;
+    --f: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+    --m: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--krem);
+    color: var(--tinta);
+    font: 15px/1.6 var(--f);
+    -webkit-font-smoothing: antialiased;
+  }
+  .bungkus { max-width: 1080px; margin: 0 auto; padding: 40px 24px 72px; }
+
+  header.top { display: flex; align-items: center; gap: 20px; margin-bottom: 12px; }
+  header.top img { width: 84px; height: 84px; display: block; }
+  header.top h1 { margin: 0; font-size: 30px; letter-spacing: -0.02em; line-height: 1.1; }
+  header.top p { margin: 6px 0 0; color: var(--redup); max-width: 52ch; }
+
+  .palet { display: flex; gap: 10px; margin: 26px 0 8px; flex-wrap: wrap; }
+  .palet div {
+    display: flex; align-items: center; gap: 9px;
+    background: var(--putih); border: 1px solid var(--garis);
+    border-radius: 999px; padding: 6px 14px 6px 7px;
+    font: 12px var(--m); color: var(--redup);
+  }
+  .palet i { width: 20px; height: 20px; border-radius: 50%; display: block; border: 1px solid rgba(0,0,0,.12); }
+
+  h2 {
+    font: 700 12px/1 var(--m); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--redup); margin: 44px 0 16px;
+  }
+
+  .baris { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .kartu {
+    background: var(--putih); border: 1px solid var(--garis); border-radius: 16px;
+    padding: 22px; display: flex; flex-direction: column; gap: 14px;
+    align-items: center; flex: 1 1 300px;
+  }
+  .kartu.gelap { background: var(--hitam); border-color: #262626; }
+  .kartu img { display: block; width: 100%; max-width: 340px; height: auto; }
+  .kartu .nama { font: 11px var(--m); color: var(--redup); }
+  .kartu.gelap .nama { color: #8f8f8f; }
+
+  .ukuran { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .ukuran figure { margin: 0; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .ukuran figcaption { font: 10px var(--m); color: var(--redup); }
+  .ubin {
+    background: var(--putih); border: 1px solid var(--garis); border-radius: 12px;
+    padding: 12px; display: grid; place-items: center;
+  }
+  .ubin.gelap { background: var(--hitam); border-color: #262626; }
+
+  .latar-uji { display: flex; flex-wrap: wrap; gap: 14px; }
+  .kotak {
+    border-radius: 14px; padding: 26px; display: grid; place-items: center;
+    min-width: 190px; flex: 1 1 190px;
+  }
+  .kotak img { width: 150px; height: auto; display: block; }
+
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--garis); color: var(--redup); font-size: 13px; }
+  code { font: 12px var(--m); background: #ece7de; padding: 2px 6px; border-radius: 6px; }
+  a { color: var(--oren-tua); }
+</style>
+</head>
+<body>
+<div class="bungkus">
+
+  <header class="top">
+    <img src="logo/logo-lambang.svg" alt="Lambang Warung Go Digital" />
+    <div>
+      <h1>Logo Warung Go Digital</h1>
+      <p>Warung yang jendelanya berpola QR — satu bentuk, dua arti: warung, dan digital.
+         Palet oren, hitam, dan putih.</p>
+    </div>
+  </header>
+
+  <div class="palet">
+    <div><i style="background:#f7871b"></i>#f7871b oren</div>
+    <div><i style="background:#ffc061"></i>#ffc061 oren terang</div>
+    <div><i style="background:#d95c07"></i>#d95c07 oren tua</div>
+    <div><i style="background:#111111"></i>#111111 hitam</div>
+    <div><i style="background:#ffffff"></i>#ffffff putih</div>
+  </div>
+
+  <h2>Lambang</h2>
+  <div class="baris">
+    <div class="kartu"><img src="logo/logo-lambang.svg" alt="Lambang utama, lencana oren" /><span class="nama">logo-lambang.svg</span></div>
+    <div class="kartu gelap"><img src="logo/logo-lambang-hitam.svg" alt="Lambang pada lencana hitam" /><span class="nama">logo-lambang-hitam.svg</span></div>
+    <div class="kartu"><img src="logo/logo-lambang-putih.svg" alt="Lambang pada lencana putih" /><span class="nama">logo-lambang-putih.svg</span></div>
+  </div>
+
+  <h2>Kunci merek</h2>
+  <div class="baris">
+    <div class="kartu"><img src="logo/logo-utama.svg" alt="Kunci horizontal untuk latar terang" /><span class="nama">logo-utama.svg</span></div>
+    <div class="kartu gelap"><img src="logo/logo-utama-gelap.svg" alt="Kunci horizontal untuk latar gelap" /><span class="nama">logo-utama-gelap.svg</span></div>
+  </div>
+  <div class="baris" style="margin-top:16px">
+    <div class="kartu"><img src="logo/logo-tumpuk.svg" alt="Kunci bertumpuk untuk latar terang" /><span class="nama">logo-tumpuk.svg</span></div>
+    <div class="kartu gelap"><img src="logo/logo-tumpuk-gelap.svg" alt="Kunci bertumpuk untuk latar gelap" /><span class="nama">logo-tumpuk-gelap.svg</span></div>
+  </div>
+
+  <h2>Monokrom (cetak, watermark, bordir)</h2>
+  <div class="baris">
+    <div class="kartu"><img src="logo/logo-mono-hitam.svg" alt="Logo satu warna hitam" /><span class="nama">logo-mono-hitam.svg</span></div>
+    <div class="kartu gelap"><img src="logo/logo-mono-putih.svg" alt="Logo satu warna putih" /><span class="nama">logo-mono-putih.svg</span></div>
+  </div>
+
+  <h2>Lambang tanpa lencana</h2>
+  <div class="baris">
+    <div class="kartu"><img src="logo/lambang-oren.svg" alt="Warung oren untuk latar terang" /><span class="nama">lambang-oren.svg</span></div>
+    <div class="kartu gelap"><img src="logo/lambang-putih.svg" alt="Warung putih untuk latar gelap" /><span class="nama">lambang-putih.svg</span></div>
+  </div>
+
+  <h2>Ukuran kecil — tetap terbaca?</h2>
+  <div class="ukuran">
+    <figure><span class="ubin"><img src="logo/png/logo-lambang-128.png" width="128" height="128" alt="Ikon 128 piksel" /></span><figcaption>128px</figcaption></figure>
+    <figure><span class="ubin"><img src="logo/png/logo-lambang-64.png" width="64" height="64" alt="Ikon 64 piksel" /></span><figcaption>64px</figcaption></figure>
+    <figure><span class="ubin"><img src="logo/png/logo-lambang-32.png" width="32" height="32" alt="Ikon 32 piksel" /></span><figcaption>32px</figcaption></figure>
+    <figure><span class="ubin"><img src="logo/png/logo-lambang-16.png" width="16" height="16" alt="Ikon 16 piksel" /></span><figcaption>16px</figcaption></figure>
+    <figure><span class="ubin gelap"><img src="logo/png/logo-lambang-32.png" width="32" height="32" alt="Ikon 32 piksel di latar gelap" /></span><figcaption>32px gelap</figcaption></figure>
+  </div>
+
+  <h2>Di atas berbagai latar</h2>
+  <div class="latar-uji">
+    <div class="kotak" style="background:#f3efe8"><img src="logo/lambang-oren.svg" alt="Warung oren di latar krem" /></div>
+    <div class="kotak" style="background:#111111"><img src="logo/lambang-putih.svg" alt="Warung putih di latar hitam" /></div>
+    <div class="kotak" style="background:#f7871b"><img src="logo/lambang-hitam.svg" alt="Warung hitam di latar oren" /></div>
+  </div>
+
+  <footer>
+    <p>Aset di <code>warung-go-digital/logo/</code>, dibuat ulang dengan
+       <code>python3 buat-logo.py</code>. Teks di SVG sudah jadi kurva memakai
+       Bricolage Grotesque dan JetBrains Mono, jadi berkasnya mandiri tanpa font.
+       Diperiksa otomatis oleh <code>python3 uji/uji-logo.py</code>.</p>
+  </footer>
+
+</div>
+</body>
+</html>

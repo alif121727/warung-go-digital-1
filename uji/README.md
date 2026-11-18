@@ -20,6 +20,7 @@ python3 uji/uji-client-id.py      # 8 uji pembaca Client ID Google
 python3 uji/uji-terbit-otomatis.py # 14 uji penerbitan menu otomatis
 python3 uji/uji-google.py         # 57 uji kesiapan mesin pencari (SEO)
 python3 uji/uji-pembuka.py        # 29 uji video pembuka (intro) beranda
+python3 uji/uji-logo.py           # 109 uji aset logo (palet, bentuk, PNG, favicon)
 ```
 
 Uji yang memeriksa data terisi memanggil `Store.muatContoh()` lebih dulu, karena
@@ -43,6 +44,15 @@ python3 uji/uji-qr.py                   # render QR dari aplikasi, dekode ulang
 `uji-qr.py` menyimpan PNG di folder sementara lalu mengoper jalurnya ke
 `uji/decode-qr.js`. (Dulu skrip menulis ke `./` tetapi dekode membaca `/tmp`, sehingga
 dekode memakai berkas basi dan melaporkan lulus palsu.)
+
+`uji-logo.py` memeriksa `warung-go-digital/logo/` dari hasil render Chromium,
+bukan dari membaca berkas SVG: XML sah, tanpa galat JS, tanpa rujukan font
+eksternal (teks sudah jadi kurva), palet hanya oren/hitam/putih, oren jadi kelas
+warna terbesar pada lambang utama, tetap berbentuk di 16 dan 32 piksel, tidak ada
+isi yang melewati viewBox, dan tiap PNG seukuran namanya. Uji "tidak terpotong"
+bekerja dengan memperluas viewBox 25% lalu memeriksa apakah muncul piksel baru di
+luar kotak asli — cara ini pernah menangkap `lambang-*` yang terpotong sisi
+kiri-kanannya.
 
 `uji-hp.py` menguji: overflow, target sentuh minimal 40px, input tidak memicu zoom iOS,
 tabel berubah jadi kartu di lebar <=620px, modal dalam layar, navigasi lewat menu geser,
