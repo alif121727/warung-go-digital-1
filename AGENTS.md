@@ -217,8 +217,9 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   memakai `flex-direction: column`. Jangan kembalikan ke sebaris: permintaannya
   memang tulisan di bawah lambang. Ukuran lambang dipadatkan (30px di beranda,
   34px di topbar aplikasi) agar bilah atas tetap ringkas (~75px).
-  Ikon aplikasi PNG dibuat `python3 buat-ikon.py` (bentuk warung digambar
-  dengan Pillow, bukan lagi huruf "W"). `apk/siapkan-aset-android.py` memisahkan
+  Ikon aplikasi PNG dibuat `python3 buat-ikon.py`, yang **menyalin** hasil
+  `buat-logo.py` (satu sumber bentuk, tidak digambar ulang). Jadi urutannya:
+  `buat-logo.py` lalu `buat-ikon.py`. `apk/siapkan-aset-android.py` memisahkan
   lambang gelap dari latar amber secara otomatis, jadi tidak perlu diubah saat
   bentuknya berganti. `playstore/ikon-512.png` hanya salinan `ikon-512.png`.
 - **Perangkat logo (baru)**: `warung-go-digital/logo/` berisi set logo lengkap
@@ -235,7 +236,7 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
     SVG-nya mandiri tanpa font. Cache font di `.cache/font-logo/` (diabaikan git).
   - Warna hitam **#111111** (netral). Jangan pakai #0e100f: berona hijau sisa tema lama.
   - Halaman peraga: `warung-go-digital/logo.html`.
-  - Diperiksa `python3 uji/uji-logo.py` (109 uji) — lihat bagian Verifikasi.
+  - Diperiksa `python3 uji/uji-logo.py` (118 uji) — lihat bagian Verifikasi.
 
 ### Terlihat di mesin pencari (SEO)
 
@@ -659,7 +660,7 @@ iPad modern, Android, sudah terpasang), tautan silang, dan anti-geser samping
 4. Harga di kartu, blok langganan, dan dropdown formulir sesuai tabel di atas.
 5. Formulir mengirim pesan ke `wa.me/6281563324546`.
 
-**Logo** — jalankan `python3 uji/uji-logo.py` (109 uji). Semua diukur dari
+**Logo** — jalankan `python3 uji/uji-logo.py` (118 uji). Semua diukur dari
 hasil render Chromium: XML sah, tanpa galat JS, tanpa rujukan font eksternal,
 palet hanya oren/hitam/putih (rona tiap piksel 18-54 derajat atau abu-abu netral),
 oren jadi kelas warna terbesar pada lambang utama, tetap berbentuk di 16 dan 32
@@ -808,7 +809,8 @@ Situs memenuhi syarat PWA, jadi bisa dipasang ke layar utama HP dan dibuka offli
   `VERSI` bila berkas situs berubah besar-besaran.
 - `pasang.js` — daftarkan service worker + tampilkan bilah "Pasang di layar utama"
   (prompt bawaan di Android; petunjuk manual untuk iOS/Safari).
-- `ikon/` — dibuat oleh `buat-ikon.py` (butuh `pillow`).
+- `ikon/` — dibuat oleh `buat-ikon.py`, menyalin hasil `buat-logo.py`
+  (butuh `pillow`; jalankan `buat-logo.py` lebih dulu).
 
 Tiga jebakan yang pernah membuat PWA gagal — jangan terulang:
 

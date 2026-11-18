@@ -63,19 +63,55 @@ OREN_TUA = "#d95c07"
 HITAM = "#111111"          # netral; bukan #0e100f yang berona hijau
 PUTIH = "#ffffff"
 
-GRADIEN = (
-    '<linearGradient id="oren" x1="0" y1="0" x2="0.35" y2="1">'
-    f'<stop offset="0" stop-color="{OREN_TERANG}"/>'
-    f'<stop offset="0.45" stop-color="{OREN}"/>'
-    f'<stop offset="1" stop-color="{OREN_TUA}"/></linearGradient>'
-)
+PETAK = 100.0
+TENDA_X0, TENDA_X1 = 20.0, 80.0      # tepi kiri/kanan tenda
+TENDA_ATAS, TENDA_BAWAH = 20.0, 33.0  # puncak atap dan garis dasar tenda
+SCALLOP_N = 5                          # jumlah gelombang
+PILAR_X = (27.0, 68.0)
+PILAR_W, PILAR_ATAS, PILAR_BAWAH = 5.0, 36.0, 74.0
+KONTER_Y, KONTER_H = 72.0, 10.0
+PONSEL_W, PONSEL_H, PONSEL_Y = 31.0, 35.0, 38.5
+LINGKARAN_R = 38.0
+GARIS = 3.0                            # tebal garis dalam petak 100
 
-# ── geometri lambang dalam petak 24 (mengikuti ikon `warung`) ──
-KIRI, KANAN, ATAS, BAWAH = 1.6, 22.4, 4.2, 19.6
-LEBAR, TINGGI = KANAN - KIRI, BAWAH - ATAS
-TENDA = "M5.2 4.2 H18.8 L22.4 9.6 H1.6 Z"
-BADAN = "M4.2 9.6 H19.8 V19.6 H4.2 Z"
-JW_X, JW_Y, JW_S = 8.6, 11.6, 6.8      # jendela QR
+def _busur_gelombang(x0: float, x1: float, n: int, r: float) -> str:
+    """Busur bergelombang (scallop) dari x0 ke x1, menggantung ke bawah.
+
+    Dipanggil sebagai (kanan, kiri, …), jadi `lebar` bernilai negatif dan
+    busurnya berjalan ke kiri. Sweep 1 membuatnya melengkung ke bawah.
+    """
+    lebar = (x1 - x0) / n
+    return "".join(f" a{r:.2f} {r:.2f} 0 0 1 {lebar:.2f} 0" for _ in range(n))
+
+
+def _penanda_qr(x: float, y: float, sisi: float, warna: str = OREN) -> str:
+    """Tiga pola temukan QR di dalam kotak `sisi`, bersudut `warna`.
+
+    Tiap penanda tiga lapis: kotak (3p) → cincin (2p) → inti (p). Pola inilah
+    yang membuat sebuah kotak terbaca sebagai QR, bukan sekadar kotak kecil.
+    """
+    p = sisi / 7.0
+    keluar = ""
+    for dx, dy in ((0, 0), (sisi - 3 * p, 0), (0, sisi - 3 * p)):
+        bx, by = x + dx, y + dy
+        keluar += (
+            f'<rect x="{bx:.2f}" y="{by:.2f}" width="{3 * p:.2f}" height="{3 * p:.2f}" fill="{warna}"/>'
+            f'<rect x="{bx + p:.2f}" y="{by + p:.2f}" width="{2 * p:.2f}" height="{2 * p:.2f}" fill="{PUTIH}"/>'
+            f'<rect x="{bx + 2 * p:.2f}" y="{by + 2 * p:.2f}" width="{p:.2f}" height="{p:.2f}" fill="{warna}"/>')
+    return keluar
+
+
+def _ikon_wifi(cx: float, cy: float, skala: float, warna: str, tebal: float) -> str:
+    """Ikon sinyal wifi: dua busur dan satu titik, di atas layar ponsel."""
+    keluar = ""
+    for jari in (skala * 0.55, skala * 1.05):
+        keluar += (f'<path d="M{cx - jari:.2f} {cy + jari * 0.36:.2f} A{jari:.2f} {jari:.2f} '
+                   f'0 0 1 {cx + jari:.2f} {cy + jari * 0.36:.2f}" fill="none" stroke="{warna}" '
+                   f'stroke-width="{tebal:.2f}" stroke-linecap="round"/>')
+    keluar += (f'<circle cx="{cx:.2f}" cy="{cy + skala * 0.52:.2f}" r="{skala * 0.20:.2f}" '
+               f'fill="{warna}"/>')
+    return keluar
+
 
 FONT_BRICOLAGE = ("https://github.com/google/fonts/raw/main/ofl/bricolagegrotesque/"
                   "BricolageGrotesque%5Bopsz%2Cwdth%2Cwght%5D.ttf")
@@ -125,39 +161,50 @@ def teks_ke_kurva(font, ukuran: float, x: float, baseline: float, isi: str,
     return f'<g fill="{warna}">{"".join(bagian)}</g>'
 
 
-def lambang(cx, cy, tinggi, badan, tenda, jendela, garis, cincin, uid="L") -> str:
-    """Warung berpusat di (cx, cy) setinggi `tinggi`.
+def lambang(cx, cy, sisi, warna_tenda, warna_ponsel, warna_layar,
+            garis=HITAM, cincin=True, uid="L", warna_konter=None,
+            wifi=True, warna_penanda=None) -> str:
+    """Warung berponsel QR, digambar dalam petak 100 lalu dipusatkan di (cx, cy).
 
-    Garis tenda digambar di dalam klip yang ikut ter-transform, supaya tidak
-    menonjol keluar tepi tenda.
+    `sisi` adalah panjang sisi kotak 100 yang dipetakan; jadi satu angka mengatur
+    besar-kecilnya tanpa membuat bentuknya gepeng.
     """
-    s = tinggi / TINGGI
-    ox, oy = cx - LEBAR * s / 2 - KIRI * s, cy - tinggi / 2 - ATAS * s
+    s = sisi / PETAK
+    ox, oy = cx - PETAK * s / 2, cy - PETAK * s / 2
     tr = f"translate({ox:.2f} {oy:.2f}) scale({s:.5f})"
-    jx, jy, jw = ox + JW_X * s, oy + JW_Y * s, JW_S * s
-    p = jw / 7.0
-    jendela_isi = (
-        f'<rect x="{jx:.2f}" y="{jy:.2f}" width="{jw:.2f}" height="{jw:.2f}" '
-        f'rx="{jw * 0.14:.2f}" fill="{jendela}"/>'
-        f'<rect x="{jx + p:.2f}" y="{jy + p:.2f}" width="{jw - 2 * p:.2f}" height="{jw - 2 * p:.2f}" '
-        f'rx="{jw * 0.08:.2f}" fill="{cincin}"/>'
-        f'<rect x="{jx + 3 * p:.2f}" y="{jy + 3 * p:.2f}" width="{jw - 6 * p:.2f}" height="{jw - 6 * p:.2f}" '
-        f'rx="{jw * 0.04:.2f}" fill="{jendela}"/>'
-    )
-    garis_isi = "".join(
-        f'<rect x="{(KIRI + (i + 1) * (20.8 / 5) - 0.675) * s + ox:.2f}" '
-        f'y="{3.4 * s + oy:.2f}" width="{1.35 * s:.2f}" height="{6.2 * s:.2f}" fill="{garis}"/>'
-        for i in range(4))
-    return (f'<clipPath id="tenda-{uid}"><path d="{TENDA}" transform="{tr}"/></clipPath>'
-            f'<g clip-path="url(#tenda-{uid})">'
-            f'<path d="{BADAN}" transform="{tr}" fill="{badan}"/>'
-            f'<path d="{TENDA}" transform="{tr}" fill="{tenda}"/>{garis_isi}</g>{jendela_isi}')
+    W = (f'stroke="{garis}" stroke-width="{GARIS}" stroke-linejoin="round" '
+         f'stroke-linecap="round"')
+    isi = ""
+    if cincin:
+        isi += (f'<circle cx="50" cy="50" r="{LINGKARAN_R}" fill="{warna_tenda}" {W}/>')
+    tenda = (f'M{TENDA_X0:g} {TENDA_BAWAH:g} V{TENDA_ATAS:g} H{TENDA_X1:g} V{TENDA_BAWAH:g}'
+             + _busur_gelombang(TENDA_X1, TENDA_X0, SCALLOP_N,
+                                (TENDA_X1 - TENDA_X0) / (2 * SCALLOP_N)) + ' Z')
+    isi += f'<path d="{tenda}" fill="{warna_tenda}" {W}/>'
+    for x in PILAR_X:
+        isi += (f'<rect x="{x:g}" y="{PILAR_ATAS:g}" width="{PILAR_W:g}" '
+                f'height="{PILAR_BAWAH - PILAR_ATAS:g}" fill="{warna_layar}" {W}/>')
+    isi += (f'<rect x="{TENDA_X0:g}" y="{KONTER_Y:g}" width="{TENDA_X1 - TENDA_X0:g}" '
+            f'height="{KONTER_H:g}" rx="1.4" fill="{warna_konter or warna_tenda}" {W}/>')
+    px = 50 - PONSEL_W / 2
+    isi += (f'<rect x="{px:.2f}" y="{PONSEL_Y:g}" width="{PONSEL_W:g}" height="{PONSEL_H:g}" '
+            f'rx="3" fill="{warna_ponsel}" {W}/>')
+    layar_x, layar_y = px + 2.6, PONSEL_Y + 2.6
+    layar_w, layar_h = PONSEL_W - 5.2, PONSEL_H - 5.2
+    isi += (f'<rect x="{layar_x:.2f}" y="{layar_y:.2f}" width="{layar_w:g}" height="{layar_h:g}" '
+            f'rx="1.4" fill="{warna_layar}"/>')
+    if wifi:
+        isi += _ikon_wifi(50, layar_y + 3.0, 3.8, warna_penanda or OREN, 1.35)
+    # Penanda QR selebar layar: inilah gagasan "digital", jadi harus terbaca
+    # bahkan di 16 px — bukan kotak kecil yang tenggelam di tengah layar.
+    isi += _penanda_qr(layar_x + 0.7, layar_y + 8.2, layar_w - 1.4, warna_penanda or OREN)
+    return f'<g transform="{tr}">{isi}</g>'
 
 
 def bungkus(w: float, h: float, isi: str) -> str:
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:.0f} {h:.0f}" '
             f'width="{w:.0f}" height="{h:.0f}" role="img" aria-label="Warung Go Digital">'
-            f'<defs>{GRADIEN}</defs>{isi}</svg>')
+            f'{isi}</svg>')
 
 
 def ukur_isi(isi: str, cw: int, ch: int):
@@ -187,75 +234,106 @@ def rapatkan(isi: str, cw: int, ch: int, latar: str | None = None, pad: int = 8)
     return bungkus(w, h, dalam)
 
 
-def lencana_lambang(ukuran=512, sudut=112, latar=f"url(#oren)", warung=PUTIH,
-                    jendela=HITAM, cincin=PUTIH, rel=0.66, uid="L") -> str:
+def lencana_lambang(ukuran=512, sudut=112, latar=OREN, rel=0.88, uid="L",
+                    warna_tenda=PUTIH, warna_ponsel=HITAM, warna_layar=PUTIH,
+                    garis=HITAM, cincin=True, **warna) -> str:
     """Lambang dalam lencana bersudut membulat — untuk ikon dan avatar."""
-    isi = (f'<rect width="{ukuran}" height="{ukuran}" rx="{sudut}" fill="{latar}"/>'
-           + lambang(ukuran / 2, ukuran / 2, ukuran * rel, warung, warung, jendela, jendela, cincin, uid))
+    isi = f'<rect width="{ukuran}" height="{ukuran}" rx="{sudut}" fill="{latar}"/>'
+    isi += lambang(ukuran / 2, ukuran / 2, ukuran * rel, warna_tenda, warna_ponsel,
+                   warna_layar, garis, cincin, uid, **warna)
     return bungkus(ukuran, ukuran, isi)
 
 
-def lambang_telanjang(warna_warung, warna_jendela, uid="T") -> str:
-    """Warung tanpa lencana, dipangkas rapat — untuk latar apa pun.
-
-    Tinggi dibatasi oleh lebar: lambang ini 1,35 kali lebih lebar daripada
-    tingginya, jadi menetapkan tinggi saja akan memotong sisi kiri-kanan.
-    """
+def lambang_telanjang(warna_tenda, warna_ponsel, warna_layar=PUTIH, garis=HITAM,
+                      cincin=True, uid="T", **warna) -> str:
+    """Lambang tanpa lencana, dipangkas rapat — untuk latar apa pun."""
     kanvas = 512
-    tinggi = min(kanvas * 0.86, kanvas * 0.86 / (LEBAR / TINGGI))
-    isi = lambang(kanvas / 2, kanvas / 2, tinggi, warna_warung, warna_warung,
-                  warna_jendela, warna_jendela, PUTIH, uid)
+    isi = lambang(kanvas / 2, kanvas / 2, kanvas * 0.94, warna_tenda, warna_ponsel,
+                  warna_layar, garis, cincin, uid, **warna)
     return rapatkan(isi, kanvas, kanvas)
 
 
-def kunci(latar=None, tumpuk=False, uid="L", warung=PUTIH, jendela=HITAM,
-          cincin=PUTIH, tinta=PUTIH, aksen=OREN_TERANG, lencana="url(#oren)") -> str:
-    """Kunci merek: lambang + "Warung" + "GO DIGITAL"."""
+def kunci(latar=None, tumpuk=False, uid="L", tinta=HITAM, aksen=OREN_TUA,
+          warna_tenda=OREN, warna_ponsel=HITAM, warna_layar=PUTIH, garis=HITAM,
+          cincin=True, **warna) -> str:
+    """Kunci merek: lambang + "Warung" + "GO DIGITAL".
+
+    Lambangnya persegi (petak 100), jadi satu ukuran `TL` cukup untuk lebar dan
+    tinggi — tidak ada lagi perkalian rasio yang membuat bentuknya gepeng.
+    """
     if not tumpuk:
         TL, U1, U2, BL = 150, 132, 40, 52
-        lb = LEBAR / TINGGI * TL
-        x1 = 60 + lb + 52
+        x1 = 60 + TL + 52
         lt1 = lebar_teks(FONT_B, "Warung") / 1000 * U1
         lt2 = lebar_teks(FONT_M, "GO DIGITAL") / 1000 * U2 + 9 * 5
         tt = U1 * 0.72 + BL + U2 * 0.28
         tengah = 60 + max(TL, tt) / 2
         b1 = tengah + tt / 2 - (BL + U2 * 0.28)
-        isi = (f'<rect x="60" y="{tengah - TL / 2:.2f}" width="{lb:.2f}" height="{TL}" '
-               f'rx="{TL * 0.22:.2f}" fill="{lencana}"/>'
-               + lambang(60 + lb / 2, tengah, TL * 0.62, warung, warung, jendela, jendela, cincin, uid))
+        isi = lambang(60 + TL / 2, tengah, TL, warna_tenda, warna_ponsel,
+                      warna_layar, garis, cincin, uid, **warna)
         isi += teks_ke_kurva(FONT_B, U1, x1, b1, "Warung", tinta)
         isi += teks_ke_kurva(FONT_M, U2, x1 + 3, b1 + BL, "GO DIGITAL", aksen, spasi=5)
         return rapatkan(isi, 1500, 1500, latar)
-    TL, U1, U2, BL = 190, 150, 44, 58
+    TL, U1, U2, BL = 200, 150, 44, 58
     lt1 = lebar_teks(FONT_B, "Warung") / 1000 * U1
     lt2 = lebar_teks(FONT_M, "GO DIGITAL") / 1000 * U2 + 9 * 5
-    lt = max(lt1, lt2)
-    lb = LEBAR / TINGGI * TL
-    pusat = 60 + max(lb, lt) / 2
+    pusat = 60 + max(TL, lt1, lt2) / 2
     b1 = 60 + TL + 72 + U1 * 0.72
-    isi = (f'<rect x="{pusat - lb / 2:.2f}" y="60" width="{lb:.2f}" height="{TL}" '
-           f'rx="{TL * 0.22:.2f}" fill="{lencana}"/>'
-           + lambang(pusat, 60 + TL / 2, TL * 0.62, warung, warung, jendela, jendela, cincin, uid))
+    isi = lambang(pusat, 60 + TL / 2, TL, warna_tenda, warna_ponsel,
+                  warna_layar, garis, cincin, uid, **warna)
     isi += teks_ke_kurva(FONT_B, U1, pusat - lt1 / 2, b1, "Warung", tinta)
     isi += teks_ke_kurva(FONT_M, U2, pusat - lt2 / 2, b1 + BL, "GO DIGITAL", aksen, spasi=5)
-    return rapatkan(isi, 1500, 1200, latar)
+    return rapatkan(isi, 1500, 1400, latar)
 
 
-def mono(warna, latar=None, ukuran=512, rel=0.68) -> str:
-    """Satu warna: siluet warung utuh, jendela QR dilubangi."""
-    tinggi = ukuran * rel
-    s = tinggi / TINGGI
-    ox, oy = ukuran / 2 - LEBAR * s / 2 - KIRI * s, ukuran / 2 - tinggi / 2 - ATAS * s
+def mono(warna, latar=None, ukuran=512, rel=0.78, uid="mono") -> str:
+    """Satu warna: siluet warung utuh, layar QR dilubangi.
+
+    Dipakai untuk cetak satu warna, cap, bordir, dan tanda air — tempat warna
+    kedua tidak tersedia. Bentuknya tetap bentuk merek, bukan bentuk lain.
+    """
+    sisi = ukuran * rel
+    s = sisi / PETAK
+    ox, oy = ukuran / 2 - sisi / 2, ukuran / 2 - sisi / 2
     tr = f"translate({ox:.2f} {oy:.2f}) scale({s:.5f})"
-    jx, jy, jw = ox + JW_X * s, oy + JW_Y * s, JW_S * s
-    p = jw / 7.0
-    lubang = (f'<rect x="{jx + p:.2f}" y="{jy + p:.2f}" width="{jw - 2 * p:.2f}" height="{jw - 2 * p:.2f}" fill="#000"/>'
-              f'<rect x="{jx + 3 * p:.2f}" y="{jy + 3 * p:.2f}" width="{jw - 6 * p:.2f}" height="{jw - 6 * p:.2f}" fill="#fff"/>')
+    tenda = (f'M{TENDA_X0:g} {TENDA_BAWAH:g} V{TENDA_ATAS:g} H{TENDA_X1:g} V{TENDA_BAWAH:g}'
+             + _busur_gelombang(TENDA_X1, TENDA_X0, SCALLOP_N,
+                                (TENDA_X1 - TENDA_X0) / (2 * SCALLOP_N)) + ' Z')
+    px = 50 - PONSEL_W / 2
+    layar_x, layar_y = px + 3, PONSEL_Y + 3.5
+    layar_w = PONSEL_W - 6
+    # Lubang: layar jadi kosong, lalu penanda QR diisi kembali.
+    lubang = (f'<rect x="{layar_x:.2f}" y="{layar_y:.2f}" width="{layar_w:g}" '
+              f'height="{PONSEL_H - 7:g}" rx="1.6" fill="#000"/>')
+    p7 = layar_w / 7.0
+    qy = layar_y + 7.5
+    for dx, dy in ((0, 0), (layar_w - 3 * p7, 0), (0, layar_w - 3 * p7)):
+        lubang += (f'<rect x="{layar_x + dx:.2f}" y="{qy + dy:.2f}" width="{3 * p7:.2f}" '
+                   f'height="{3 * p7:.2f}" fill="#fff"/>')
     isi = f'<rect width="{ukuran}" height="{ukuran}" rx="112" fill="{latar}"/>' if latar else ""
-    isi += (f'<mask id="lubang"><rect width="{ukuran}" height="{ukuran}" fill="#fff"/>{lubang}</mask>'
-            f'<g mask="url(#lubang)"><path d="{TENDA}" transform="{tr}" fill="{warna}"/>'
-            f'<path d="{BADAN}" transform="{tr}" fill="{warna}"/></g>')
+    isi += (f'<mask id="lubang-{uid}"><rect width="{ukuran}" height="{ukuran}" fill="#fff"/>{lubang}</mask>'
+            f'<g transform="{tr}" mask="url(#lubang-{uid})">'
+            f'<path d="{tenda}" fill="{warna}"/>'
+            f'<rect x="{PILAR_X[0]:g}" y="{PILAR_ATAS:g}" width="{PILAR_W:g}" '
+            f'height="{PILAR_BAWAH - PILAR_ATAS:g}" fill="{warna}"/>'
+            f'<rect x="{PILAR_X[1]:g}" y="{PILAR_ATAS:g}" width="{PILAR_W:g}" '
+            f'height="{PILAR_BAWAH - PILAR_ATAS:g}" fill="{warna}"/>'
+            f'<rect x="{TENDA_X0:g}" y="{KONTER_Y:g}" width="{TENDA_X1 - TENDA_X0:g}" '
+            f'height="{KONTER_H:g}" fill="{warna}"/>'
+            f'<rect x="{px:.2f}" y="{PONSEL_Y:g}" width="{PONSEL_W:g}" height="{PONSEL_H:g}" '
+            f'rx="3" fill="{warna}"/></g>')
     return bungkus(ukuran, ukuran, isi)
+
+
+def lambang_bilah(ukuran=512, rel=0.98, uid="bilah") -> str:
+    """Lambang untuk bilah atas situs, satu warna memakai `currentColor`.
+
+    Sengaja tanpa kotak: kotaknya sudah disediakan `.logo__mark` di gaya.css
+    (gelap di header, oren di footer). Jadi lambangnya mengikuti warna teks dan
+    otomatis benar di tema terang maupun gelap. Layar ponsel dilubangi dan
+    penanda QR digambar sebagai cincin, supaya tetap terbaca di 20 px.
+    """
+    return mono("currentColor", ukuran=ukuran, rel=rel, uid=uid)
 
 
 # ── raster ──────────────────────────────────────────────────
@@ -292,24 +370,36 @@ def main() -> None:
     FONT_M = muat_font(ambil_font(FONT_JETBRAINS, "jetbrains.ttf"), {"wght": 700})
 
     svg = {
-        # lambang berlencana
-        "logo-lambang.svg": lencana_lambang(uid="1"),
-        "logo-lambang-hitam.svg": lencana_lambang(uid="2", latar=HITAM, warung=f"url(#oren)",
-                                                  jendela=PUTIH, cincin=HITAM),
-        "logo-lambang-putih.svg": lencana_lambang(uid="3", latar=PUTIH, warung=f"url(#oren)",
-                                                  jendela=HITAM, cincin=PUTIH),
+        # lambang berlencana — konter selalu oren seperti acuan
+        "logo-lambang.svg": lencana_lambang(uid="1", warna_konter=OREN,
+                                            warna_penanda=OREN),
+        "logo-lambang-hitam.svg": lencana_lambang(
+            uid="2", latar=HITAM, warna_tenda=OREN, warna_ponsel=HITAM,
+            warna_layar=PUTIH, warna_konter=OREN, warna_penanda=OREN),
+        "logo-lambang-putih.svg": lencana_lambang(
+            uid="3", latar=PUTIH, warna_tenda=OREN, warna_ponsel=HITAM,
+            warna_layar=PUTIH, warna_konter=OREN, warna_penanda=OREN),
         # lambang telanjang
-        "lambang-oren.svg": lambang_telanjang(f"url(#oren)", HITAM, uid="T1"),
-        "lambang-putih.svg": lambang_telanjang(PUTIH, OREN_TUA, uid="T2"),
-        "lambang-hitam.svg": lambang_telanjang(HITAM, OREN, uid="T3"),
+        "lambang-oren.svg": lambang_telanjang(OREN, HITAM, PUTIH, HITAM, True, "T1",
+                                              warna_konter=OREN, warna_penanda=OREN),
+        "lambang-putih.svg": lambang_telanjang(PUTIH, HITAM, PUTIH, HITAM, False, "T2",
+                                               warna_konter=OREN, warna_penanda=OREN),
+        "lambang-hitam.svg": lambang_telanjang(HITAM, OREN, PUTIH, HITAM, False, "T3",
+                                               warna_konter=OREN, warna_penanda=OREN),
         # kunci merek
-        "logo-utama.svg": kunci(uid="H1", warung=PUTIH, jendela=HITAM, cincin=PUTIH, tinta=HITAM, aksen=OREN_TUA),
-        "logo-utama-gelap.svg": kunci(HITAM, uid="H2"),
-        "logo-utama-putih.svg": kunci(PUTIH, uid="H3", warung=PUTIH, jendela=HITAM, cincin=PUTIH,
-                                       tinta=HITAM, aksen=OREN_TUA),
-        "logo-tumpuk.svg": kunci(tumpuk=True, uid="V1", warung=PUTIH, jendela=HITAM, cincin=PUTIH,
-                                 tinta=HITAM, aksen=OREN_TUA),
-        "logo-tumpuk-gelap.svg": kunci(HITAM, tumpuk=True, uid="V2"),
+        "logo-utama.svg": kunci(uid="H1", warna_konter=OREN, warna_penanda=OREN),
+        "logo-utama-gelap.svg": kunci(HITAM, uid="H2", tinta=PUTIH, aksen=OREN_TERANG,
+                                      warna_tenda=OREN, warna_konter=OREN,
+                                      warna_penanda=OREN),
+        "logo-utama-putih.svg": kunci(PUTIH, uid="H3", warna_konter=OREN,
+                                      warna_penanda=OREN),
+        "logo-tumpuk.svg": kunci(tumpuk=True, uid="V1", warna_konter=OREN,
+                                 warna_penanda=OREN),
+        "logo-tumpuk-gelap.svg": kunci(HITAM, tumpuk=True, uid="V2", tinta=PUTIH,
+                                       aksen=OREN_TERANG, warna_tenda=OREN,
+                                       warna_konter=OREN, warna_penanda=OREN),
+        # untuk bilah atas situs (menggantikan ikon inline 24x24)
+        "lambang-bilah.svg": lambang_bilah(),
         # monokrom
         "logo-mono-hitam.svg": mono(HITAM),
         "logo-mono-putih.svg": mono(PUTIH, HITAM),
@@ -318,7 +408,7 @@ def main() -> None:
         (KELUARAN / nama).write_text(isi)
         print(f"  svg/{nama}")
 
-    # favicon
+    # favicon: lambang penuh untuk 32 px ke atas, versi ringkas untuk 16 px
     (KELUARAN / "favicon.svg").write_text(svg["logo-lambang.svg"])
     for sisi in (16, 32, 48):
         raster(svg["logo-lambang.svg"], PNG / f"_fav{sisi}.png", sisi)
@@ -350,7 +440,7 @@ def main() -> None:
             print(f"  png/{nama}")
 
     # ikon Android/iOS: latar penuh, isi diperkecil ke zona aman
-    maskable = lencana_lambang(ukuran=512, sudut=0, rel=0.46, uid="M1")
+    maskable = lencana_lambang(ukuran=512, sudut=0, rel=0.60, uid="M1")
     raster(maskable, PNG / "ikon-maskable-512.png", 512)
     raster(maskable, PNG / "apple-touch-icon.png", 180)
     print("  png/ikon-maskable-512.png, png/apple-touch-icon.png")

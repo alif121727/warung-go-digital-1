@@ -92,7 +92,7 @@ em.serif { font-family: var(--f-serif); font-style: italic; font-weight: 400; }
   width: 32px; height: 32px; border-radius: 10px; background: var(--amber); color: var(--ink);
   display: grid; place-items: center; flex-shrink: 0;
 }
-.kepala .logo__mark svg { width: 18px; height: 18px; }
+.kepala .logo__mark svg { width: 21px; height: 21px; }
 .kepala .logo__word { white-space: nowrap; text-align: center; }
 .kepala .logo__word b { color: var(--amber); }
 .kepala h1 { color: var(--cream); margin-bottom: .8rem; }
