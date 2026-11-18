@@ -23,3 +23,6 @@ hasil/
 
 # Berkas sementara agen (tangkapan layar, rekaman)
 .agent_tmp/
+
+# Cache font untuk buat-logo.py
+.cache/
