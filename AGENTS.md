@@ -170,6 +170,31 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   dan menghilangkan tersendatnya; SSIM frame terburuk masih 0,983 terhadap hasil
   tanpa batas (nyaris tak terbedakan). Mutu HD (1280x720) tetap utuh — yang
   turun hanya berat berkasnya.
+
+  **Dua versi, dipilih menurut koneksi.** `pembuka.mp4` (3,6 MB, CRF 28,
+  480 kb/s) untuk koneksi lambat, dan `pembuka-hd.mp4` (7,0 MB, CRF 20,
+  900 kb/s) untuk koneksi lapang. Keduanya 1280x720; yang berbeda mutunya:
+  SSIM **0,991 lawan 0,995** terhadap acuan CRF 16. Diukur pada 700 kb/s
+  selama 22 detik, jumlah tersendat: versi ringan **2 kali**, HD **5 kali**.
+  Di 2 Mb/s keduanya **nol** tersendat. Karena itu menaikkan bitrate untuk
+  semua orang justru merusak pengalaman koneksi lambat — `bersama/pembuka.js`
+  memilih: `saveData`, `effectiveType` 2g/3g, atau `downlink` < 1,5 Mb/s
+  mendapat versi ringan; selain itu HD. Tanpa Network Information API juga
+  versi ringan, sebab salah pilih ke arah HD membuat video tersendat.
+  Bila HD gagal dimuat, `pembuka.js` mencoba versi ringan sebelum menyerah.
+  Dijaga `uji/uji-pembuka.py` (bagian 7b).
+
+  **Jangan ganti `preload="none"` menjadi `auto`:** `src` cadangan di HTML
+  menunjuk versi ringan. Dengan `auto`, peramban mengunduh versi ringan lebih
+  dulu, lalu skrip menggantinya dengan HD — dua unduhan untuk satu tayangan.
+  Terverifikasi: dengan `none`, hanya satu berkas yang diminta.
+
+  **Sumber hanya 640x360** — "HD" adalah hasil pembesaran Lanczos, bukan
+  rekaman HD asli. Berkas `Tugas-Video-Alif-Fadilah-Raditya_3MB.zip` ternyata
+  **identik** (SHA-256 sama) dengan `video-sumber-pembuka.mp4`, jadi tidak ada
+  sumber beresolusi lebih tinggi. Bila kelak pengguna memberi rekaman asli
+  >= 720p, cukup jalankan ulang `buat-video-pembuka.py`.
+
   Aturan yang **harus dijaga** (dijaga `uji/uji-pembuka.py`):
   - Kelas `pembuka-aktif` dipasang oleh skrip kecil di `<head>` **sebelum**
     halaman digambar, supaya beranda tidak berkelip lebih dulu. Lapisan hanya
@@ -1135,4 +1160,3 @@ Data safety, dan catatan rilis ada di `playstore/teks-listing.md`.
   mengisi email kontak pengembang, lalu mengunggah AAB dan menekan "Start rollout".
   Ini hanya bisa dilakukan pemilik akun — agen tidak punya akses ke pembayaran atau
   akun Google.
-

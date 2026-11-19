@@ -194,15 +194,34 @@ with sync_playwright() as p:
     # ── 7. Kartu tidak kehilangan animasi sorotnya ───────────
     # Gerak reveal memakai translate/scale, bukan transform, supaya animasi
     # sorot bawaan kartu (yang memakai transform) tidak terhapus.
+    #
+    # Uji ini dulu menunggu 700 ms lalu membandingkan `transform`. Itu rapuh:
+    # kadang `:hover` belum sempat berlaku (kartu baru bergeser karena
+    # parallax), sehingga hasilnya "none -> none" dan uji gagal padahal
+    # animasinya sehat. Sekarang kartu digulir ke tengah layar lebih dulu,
+    # lalu ditunggu sampai transformnya benar-benar berubah.
     pg = b.new_page(viewport={"width": 1440, "height": 900})
     pg.goto(LANDING, wait_until="load")
     pg.wait_for_timeout(1600)
-    pg.evaluate("()=>document.querySelector('#maskot')?.scrollIntoView()")
-    pg.wait_for_timeout(1200)
+    pg.evaluate("""()=>{
+      const k=document.querySelector('.maskot__card');
+      k?.scrollIntoView({block:'center'});
+    }""")
+    pg.wait_for_timeout(900)
     kartu = pg.query_selector(".maskot__card")
     sebelum = kartu.evaluate("e=>getComputedStyle(e).transform")
     kartu.hover()
-    pg.wait_for_timeout(700)
+    # Tunggu sampai transform berubah, paling lama 2 detik. Menunggu
+    # ketentuan yang diuji jauh lebih andal daripada menebak lama waktu.
+    try:
+        pg.wait_for_function(
+            """(awal)=>{
+                 const e=document.querySelector('.maskot__card');
+                 return e && getComputedStyle(e).transform !== awal;
+               }""",
+            arg=sebelum, timeout=2000)
+    except Exception:
+        pass
     sesudah = kartu.evaluate("e=>getComputedStyle(e).transform")
     cek("kartu: animasi sorot bawaan masih bekerja",
         sebelum != sesudah, f"{sebelum} -> {sesudah}")

@@ -26,6 +26,9 @@
 
   <circle cx="120" cy="120" r="96" fill="url(#pwGlow)" opacity=".55"/>
 
+  <!-- Tokoh digeser agar terpusat di lingkarannya -->
+  <g transform="translate(-18 -24)">
+
   <rect x="92" y="206" width="22" height="20" rx="9" fill="#132419"/>
   <rect x="124" y="206" width="22" height="20" rx="9" fill="#132419"/>
 
@@ -68,7 +71,8 @@
   <circle cx="129.6" cy="99.6" r="1.5" fill="#fffdf7"/>
 
   <path d="M104 110c4-4 8-4 12 0 4-4 8-4 12 0" stroke="#0d1a12" stroke-width="3.2" stroke-linecap="round" fill="none"/>
-  <path d="M108 118c5 5 12 5 17 0" stroke="#0d1a12" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M108 118c5 5 12 5 17 0" stroke="#0d1a12" stroke-width="3.2" stroke-linecap="round"/></g>
+
 
   <path d="M188 62l3 8 8 3-8 3-3 8-3-8-8-3 8-3 3-8Z" fill="#f5a524"/>
   <circle cx="58" cy="80" r="4" fill="#3ba55d"/>

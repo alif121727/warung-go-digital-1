@@ -25,6 +25,9 @@
 
   <circle cx="120" cy="120" r="96" fill="url(#etGlow)" opacity=".55"/>
 
+  <!-- Tokoh digeser agar terpusat di lingkarannya -->
+  <g transform="translate(0 -4)">
+
   <!-- sedotan -->
   <path d="M150 44l-14 66" stroke="#0d1a12" stroke-width="7" stroke-linecap="round"/>
   <path d="M150 44l-14 66" stroke="#f5a524" stroke-width="3.4" stroke-linecap="round"/>
@@ -55,7 +58,8 @@
 
   <!-- tutup gelas -->
   <path d="M72 70h96l-4 12H76l-4-12Z" fill="#f6f0e2" stroke="#0d1a12" stroke-width="3.4"/>
-  <path d="M120 70V58" stroke="#0d1a12" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M120 70V58" stroke="#0d1a12" stroke-width="3.4" stroke-linecap="round"/></g>
+
 
   <path d="M52 92l3 8 8 3-8 3-3 8-3-8-8-3 8-3 3-8Z" fill="#f5a524"/>
   <circle cx="192" cy="104" r="4" fill="#3ba55d"/>

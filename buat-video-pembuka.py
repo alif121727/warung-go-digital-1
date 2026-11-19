@@ -49,6 +49,16 @@ BUF_KBPS = "960k"   # ukuran perayap (2x maks)
 AUDIO_KBPS = "48k"
 DETIK_POSTER = 12.0  # kerangka dengan bagian hero yang sudah terbaca
 
+# Versi HD: berkas kedua yang dipakai HANYA bila koneksi pengunjung lapang.
+# Diukur pada 700 kb/s selama 22 detik: versi ringan tersendat 2 kali, versi
+# HD 5 kali — jadi HD tidak boleh dipakai sembarangan. Di koneksi 2 Mb/s
+# keduanya sama-sama nol tersendat, dan di situlah HD terasa bedanya:
+# SSIM 0,995 lawan 0,991. `bersama/pembuka.js` yang memilih.
+HD_MAKS_KBPS = "900k"
+HD_BUF_KBPS = "1800k"
+HD_CRF = "20"
+HD_AUDIO_KBPS = "64k"
+
 
 def ffmpeg():
     exe = shutil.which("ffmpeg")
@@ -98,12 +108,29 @@ def main():
          "-c:a", "aac", "-b:a", AUDIO_KBPS, "-ac", "1",
          mp4]
     )
+    # Versi HD untuk koneksi lapang. Resolusi sama (720p), tetapi bitrate
+    # puncaknya dinaikkan dan CRF-nya diturunkan, sehingga gradasi langit
+    # dan teks kecil tidak pecah.
+    mp4_hd = os.path.join(KELUARAN, "pembuka-hd.mp4")
+    jalankan(
+        [exe, "-y", "-i", sumber,
+         "-vf", tapis,
+         "-c:v", "libx264", "-preset", PRESET, "-crf", HD_CRF,
+         "-profile:v", "high", "-level", "4.0",
+         "-maxrate", HD_MAKS_KBPS, "-bufsize", HD_BUF_KBPS,
+         "-pix_fmt", "yuv420p",
+         "-movflags", "+faststart",
+         "-map", "0:v:0", "-map", "0:a?",
+         "-c:a", "aac", "-b:a", HD_AUDIO_KBPS, "-ac", "1",
+         mp4_hd]
+    )
     jalankan(
         [exe, "-y", "-ss", f"{DETIK_POSTER}", "-i", mp4,
          "-frames:v", "1", "-q:v", "4", jpg]
     )
 
     print(f"pembuka.mp4: {os.path.getsize(mp4) / 1024:.0f} KB")
+    print(f"pembuka-hd.mp4: {os.path.getsize(mp4_hd) / 1024:.0f} KB")
     print(f"pembuka.jpg: {os.path.getsize(jpg) / 1024:.0f} KB")
     print(f"Hasil di {KELUARAN}")
 

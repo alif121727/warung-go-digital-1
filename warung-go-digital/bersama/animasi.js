@@ -52,29 +52,45 @@
     let my = window.innerHeight / 2;
     let mx2 = mx;
     let my2 = my;
-    let hidup = false;
+    let hidup = false;   // kursor berada di dalam halaman
+    let jalan = false;   // loop pengejar sedang berjalan
+    let bingkai = 0;
 
     // Posisi asli disimpan, lalu dikejar perlahan di loop gambar. Ini
     // membuat sorotan tertinggal sedikit dari kursor — terasa lebih halus
     // daripada menempel kaku.
+    //
+    // Dua penghematan yang disengaja:
+    //   1. Digambar pada 30 bingkai/detik, bukan 60. Sorotan ini pendar
+    //      sangat halus; separuh laju tak terlihat bedanya, tetapi separuh
+    //      kerja main-thread ikut hilang.
+    //   2. Loop berhenti sendiri begitu sorotan menyusul kursor, dan hidup
+    //      lagi saat kursor bergerak. Sebelum ini loop berjalan selamanya
+    //      walau kursor diam — persis saat pengunjung sedang membaca.
+    const ikuti = () => {
+      if (++bingkai % 2) { requestAnimationFrame(ikuti); return; }
+      mx2 += (mx - mx2) * 0.18;
+      my2 += (my - my2) * 0.18;
+      sorot.style.setProperty('--ax-x', `${mx2.toFixed(1)}px`);
+      sorot.style.setProperty('--ax-y', `${my2.toFixed(1)}px`);
+      if (Math.abs(mx - mx2) < 0.5 && Math.abs(my - my2) < 0.5) {
+        mx2 = mx; my2 = my;
+        jalan = false;
+        return;
+      }
+      requestAnimationFrame(ikuti);
+    };
+
     window.addEventListener('mousemove', (e) => {
       mx = e.clientX;
       my = e.clientY;
       if (!hidup) { hidup = true; sorot.classList.add('is-on'); }
+      if (!jalan) { jalan = true; requestAnimationFrame(ikuti); }
     }, { passive: true });
     document.addEventListener('mouseleave', () => {
       hidup = false;
       sorot.classList.remove('is-on');
     });
-
-    const ikuti = () => {
-      mx2 += (mx - mx2) * 0.12;
-      my2 += (my - my2) * 0.12;
-      sorot.style.setProperty('--ax-x', `${mx2.toFixed(1)}px`);
-      sorot.style.setProperty('--ax-y', `${my2.toFixed(1)}px`);
-      requestAnimationFrame(ikuti);
-    };
-    requestAnimationFrame(ikuti);
   }
 
   // ── 3. Tandai elemen yang punya gerak sendiri ────────────
@@ -212,7 +228,13 @@
     // ATAS titik itu tidak akan pernah masuk layar, jadi pengamat tidak akan
     // pernah menyala untuknya dan seksi itu tinggal tak terlihat. Karena
     // pengunjung sudah "melewatinya", tampilkan sekalian di awal.
+    //
+    // Dipanggil saat gulir, jadi dibungkus penahan bingkai: tanpa itu, satu
+    // sentakan gulir memanggilnya puluhan kali dan tiap panggilan membaca
+    // posisi puluhan elemen sekaligus.
+    let menungguL = false;
     const sudahTerlewati = () => {
+      menungguL = false;
       [...penanda, ...berjenjang].forEach((el) => {
         if (!el.classList.contains('ax-in') &&
             el.getBoundingClientRect().bottom <= 0) {
@@ -221,8 +243,13 @@
         }
       });
     };
+    const sudahTerlewatiTerjadwal = () => {
+      if (menungguL) return;
+      menungguL = true;
+      requestAnimationFrame(sudahTerlewati);
+    };
     sudahTerlewati();
-    window.addEventListener('scroll', sudahTerlewati, { passive: true });
+    window.addEventListener('scroll', sudahTerlewatiTerjadwal, { passive: true });
 
     // Jaring pengaman. Bila pengamat irisan mati — galat tak terduga, tata
     // letak ganjil, atau apa pun — isi halaman tetap harus terbaca,
@@ -319,6 +346,7 @@
     LAPISAN.forEach(([sel, depth]) => {
       document.querySelectorAll(sel).forEach((el) => {
         if (el.classList.contains('ax-reveal') ||
+            el.classList.contains('ax-stagger') ||
             (el.parentElement &&
              el.parentElement.classList.contains('ax-stagger'))) return;
         el.classList.add('ax-parallax');
@@ -334,12 +362,20 @@
       menungguP = false;
       const tinggi = window.innerHeight;
       const tengah = tinggi / 2;
+      // Baca dulu SEMUA posisi, baru tulis semuanya. Membaca lalu menulis
+      // bergantian memaksa peramban menghitung ulang tata letak untuk tiap
+      // elemen; dengan puluhan lapisan, itu pekerjaan yang berlipat-lipat
+      // dan terasa sebagai tersendat saat menggulir.
+      const nilai = [];
       for (const el of parallax) {
         const r = el.getBoundingClientRect();
-        if (r.bottom < -200 || r.top > tinggi + 200) continue;
+        if (r.bottom < -200 || r.top > tinggi + 200) { nilai.push(null); continue; }
         // -1 saat elemen masih di bawah layar, 1 saat sudah lewat di atas.
         const p = (tengah - (r.top + r.height / 2)) / tengah;
-        el.style.setProperty('--ax-p', Math.max(-1, Math.min(1, p)).toFixed(3));
+        nilai.push(Math.max(-1, Math.min(1, p)).toFixed(3));
+      }
+      for (let i = 0; i < parallax.length; i++) {
+        if (nilai[i] !== null) parallax[i].style.setProperty('--ax-p', nilai[i]);
       }
     };
     window.addEventListener('scroll', () => {
@@ -374,14 +410,18 @@
     let jalan = false, halus = false, bagianGelap = true;
 
     const ukur = () => {
-      const rasio = Math.min(window.devicePixelRatio || 1, 2);
+      // Cukup 1.5x, bukan 2x. Titik-titiknya kecil dan berpendar; bedanya
+      // tak terlihat, tetapi jumlah piksel yang harus diisi turun ~44%.
+      const rasio = Math.min(window.devicePixelRatio || 1, 1.5);
       lebar = window.innerWidth;
       tinggi = window.innerHeight;
       kanvas.width = Math.round(lebar * rasio);
       kanvas.height = Math.round(tinggi * rasio);
       ctx.setTransform(rasio, 0, 0, rasio, 0, 0);
-      const jumlah = Math.max(20, Math.min(60,
-        Math.round(lebar * tinggi / 16000)));
+      // Jumlah titik dihitung ulang dari luas layar, dengan batas atas yang
+      // lebih rendah daripada sebelumnya supaya layar besar tidak berat.
+      const jumlah = Math.max(16, Math.min(40,
+        Math.round(lebar * tinggi / 22000)));
       titik = Array.from({ length: jumlah }, () => ({
         x: Math.random() * lebar,
         y: Math.random() * tinggi,
@@ -411,28 +451,59 @@
       return hasil;
     };
 
+    // Titik-titik dikelompokkan menurut tingkat kecerahannya (5 tingkat),
+    // lalu digambar satu jalur per tingkat. Dengan begitu `fill()` dipanggil
+    // 5 kali per bingkai, bukan sekali per titik, dan tidak ada satu pun
+    // string warna yang dibuat ulang tiap bingkai. Inilah penghematan
+    // terbesar di bagian ini: sebelumnya setiap titik membuat string
+    // `rgba(...)` sendiri — ribuan string per detik yang harus dipungut
+    // pemulung memori, dan itu terasa sebagai tersendat.
+    const TINGKAT = 5;
+    const jalur = Array.from({ length: TINGKAT }, () => []);
+    let hitung = 0;
+    const bingkaiKe = 2;   // gambar tiap 2 bingkai -> 30 gambar/detik
+
     const gambar = () => {
+      if (!jalan) return;
+      requestAnimationFrame(gambar);
+      if (++hitung % bingkaiKe) return;
+
       ctx.clearRect(0, 0, lebar, tinggi);
-      const warna = bagianGelap ? '245 214 150' : '196 118 42';
-      const dasar = bagianGelap ? 0.30 : 0.24;
-      const puncak = bagianGelap ? 0.42 : 0.34;
+      const gelap = bagianGelap;
+      const warna = gelap ? '245 214 150' : '196 118 42';
+      const dasar = gelap ? 0.30 : 0.24;
+      const puncak = gelap ? 0.42 : 0.34;
+
+      for (let i = 0; i < TINGKAT; i++) jalur[i].length = 0;
+
       for (const t of titik) {
         t.x += t.vx; t.y += t.vy; t.f += 0.012 * t.d;
         if (t.y < -8) { t.y = tinggi + 8; t.x = Math.random() * lebar; }
         if (t.x < -8) t.x = lebar + 8;
         if (t.x > lebar + 8) t.x = -8;
         const nyala = dasar + puncak * (0.5 + 0.5 * Math.sin(t.f));
+        const k = Math.min(TINGKAT - 1, (nyala / (dasar + puncak) * TINGKAT) | 0);
+        jalur[k].push(t);
+      }
+
+      for (let k = 0; k < TINGKAT; k++) {
+        const isi = jalur[k];
+        if (!isi.length) continue;
+        const alfa = (dasar + puncak * ((k + 0.5) / TINGKAT)).toFixed(3);
+        ctx.fillStyle = `rgb(${warna} / ${alfa})`;
         ctx.beginPath();
-        ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${warna} / ${nyala.toFixed(3)})`;
+        for (const t of isi) {
+          ctx.moveTo(t.x + t.r, t.y);
+          ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+        }
         ctx.fill();
       }
-      if (jalan) requestAnimationFrame(gambar);
     };
 
     const mulai = () => {
       if (jalan || !halus || document.hidden) return;
       jalan = true;
+      hitung = 0;
       requestAnimationFrame(gambar);
     };
     const henti = () => { jalan = false; };
@@ -583,4 +654,35 @@
   // muncul terus sejak halaman dibuka.
   const fab = document.getElementById('fab');
   if (fab && !kurangi) fab.classList.add('ax-float');
+
+  // ── 11. Animasi tambahan yang ringan ─────────────────────
+  // Semua yang di sini hanya menggerakkan `transform`/`opacity`/`scale`,
+  // jadi dikerjakan penggabung gambar dan tidak menambah beban main-thread.
+  // Itu penting: menambah gerak tidak boleh membuat halaman kembali berat.
+  if (!kurangi) {
+    // Cincin sorot pada kartu yang bisa disorot. Hanya di perangkat
+    // berpenunjuk presisi, sebab di layar sentuh tidak ada "hover".
+    if (presisi) {
+      document.querySelectorAll(
+        '.tile, .price, .kartu, .inno__card, .target__stats > div, .checks li'
+      ).forEach((el) => {
+        // Kartu maskot sudah punya cincin sendiri (`.maskot__card::before`);
+        // menambah satu lagi akan menumpuk dua tepi bercahaya.
+        if (el.classList.contains('maskot__card')) return;
+        el.classList.add('ax-ringkas');
+      });
+    }
+
+    // Kotak ikon di dalam kartu masuk dengan sedikit putaran. Dipilih hanya
+    // kotak ikon yang benar-benar berdiri sendiri, bukan ikon di dalam
+    // tautan atau tombol yang teksnya ikut berputar.
+    document.querySelectorAll(
+      '.tile__ico, .inno__no, .flow__n, .panduan__nomor'
+    ).forEach((el) => el.classList.add('ax-putar'));
+
+    // Judul panjang diberi garis yang tumbuh dari tengah, bukan dari kiri —
+    // terasa lebih tenang untuk judul yang mengisi hampir seluruh lebar.
+    document.querySelectorAll('.target__copy > h2, .contact__head > h2')
+      .forEach((el) => el.classList.add('ax-underline--tengah'));
+  }
 })();
