@@ -243,7 +243,8 @@ Selain folder situs, paket ini memuat beberapa berkas kecil untuk deploy otomati
 | `warung-go-digital/sw.js` | Service worker: simpan kerangka situs agar tetap terbuka saat offline |
 | `warung-go-digital/pasang.js` | Menampilkan bilah "Pasang di layar utama" dan mendaftarkan service worker |
 | `warung-go-digital/ikon/` | Ikon aplikasi (192, 512, maskable, apple-touch) |
-| `buat-ikon.py` | Membuat ulang ikon di `ikon/` (jalankan: `python3 buat-ikon.py`) |
+| `buat-logo.py` | Membuat perangkat logo SVG + PNG (jalankan: `python3 buat-logo.py`) |
+| `buat-ikon.py` | Menyalin ikon aplikasi dari hasil `buat-logo.py` ke `ikon/` |
 | `dorong.sh` | Skrip bantu untuk mendorong repo ini ke GitHub |
 
 Berkas-berkas ini **opsional**. Kalau Anda memakai Netlify Drop, cukup seret folder

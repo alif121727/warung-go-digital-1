@@ -20,7 +20,7 @@ python3 uji/uji-client-id.py      # 8 uji pembaca Client ID Google
 python3 uji/uji-terbit-otomatis.py # 14 uji penerbitan menu otomatis
 python3 uji/uji-google.py         # 57 uji kesiapan mesin pencari (SEO)
 python3 uji/uji-pembuka.py        # 29 uji video pembuka (intro) beranda
-python3 uji/uji-logo.py           # 109 uji aset logo (palet, bentuk, PNG, favicon)
+python3 uji/uji-logo.py           # 118 uji aset logo (palet, bentuk, PNG, favicon)
 ```
 
 Uji yang memeriksa data terisi memanggil `Store.muatContoh()` lebih dulu, karena

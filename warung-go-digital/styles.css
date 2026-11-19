@@ -186,7 +186,7 @@ h1 em, h2 em, .contact__head h2 em {
   display: grid; place-items: center; flex-shrink: 0;
   transition: transform .35s var(--ease), background .3s;
 }
-.logo__mark svg { width: 17px; height: 17px; }
+.logo__mark svg { width: 21px; height: 21px; }
 .logo:hover .logo__mark { transform: rotate(-8deg) scale(1.07); }
 .logo__word { white-space: nowrap; text-align: center; }
 .logo__word b { color: var(--clay); }

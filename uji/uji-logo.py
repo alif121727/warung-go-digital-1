@@ -157,11 +157,23 @@ for nama in SVG:
             f"oren {porsi*100:.1f}% gelap {gelap*100//total}% terang {terang*100//total}%")
     elif "mono" in nama:
         cek(f"monokrom benar-benar satu warna: {nama}", porsi == 0, f"oren {porsi*100:.1f}%")
+    elif nama == "lambang-bilah.svg":
+        # Lambang bilah atas memakai `currentColor`: warnanya datang dari CSS
+        # bilah (gelap di header, oren di footer), jadi saat dirender sendiri ia
+        # memakai warna teks bawaan — satu warna, bukan berona.
+        cek(f"lambang bilah satu warna (ikut CSS): {nama}", porsi == 0,
+            f"oren {porsi*100:.1f}%")
     elif nama.startswith(("logo-lambang", "lambang-", "favicon")):
         # Varian alternatif (lencana hitam/putih) memang berlatar netral.
         cek(f"varian alternatif tetap beroren: {nama}", porsi > 0.10, f"oren {porsi*100:.1f}%")
     else:                                   # kunci merek: oren jadi aksen
         cek(f"oren sebagai aksen (5-60%): {nama}", 0.05 <= porsi <= 0.60, f"oren {porsi*100:.1f}%")
+
+# ── 3b. lambang bilah mengikuti warna CSS ───────────────────
+# Warna tetap akan membuatnya salah di salah satu tema; `currentColor` membuat
+# satu berkas benar untuk header (gelap) sekaligus footer (oren).
+cek("lambang bilah memakai currentColor",
+    "currentColor" in baca("lambang-bilah.svg"))
 
 # ── 4. terbaca di ukuran kecil ──────────────────────────────
 lambang = baca("logo-lambang.svg")
@@ -181,9 +193,23 @@ for sisi in (16, 32):
                 oren += 1
             if (r + g + b) / 3 > 150:
                 terang += 1
+    # "Ada oren" saja tidak cukup: gambar bisa lolos sebagai gumpalan. Ukur
+    # juga berapa kali terang dan gelap berganti di sepanjang baris — itulah
+    # yang membuat lambang masih terbaca sebagai warung di 16 px. Ambang 20
+    # memberi ruang untuk beda peramban, tetapi tetap menolak gumpalan (yang
+    # hanya menghasilkan < 10 transisi).
+    tepi = 0
+    for y in range(sisi):
+        for x in range(sisi - 1):
+            kiri = sum(px[x, y][:3]) / 3
+            kanan = sum(px[x + 1, y][:3]) / 3
+            if abs(kiri - kanan) > 60:
+                tepi += 1
     cek(f"lambang {sisi}px punya bentuk (oren+terang)",
         oren > total * 0.2 and terang > total * 0.03,
         f"oren {oren*100//total}% terang {terang*100//total}%")
+    cek(f"lambang {sisi}px masih berpola (bukan gumpalan)",
+        tepi >= 20, f"transisi terang-gelap {tepi} (min 20)")
 
 # ── 5. rapat: tidak ada isi di luar viewBox ─────────────────
 # Isi yang menyentuh tepi itu wajar untuk gambar yang dipangkas rapat maupun
