@@ -188,6 +188,13 @@ Arah: hero gelap atmosferik → isi terang krem, berselang-seling terang/gelap.
   menunjuk versi ringan. Dengan `auto`, peramban mengunduh versi ringan lebih
   dulu, lalu skrip menggantinya dengan HD — dua unduhan untuk satu tayangan.
   Terverifikasi: dengan `none`, hanya satu berkas yang diminta.
+
+  **Sumber hanya 640x360** — "HD" adalah hasil pembesaran Lanczos, bukan
+  rekaman HD asli. Berkas `Tugas-Video-Alif-Fadilah-Raditya_3MB.zip` ternyata
+  **identik** (SHA-256 sama) dengan `video-sumber-pembuka.mp4`, jadi tidak ada
+  sumber beresolusi lebih tinggi. Bila kelak pengguna memberi rekaman asli
+  >= 720p, cukup jalankan ulang `buat-video-pembuka.py`.
+
   Aturan yang **harus dijaga** (dijaga `uji/uji-pembuka.py`):
   - Kelas `pembuka-aktif` dipasang oleh skrip kecil di `<head>` **sebelum**
     halaman digambar, supaya beranda tidak berkelip lebih dulu. Lapisan hanya
@@ -1153,4 +1160,3 @@ Data safety, dan catatan rilis ada di `playstore/teks-listing.md`.
   mengisi email kontak pengembang, lalu mengunggah AAB dan menekan "Start rollout".
   Ini hanya bisa dilakukan pemilik akun — agen tidak punya akses ke pembayaran atau
   akun Google.
-
