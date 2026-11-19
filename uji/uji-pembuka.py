@@ -172,8 +172,11 @@ with sync_playwright() as p:
     ctx.close()
 
     # ── 7. Video gagal dimuat -> lapisan otomatis dilewati ────
+    # Kedua versi diblokir: pembuka.js mencoba HD, lalu versi ringan, dan
+    # baru menyerah setelah keduanya gagal.
     ctx = b.new_context(viewport={"width": 1280, "height": 900}, service_workers="block")
     pg = ctx.new_page()
+    pg.route("**/video/pembuka-hd.mp4", lambda route: route.abort())
     pg.route("**/video/pembuka.mp4", lambda route: route.abort())
     pg.goto(LANDING, wait_until="load")
     pg.wait_for_timeout(1600)
@@ -182,6 +185,66 @@ with sync_playwright() as p:
     )
     cek("video gagal: lapisan otomatis dilewati", not r, str(r))
     ctx.close()
+
+    # ── 7b. Versi HD dipilih menurut koneksi ─────────────────
+    # Versi HD lebih tajam (SSIM 0,995 lawan 0,991) tetapi lebih berat.
+    # Diukur pada 700 kb/s: versi ringan tersendat 2 kali, HD 5 kali. Jadi
+    # HD hanya untuk koneksi lapang. Bila salah pilih, pengunjung lambat
+    # yang menanggung akibatnya — karena itu perilakunya diuji.
+    def sumber_terpilih(koneksi_js, blokir_hd=False):
+        c = b.new_context(viewport={"width": 390, "height": 844},
+                          service_workers="block")
+        c.add_init_script(
+            "Object.defineProperty(navigator,'connection',{configurable:true,"
+            f"value:{koneksi_js}}});"
+        )
+        if blokir_hd:
+            c.route("**/video/pembuka-hd.mp4", lambda r: r.abort())
+        h = c.new_page()
+        h.goto(LANDING, wait_until="load")
+        h.wait_for_timeout(2200)
+        nama = h.evaluate(
+            """()=>{const v=document.getElementById('pembukaVideo');
+                 return (v.currentSrc||v.src||'').split('/').pop();}"""
+        )
+        c.close()
+        return nama
+
+    kasus = [
+        ("koneksi cepat -> HD",
+         "{effectiveType:'4g',downlink:10,saveData:false}", False, "pembuka-hd.mp4"),
+        ("koneksi sedang -> HD",
+         "{effectiveType:'4g',downlink:2,saveData:false}", False, "pembuka-hd.mp4"),
+        ("koneksi 3g -> versi ringan",
+         "{effectiveType:'3g',downlink:0.8,saveData:false}", False, "pembuka.mp4"),
+        ("koneksi 2g -> versi ringan",
+         "{effectiveType:'2g',downlink:0.2,saveData:false}", False, "pembuka.mp4"),
+        ("hemat data -> versi ringan",
+         "{effectiveType:'4g',downlink:10,saveData:true}", False, "pembuka.mp4"),
+        ("HD gagal -> cadangan versi ringan",
+         "{effectiveType:'4g',downlink:10,saveData:false}", True, "pembuka.mp4"),
+    ]
+    for nama, koneksi, blokir, harap in kasus:
+        dapat = sumber_terpilih(koneksi, blokir)
+        cek(f"pilih video: {nama}", dapat == harap, f"{dapat} (harap {harap})")
+
+    # Tanpa Network Information API: harus memilih yang ringan, sebab salah
+    # pilih ke arah HD membuat video tersendat di koneksi tak dikenal.
+    c = b.new_context(viewport={"width": 390, "height": 844},
+                      service_workers="block")
+    c.add_init_script(
+        "Object.defineProperty(navigator,'connection',"
+        "{configurable:true,value:undefined});")
+    h = c.new_page()
+    h.goto(LANDING, wait_until="load")
+    h.wait_for_timeout(2200)
+    dapat = h.evaluate(
+        """()=>{const v=document.getElementById('pembukaVideo');
+             return (v.currentSrc||v.src||'').split('/').pop();}"""
+    )
+    cek("pilih video: tanpa info koneksi -> versi ringan",
+        dapat == "pembuka.mp4", dapat)
+    c.close()
 
     # ── 8. Skrip pembuka gagal dimuat -> jaring pengaman melepas lapisan ─
     # Ini yang paling berbahaya: kelas `pembuka-aktif` sudah dipasang skrip

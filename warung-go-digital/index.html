@@ -181,10 +181,15 @@
      "Lewati" di kanan bawah. Tidak memblokir halaman: latarnya tembus
      ketukan, hanya tombolnya yang menangkap ketukan. -->
 <section class="pembuka" id="pembuka" role="region" aria-label="Video pembuka Warung Go Digital">
+  <!-- Sumber video dipilih oleh bersama/pembuka.js: versi HD untuk koneksi
+       lapang, versi ringan untuk koneksi lambat. Atribut `src` hanyalah
+       cadangan bila JavaScript mati. `preload="none"` penting: tanpa itu
+       peramban mengunduh versi ringan lebih dulu, lalu skrip menggantinya
+       dengan HD — dua unduhan untuk satu tayangan. -->
   <video class="pembuka__video" id="pembukaVideo"
+         src="video/pembuka.mp4"
          poster="video/pembuka.jpg" muted playsinline preload="none"
          aria-label="Video promosi Warung Go Digital: etalase digital untuk warung dan UMKM">
-    <source src="video/pembuka.mp4" type="video/mp4" />
   </video>
   <div class="pembuka__lapis" aria-hidden="true"></div>
 

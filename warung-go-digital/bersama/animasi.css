@@ -498,8 +498,64 @@ details.tanya[open] summary::before { transform: rotate(180deg); }
     rgba(59, 165, 93, .40), rgba(59, 165, 93, .40));
 }
 
-/* ══ Penjagaan gerak ══════════════════════════════════════ */
+/* ── Cincin sorot pada kartu yang disorot ─────────────────
+   Saat kursor menyentuh kartu, sebuah cincin gradasi merekah dari tepinya.
+   Efeknya murni `transform` + `opacity` pada pseudo-elemen, jadi dikerjakan
+   penggabung gambar dan tidak menyentuh main-thread sama sekali.
 
+   Dipakai hanya di perangkat berpenunjuk presisi; lihat penjagaan di bawah. */
+.ax-ringkas { position: relative; }
+.ax-ringkas::after {
+  content: ""; position: absolute; inset: -3px; pointer-events: none;
+  border-radius: inherit; border: 2px solid rgba(245, 165, 36, .85);
+  opacity: 0; transform: scale(.97);
+  transition: opacity .32s var(--ax-ease), transform .32s var(--ax-ease);
+}
+.ax-ringkas:hover::after { opacity: 1; transform: scale(1); }
+
+/* ── Judul: garis bawah tumbuh dari tengah ────────────────
+   Varian dari `ax-underline`, tetapi memanjang dari titik tengah ke dua
+   arah. Terasa lebih tenang untuk judul yang panjang. */
+.ax-underline--tengah::after {
+  margin-left: auto; margin-right: auto;
+  transform-origin: 50% 50%;
+}
+.ax-underline--tengah.ax-in::after {
+  width: clamp(64px, 12vw, 104px);
+}
+
+/* ── Ikona berdenyut lembut saat kartunya disorot ─────────
+   Hanya `scale`, jadi tetap di lapisan gambar. Memberi umpan balik halus
+   tanpa memindahkan tata letak. */
+.ax-lentur { transition: scale .35s var(--ax-ease); }
+.ax-ringkas:hover .ax-lentur,
+.kartu:hover .ax-lentur { scale: 1.08; }
+
+/* ── Ikon dalam kartu: muncul berputar halus ──────────────
+   Kotak ikon masuk dengan sedikit putaran dan skala. Sekali saja, saat
+   kartunya muncul di layar — bukan berulang.
+
+   PENTING: animasinya dipasang HANYA ketika pemicunya sudah ada. Kalau
+   dipasang lebih dulu lalu ditahan `animation-play-state: paused`, keadaan
+   awalnya (`opacity: 0`) ikut terpakai — dan bila pemicunya tidak pernah
+   menyala, ikonnya tinggal tak terlihat. Dengan cara ini, tanpa JavaScript
+   atau bila pemicunya gagal, ikon tetap tampil seperti biasa.
+
+   Ada dua sistem kemunculan di situs ini: `reveal`/`in` dari app.js untuk
+   halaman beranda, dan `ax-reveal`/`ax-stagger` dari animasi.js untuk
+   halaman lain. Keduanya harus dikenali, sebab kotak ikon muncul di
+   halaman dari kedua sistem. */
+.reveal.in .ax-putar,
+.ax-reveal.ax-in .ax-putar,
+.ax-stagger.ax-in .ax-putar {
+  animation: ax-putar .7s var(--ax-ease) both;
+}
+@keyframes ax-putar {
+  from { opacity: 0; rotate: -14deg; scale: .8; }
+  to   { opacity: 1; rotate: none; scale: none; }
+}
+
+/* ══ Penjagaan gerak ══════════════════════════════════════ */
 /* Kursor sentuh tidak punya "hover"; matikan gerak yang bergantung kursor. */
 @media (hover: none), (pointer: coarse) {
   .ax-spot { display: none; }
@@ -509,6 +565,9 @@ details.tanya[open] summary::before { transform: rotate(180deg); }
   .ax-3d { transform: none; }
   .ax-tilt.is-tilting { transform: none; box-shadow: none; }
   .ax-glide::after { display: none; }
+  /* Cincin sorot hanya muncul saat "hover", dan layar sentuh tidak punya
+     hover — jadi tidak ada gunanya dipasang sama sekali. */
+  .ax-ringkas::after { display: none; }
   /* Sapuan pemindai memakai sumber daya baterai tanpa manfaat di layar
      sentuh, karena tidak ada yang mengarahkan pandangan ke sana. */
   .ax-scan.ax-in::after { animation: none !important; }
@@ -540,6 +599,15 @@ details.tanya[open] summary::before { transform: rotate(180deg); }
   .ax-hero > *, .ax-scan.ax-in::after, .ax-pulse-nomor::after,
   details.tanya[open] > :not(summary) {
     animation: none !important;
+  }
+  /* Animasi tambahan juga harus berhenti, dan hasil akhirnya dipaksa supaya
+     tidak ada yang tertinggal dalam keadaan awal (mis. ikon tak terlihat). */
+  .ax-putar { animation: none !important; opacity: 1 !important;
+              rotate: none !important; scale: none !important; }
+  .ax-ringkas::after { display: none !important; }
+  .ax-lentur { transition: none !important; }
+  .ax-underline--tengah.ax-in::after {
+    width: clamp(64px, 12vw, 104px) !important; transition: none;
   }
   /* Tinggi kotak tetap boleh berubah, hanya tanpa gerak. */
   details.tanya::details-content { transition: none !important; }
